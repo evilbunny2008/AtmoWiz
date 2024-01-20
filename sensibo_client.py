@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 
-# This is a fork of Sensibo.com python script that has been patched to make it work with python3
-# and with submitted patches than Sensibo hasn't dealt with
-
 import requests
 import json
 import argparse
@@ -89,6 +86,10 @@ if __name__ == "__main__":
     if(args.last and args.last > 40):
       args.last = 40
 
+    fmt = '%d/%m/%Y %H:%M:%S'
+    from_zone = tz.tzutc()
+    to_zone = tz.tzlocal()
+
 #    print(args)
 #    exit(1)
 
@@ -136,18 +137,24 @@ if __name__ == "__main__":
             pod_measurement = client.pod_measurement(uid)
           if(args.showMeasurements):
             not args.terse and print ("-" * 10, "Measurement of %s" % deviceNameByUID[uid], "-" * 10)
-            print (pod_measurement)
+            ac_state = pod_measurement[0]
+            sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%S.%fZ')
+            utc = sstring.replace(tzinfo=from_zone)
+            localzone = utc.astimezone(to_zone)
+            sdate = localzone.strftime(fmt)
+            print ("Command executed at %(date)s : %(state)s" % { 'date' : sdate, 'state': ac_state})
           if(args.showTempMeasurement):
             not args.terse and print ("-" * 10, "Temperature in %s" % deviceNameByUID[uid], "-" * 10)
-            print (tempFromMeasurements(pod_measurement[0]))
+            ac_state = pod_measurement[0]
+            sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%S.%fZ')
+            utc = sstring.replace(tzinfo=from_zone)
+            localzone = utc.astimezone(to_zone)
+            sdate = localzone.strftime(fmt)
+            print ("Command executed at %(date)s : %(state)s" % { 'date' : sdate, 'state': tempFromMeasurements(pod_measurement[0])})
           if(args.last):
-            fmt = '%d/%m/%Y %H:%M:%S'
-            from_zone = tz.tzutc()
-            to_zone = tz.tzlocal()
-
             last_ac_state = client.pod_last_ac_state(uid, args.last)
             for ac_state in last_ac_state:
-              sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%SZ')
+              sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%S.%fZ')
               utc = sstring.replace(tzinfo=from_zone)
               localzone = utc.astimezone(to_zone)
               sdate = localzone.strftime(fmt)
