@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 
-# Simple daemon to pull data about fujitsu myAnyWAIR from Sensibo.com
-
 import argparse
 import configparser
 import daemon
@@ -51,7 +49,7 @@ if __name__ == "__main__":
     password = configParser.get('mariadb', 'password')
 
     parser = argparse.ArgumentParser(description='Sensibo client example parser')
-    parser.add_argument('--logfile', type = str, default='/var/log/fujitsu.log',help='File to log output to')
+    parser.add_argument('--logfile', type = str, default='/var/log/fujitsu/fujitsu.log',help='File to log output to')
     parser.add_argument('--pidfile', type = str, default='/var/run/fujitsu/fujitsu.pid',help='File to set the pid to')
     args = parser.parse_args()
 
@@ -66,7 +64,7 @@ if __name__ == "__main__":
     deviceNameByUID = {v:k for k,v in devices.items()}
 
     logfile = open(args.logfile, 'a')
-    context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile))
+    context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=1001, gid=1001)
 
     with context:
       mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
