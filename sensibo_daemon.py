@@ -4,7 +4,7 @@ import argparse
 import configparser
 import daemon
 import json
-import MySQLdb
+import pymysql.cursors
 import requests
 import time
 from daemon import pidfile
@@ -31,6 +31,10 @@ class SensiboClientAPI(object):
         result = self._get("/users/me/pods", fields="id,room")
         return {x['room']['name']: x['id'] for x in result['result']}
 
+    def pod_ac_state(self, podUid):
+        result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="acState")
+        return result['result'][0]['acState']
+
     def pod_measurement(self, podUid):
         result = self._get("/pods/%s/measurements" % str(podUid))
         return result['result']
@@ -56,22 +60,34 @@ if __name__ == "__main__":
     client = SensiboClientAPI(apikey)
     devices = client.devices()
 
+    uidList = devices.values()
+    deviceNameByUID = {v:k for k,v in devices.items()}
+
     logfile = open(args.logfile, 'a')
     context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile))
 
-    mydb = MySQLdb.connect(hostname, username, password, database)
-
-    uidList = devices.values()
-    deviceNameByUID = {v:k for k,v in devices.items()}
     with context:
+      mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
       while True:
         for uid in uidList:
           pod_measurement = client.pod_measurement(uid)
           ac_state = pod_measurement[0]
+          ac_state2 = client.pod_ac_state(uid)
           sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%S.%fZ')
           utc = sstring.replace(tzinfo=from_zone)
           localzone = utc.astimezone(to_zone)
           sdate = localzone.strftime(fmt)
-          c = mydb.cursor()
-          c.execute("INSERT INTO fujitsu (whentime, uid, temperature, humidity, feelslike, rssi) VALUES (%s, %s, %s, %s, %s, %s)", (sdate, uid, ac_state['temperature'], ac_state['humidity'], ac_state['feelsLike'], ac_state['rssi'], ))
+          airconon = ac_state2['on']
+          mode = ac_state2['mode']
+          targettemp = ac_state2['targetTemperature']
+          fanlevel = ac_state2['fanLevel']
+          swing = ac_state2['swing']
+          horizontalswing = ac_state2['horizontalSwing']
+          with mydb:
+            with mydb.cursor() as cursor:
+              try:
+                sql = """INSERT INTO fujitsu (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                cursor.execute(sql, (sdate, uid, ac_state['temperature'], ac_state['humidity'], ac_state['feelsLike'], ac_state['rssi'], airconon, mode, targettemp, fanlevel, swing, horizontalswing))
+              except pymysql.err.IntegrityError as e:
+                pass
         time.sleep(60)
