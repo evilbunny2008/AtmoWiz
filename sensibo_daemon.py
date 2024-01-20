@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# Simple daemon to pull data about fujitsu myAnyWAIR from Sensibo.com
+
 import argparse
 import configparser
 import daemon
