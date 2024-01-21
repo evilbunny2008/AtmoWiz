@@ -69,8 +69,10 @@ if __name__ == "__main__":
     context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
-      mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
       while True:
+        mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
+        sql = """INSERT INTO fujitsu (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+
         for uid in uidList:
           pod_measurement = client.pod_measurement(uid)
           ac_state = pod_measurement[0]
@@ -85,11 +87,15 @@ if __name__ == "__main__":
           fanlevel = ac_state2['fanLevel']
           swing = ac_state2['swing']
           horizontalswing = ac_state2['horizontalSwing']
+
           with mydb:
             with mydb.cursor() as cursor:
               try:
-                sql = """INSERT INTO fujitsu (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                cursor.execute(sql, (sdate, uid, ac_state['temperature'], ac_state['humidity'], ac_state['feelsLike'], ac_state['rssi'], airconon, mode, targettemp, fanlevel, swing, horizontalswing))
+                values = (sdate, uid, ac_state['temperature'], ac_state['humidity'], ac_state['feelsLike'], ac_state['rssi'], airconon, mode, targettemp, fanlevel, swing, horizontalswing)
+                cursor.execute(sql, values)
+                print (sql % values)
               except pymysql.err.IntegrityError as e:
+                print ("Skipping insert as the row already exists.")
                 pass
+        mydb.close()
         time.sleep(60)
