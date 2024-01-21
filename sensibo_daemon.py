@@ -55,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('--pidfile', type = str, default='/var/run/fujitsu/fujitsu.pid',help='File to set the pid to')
     args = parser.parse_args()
 
+    fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
     fmt = '%Y-%m-%d %H:%M:%S'
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
@@ -71,31 +72,31 @@ if __name__ == "__main__":
     with context:
       while True:
         mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
-        sql = """INSERT INTO fujitsu (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+        sql = """INSERT INTO fujitsu (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+        start = time.time()
 
         for uid in uidList:
           pod_measurement = client.pod_measurement(uid)
           ac_state = pod_measurement[0]
           ac_state2 = client.pod_ac_state(uid)
-          sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%S.%fZ')
+          sstring = datetime.strptime(ac_state['time']['time'], fromfmt)
           utc = sstring.replace(tzinfo=from_zone)
           localzone = utc.astimezone(to_zone)
           sdate = localzone.strftime(fmt)
-          airconon = ac_state2['on']
-          mode = ac_state2['mode']
-          targettemp = ac_state2['targetTemperature']
-          fanlevel = ac_state2['fanLevel']
-          swing = ac_state2['swing']
-          horizontalswing = ac_state2['horizontalSwing']
 
           with mydb:
             with mydb.cursor() as cursor:
               try:
-                values = (sdate, uid, ac_state['temperature'], ac_state['humidity'], ac_state['feelsLike'], ac_state['rssi'], airconon, mode, targettemp, fanlevel, swing, horizontalswing)
+                values = (sdate, uid, ac_state['temperature'], ac_state['humidity'], ac_state['feelsLike'], ac_state['rssi'], ac_state2['on'], ac_state2['mode'],
+                                      ac_state2['targetTemperature'], ac_state2['fanLevel'], ac_state2['swing'], ac_state2['horizontalSwing'])
                 cursor.execute(sql, values)
                 print (sql % values)
               except pymysql.err.IntegrityError as e:
                 print ("Skipping insert as the row already exists.")
                 pass
         mydb.close()
-        time.sleep(60)
+        end = time.time()
+        sleeptime = round(85 - (end - start), 1)
+        print ("Sleeping for %s seconds..." % str(sleeptime))
+        time.sleep(sleeptime)
