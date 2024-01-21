@@ -8,7 +8,6 @@ import os
 import pymysql.cursors
 import requests
 import shutil
-import sys
 import time
 from daemon import pidfile
 from datetime import datetime
