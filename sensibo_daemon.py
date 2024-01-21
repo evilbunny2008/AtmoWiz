@@ -4,12 +4,16 @@ import argparse
 import configparser
 import daemon
 import json
+import os
 import pymysql.cursors
 import requests
+import shutil
+import sys
 import time
 from daemon import pidfile
 from datetime import datetime
 from dateutil import tz
+from pathlib import Path
 
 _SERVER = 'https://home.sensibo.com/api/v2'
 
@@ -40,21 +44,62 @@ class SensiboClientAPI(object):
         return result['result']
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Sensibo client example parser')
+    parser.add_argument('-c', '--config', type = str, default='/etc/fujitsu.conf',help='Path to config file, /etc/fujitsu.conf is the default')
+    parser.add_argument('--logfile', type = str, default='/var/log/fujitsu/fujitsu.log',help='File to log output to, /var/log/fujitsu/fujitsu.log is the default')
+    parser.add_argument('--pidfile', type = str, default='/var/run/fujitsu/fujitsu.pid',help='File to set the pid to, /var/run/fujitsu/fujitsu.pid is the default')
+    args = parser.parse_args()
+
     configParser = configparser.ConfigParser()
-    configParser.read('/etc/fujitsu.conf')
-    apikey = configParser.get('sensibo', 'apikey')
+    configParser.read(args.config)
+    apikey = configParser.get('sensibo', 'apikey', fallback='apikey')
     hostname = configParser.get('mariadb', 'hostname', fallback='localhost')
     database = configParser.get('mariadb', 'database', fallback='fujitsu')
     username = configParser.get('mariadb', 'username', fallback='fujitsu')
-    password = configParser.get('mariadb', 'password')
+    password = configParser.get('mariadb', 'password', fallback='password')
     uid = configParser.getint('system', 'uid', fallback=0)
     gid = configParser.getint('system', 'gid', fallback=0)
 
-    parser = argparse.ArgumentParser(description='Sensibo client example parser')
-    parser.add_argument('--logfile', type = str, default='/var/log/fujitsu/fujitsu.log',help='File to log output to')
-    parser.add_argument('--pidfile', type = str, default='/var/run/fujitsu/fujitsu.pid',help='File to set the pid to')
-    args = parser.parse_args()
+    if(apikey == 'apikey'):
+      print ('APIKEY is not set in config file.')
+      exit(1)
 
+    if(password == 'password'):
+      print ("DB Password is not set in the config file, can't continue")
+      exit(1)
+
+    if(uid == 0 or gid == 0):
+      print ("UID or GID is set to superuser, this is not recommended.")
+
+    if(os.path.isfile(args.pidfile)):
+      file = open(args.pidfile, 'r')
+      file.seek(0)
+      old_pid = int(file.readline())
+      pid = os.getpid()
+      if(pid != old_pid):
+        print ("%d is running and %s already exists, exiting" % (pid, args.pidfile))
+        exit(1)
+    else:
+      mydir = os.path.dirname(os.path.abspath(args.pidfile))
+      if(mydir == '/var/run'):
+        print ("/var/run isn't a valid directory, can't continue.")
+        exit(1)
+      if(not os.path.isdir(mydir)):
+        print ('Making %s and setting uid to %d and gid to %d' % (mydir, uid, gid))
+        os.makedirs(mydir)
+        shutil.chown(mydir, uid, gid)
+
+    if(not os.path.isfile(args.logfile)):
+      mydir = os.path.dirname(os.path.abspath(args.logfile))
+      if(mydir == '/var/log'):
+        print ("/var/log isn't a valid directory, can't continue.")
+        exit(1)
+      if(not os.path.isdir(mydir)):
+        print ('Making %s and setting uid to %d and gid to %d' % (mydir, uid, gid))
+        os.makedirs(mydir)
+        shutil.chown(mydir, uid, gid)
+
+    updatetime = 89
     fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
     fmt = '%Y-%m-%d %H:%M:%S'
     from_zone = tz.tzutc()
@@ -97,6 +142,6 @@ if __name__ == "__main__":
                 pass
         mydb.close()
         end = time.time()
-        sleeptime = round(85 - (end - start), 1)
+        sleeptime = round(updatetime - (end - start), 1)
         print ("Sleeping for %s seconds..." % str(sleeptime))
         time.sleep(sleeptime)
