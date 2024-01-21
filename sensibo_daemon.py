@@ -43,10 +43,12 @@ if __name__ == "__main__":
     configParser = configparser.ConfigParser()
     configParser.read('/etc/fujitsu.conf')
     apikey = configParser.get('sensibo', 'apikey')
-    hostname = configParser.get('mariadb', 'hostname')
-    database = configParser.get('mariadb', 'database')
-    username = configParser.get('mariadb', 'username')
+    hostname = configParser.get('mariadb', 'hostname', fallback='localhost')
+    database = configParser.get('mariadb', 'database', fallback='fujitsu')
+    username = configParser.get('mariadb', 'username', fallback='fujitsu')
     password = configParser.get('mariadb', 'password')
+    uid = configParser.getint('system', 'uid', fallback=0)
+    gid = configParser.getint('system', 'gid', fallback=0)
 
     parser = argparse.ArgumentParser(description='Sensibo client example parser')
     parser.add_argument('--logfile', type = str, default='/var/log/fujitsu/fujitsu.log',help='File to log output to')
@@ -64,7 +66,7 @@ if __name__ == "__main__":
     deviceNameByUID = {v:k for k,v in devices.items()}
 
     logfile = open(args.logfile, 'a')
-    context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=1001, gid=1001)
+    context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
       mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
