@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+!/usr/bin/python3
 
 import argparse
 import configparser
@@ -12,7 +12,6 @@ import time
 from daemon import pidfile
 from datetime import datetime
 from dateutil import tz
-from pathlib import Path
 
 _SERVER = 'https://home.sensibo.com/api/v2'
 
@@ -43,7 +42,7 @@ class SensiboClientAPI(object):
         return result['result']
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Sensibo client example parser')
+    parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally.')
     parser.add_argument('-c', '--config', type = str, default='/etc/fujitsu.conf',help='Path to config file, /etc/fujitsu.conf is the default')
     parser.add_argument('--logfile', type = str, default='/var/log/fujitsu/fujitsu.log',help='File to log output to, /var/log/fujitsu/fujitsu.log is the default')
     parser.add_argument('--pidfile', type = str, default='/var/run/fujitsu/fujitsu.pid',help='File to set the pid to, /var/run/fujitsu/fujitsu.pid is the default')
@@ -76,7 +75,7 @@ if __name__ == "__main__":
       old_pid = int(file.readline())
       pid = os.getpid()
       if(pid != old_pid):
-        print ("%d is running and %s already exists, exiting" % (pid, args.pidfile))
+        print ("Sensibo daemon is already running with pid %d, and pidfile %s already exists, exiting..." % (old_pid, args.pidfile))
         exit(1)
     else:
       mydir = os.path.dirname(os.path.abspath(args.pidfile))
@@ -98,7 +97,7 @@ if __name__ == "__main__":
         os.makedirs(mydir)
         shutil.chown(mydir, uid, gid)
 
-    updatetime = 89
+    updatetime = 90
     fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
     fmt = '%Y-%m-%d %H:%M:%S'
     from_zone = tz.tzutc()
@@ -123,11 +122,24 @@ if __name__ == "__main__":
         for uid in uidList:
           pod_measurement = client.pod_measurement(uid)
           ac_state = pod_measurement[0]
-          ac_state2 = client.pod_ac_state(uid)
           sstring = datetime.strptime(ac_state['time']['time'], fromfmt)
           utc = sstring.replace(tzinfo=from_zone)
           localzone = utc.astimezone(to_zone)
           sdate = localzone.strftime(fmt)
+          query = """SELECT 1 FROM fujitsu WHERE whentime=%s AND uid=%s"""
+          values = (sdate, uid)
+          print (query % values)
+          with mydb:
+            with mydb.cursor() as cursor:
+              try:
+                cursor.execute(query, values)
+                row = cursor.fetchone()
+                if(row):
+                  continue
+              except pymysql.err.IntegrityError as e:
+                pass
+
+          ac_state2 = client.pod_ac_state(uid)
 
           with mydb:
             with mydb.cursor() as cursor:
