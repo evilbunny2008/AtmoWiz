@@ -1,0 +1,205 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+swagger: '2.0'
+
+info:
+  version: "2.0.0"
+  title: Sensibo
+host: home.sensibo.com
+basePath: /api/v2
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - apiKey: []
+securityDefinitions:
+  apiKey:
+    type: apiKey
+    in: query
+    name: apiKey
+paths:
+  /users/me/pods:
+    get:
+      description: |
+        Gets `Pods` of a specific user.
+      security:
+        - apiKey: []
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: ArrayOfPods
+            type: array
+            items:
+              title: Pod
+              type: object
+              properties:
+                name: 
+                  type: string
+  /pods/{podUid}:
+    get:
+      description:
+        Gets `Pod` of a specific user.
+      parameters:
+        -
+          name: podUid
+          in: path
+          description: Pod unique id
+          required: true
+          type: string
+      security:
+        - apiKey: []
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: Pod
+            type: object
+            items:
+              properties:
+                name: 
+                  type: string         
+  /pods/{podUid}/acStates:
+    get:
+      description:
+        Get air conditioner state (and previous) for this pod
+      parameters:
+        -
+          name: podUid
+          in: path
+          description: Pod unique id
+          required: true
+          type: string
+      security:
+        - apiKey: []
+      responses:
+        200:
+          description: Success. Returns when command actually happened
+    post:
+      description:
+        Set air conditioner state for this pod
+      parameters:
+        -
+          name: podUid
+          in: path
+          description: Pod unique id
+          required: true
+          type: string
+        - 
+          name: acState
+          in: body
+          description: The required AC state
+          schema:
+            $ref: '#/definitions/acStateObject'
+      security:
+        - apiKey: []
+      responses:
+        200:
+          description: Success. Returns when command actually happened
+  /pods/{podUid}/acStates/{property}:
+    get:
+      description:
+        Get air conditioner state for a specific state id
+      parameters:
+        -
+          name: podUid
+          in: path
+          description: Pod unique id
+          required: true
+          type: string
+        -
+          name: property
+          in: path
+          description: State id to be retrieved
+          required: true
+          type: string
+      security:
+        - apiKey: []
+      responses:
+        200:
+          description: Success. Returns when command actually happened
+    patch:
+      description:
+        Change a protperty of the air conditioner state for this pod
+      parameters:
+        -
+          name: podUid
+          in: path
+          description: Pod unique id
+          required: true
+          type: string
+        -
+          name: property
+          in: path
+          description: The property to change (e.g., targetTemperature)
+          required: true
+          type: string
+        -
+          name: newValue
+          in: body
+          description: new value for property (e.g., "24")
+          required: true
+          schema:
+            $ref: "#/definitions/newValueObject"
+      security:
+        - apiKey: []
+      responses:
+        200:
+          description: Success. Returns when command actually happened          
+  /pods/{podUid}/measurements:
+    get:
+      description:
+        Returns an array with the last measurements sent by the pod
+      parameters:
+        -
+          name: podUid
+          in: path
+          description: Pod unique id
+          required: true
+          type: string
+      security:
+        - apiKey: []
+      responses:
+        200:
+          description: Success. Returns an array of 1 measurement object with time temperature and humidity
+definitions:
+  acStateObject:
+    required:
+      - acState
+    properties:
+      acState:
+        $ref: '#/definitions/acState'
+  acState:
+    type: object
+    required:
+      - on
+      - mode
+      - fanLevel
+      - targetTemperature
+    properties:
+      on:
+        type: boolean
+        description: on/off
+      mode:
+        type: string
+        description: one of "cool", "heat", "fan"
+      fanLevel:
+        type: string
+        description: one of "low", "medium", "high", "auto"
+      targetTemperature: 
+        type: integer
+        description: target temperature (16 to 30)
+  newValueObject:
+    type: object
+    required:
+      - newValue
+      - currentAcState
+    properties:
+      newValue:
+        type: string
+        description: the new value
+      currentAcState:
+        $ref: "#/definitions/acStateObject"
