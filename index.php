@@ -5,12 +5,13 @@
 	$dataPoints2 = array();
 	$rc = 0;
 
-	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike FROM fujitsu WHERE whentime >= now() - INTERVAL 1 DAY ORDER BY whentime ASC";
+	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike FROM fujitsu WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
 		$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature']);
 		$dataPoints2[] = array('x' => $row['whentime'], 'y' => $row['humidity']);
+		$dataPoints3[] = array('x' => $row['whentime'], 'y' => $row['feelslike']);
 		$rc++;
 	}
 
@@ -25,7 +26,7 @@ window.onload = function () {
 var chart = new CanvasJS.Chart("chartContainer", {
 	animationEnabled: true,
 	title:{
-		text: "Temperature Vs Humidity"
+		text: "Temperature Vs Humidity Vs Feels Like"
 	},
 	axisX:{
 		title: "Time",
@@ -66,7 +67,15 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		toolTipContent: "{name}: {y} %",
 		showInLegend: true,
 		dataPoints: <?php echo json_encode($dataPoints2, JSON_NUMERIC_CHECK); ?>
-	}]
+	},{
+		type: "line",
+		name: "Feels Like",
+		xValueType: "dateTime",
+		markerSize: 0,
+		toolTipContent: "{name}: {y} °C",
+		showInLegend: true,
+		dataPoints: <?php echo json_encode($dataPoints3, JSON_NUMERIC_CHECK); ?>
+        }]
 });
 chart.render();
 
