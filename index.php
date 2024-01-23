@@ -4,6 +4,7 @@
 	$dataPoints1 = array();
 	$dataPoints2 = array();
 	$dataPoints3 = array();
+	$dataPoints4 = array();
 	$rc = 0;
 
 	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike,rssi FROM fujitsu WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
