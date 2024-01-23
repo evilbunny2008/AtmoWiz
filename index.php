@@ -129,7 +129,7 @@ function toggleDataSeries(e){
 </head>
 <body>
 <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-<div id="rssiContainer" style="height: 370px; width: 100%;"></div>
+<div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
 <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 </body>
 </html>
