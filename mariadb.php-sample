@@ -1,2 +1,2 @@
 <?php
-    $link = mysqli_connect('localhost', 'fujitsu', 'password', 'fujitsu');
+    $link = mysqli_connect('localhost', 'sensibo', 'password', 'sensibo');

@@ -36,27 +36,27 @@ class SensiboClientAPI(object):
         return {x['room']['name']: x['id'] for x in result['result']}
 
     def pod_all_stats(self, podUid):
-        result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="acState,device")
+        result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="device")
         if(result == None):
             return None
         return result
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally.')
-    parser.add_argument('-c', '--config', type = str, default='/etc/fujitsu.conf',
-                        help='Path to config file, /etc/fujitsu.conf is the default')
-    parser.add_argument('--logfile', type = str, default='/var/log/fujitsu/fujitsu.log',
-                        help='File to log output to, /var/log/fujitsu/fujitsu.log is the default')
-    parser.add_argument('--pidfile', type = str, default='/var/run/fujitsu/fujitsu.pid',
-                        help='File to set the pid to, /var/run/fujitsu/fujitsu.pid is the default')
+    parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
+                        help='Path to config file, /etc/sensibo.conf is the default')
+    parser.add_argument('--logfile', type = str, default='/var/log/sensibo/sensibo.log',
+                        help='File to log output to, /var/log/sensibo/sensibo.log is the default')
+    parser.add_argument('--pidfile', type = str, default='/var/run/sensibo/sensibo.pid',
+                        help='File to set the pid to, /var/run/sensibo/sensibo.pid is the default')
     args = parser.parse_args()
 
     configParser = configparser.ConfigParser()
     configParser.read(args.config)
     apikey = configParser.get('sensibo', 'apikey', fallback='apikey')
     hostname = configParser.get('mariadb', 'hostname', fallback='localhost')
-    database = configParser.get('mariadb', 'database', fallback='fujitsu')
-    username = configParser.get('mariadb', 'username', fallback='fujitsu')
+    database = configParser.get('mariadb', 'database', fallback='sensibo')
+    username = configParser.get('mariadb', 'username', fallback='sensibo')
     password = configParser.get('mariadb', 'password', fallback='password')
     uid = configParser.getint('system', 'uid', fallback=0)
     gid = configParser.getint('system', 'gid', fallback=0)
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     with context:
       while True:
         mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
-        sql = """INSERT INTO fujitsu (whentime, uid, temperature, humidity, feelslike, rssi,
+        sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi,
                         airconon, mode, targettemp, fanlevel, swing, horizontalswing)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
         start = time.time()
@@ -130,13 +130,21 @@ if __name__ == "__main__":
           pod_measurement = client.pod_all_stats(uid)
           if(pod_measurement == None):
             continue
-          ac_state = pod_measurement['result'][0]['acState']
+          ac_state = pod_measurement['result'][0]['device']['acState']
           measurements = pod_measurement['result'][0]['device']['measurements']
+          powerConsumption = pod_measurement['result'][0]['device']['powerConsumption']
+          print ("powerConsumption == ", powerConsumption)
+          acType = pod_measurement['result'][0]['device']['acType']
+          print ("acType == ", acType)
+          lastRunEnergyConsumption = pod_measurement['result'][0]['device']['lastRunEnergyConsumption']
+          print ("lastRunEnergyConsumption == ", lastRunEnergyConsumption)
+          acUsage = pod_measurement['result'][0]['device']['acUsage']
+          print ("acUsage == ", acUsage)
           sstring = datetime.strptime(measurements['time']['time'], fromfmt)
           utc = sstring.replace(tzinfo=from_zone)
           localzone = utc.astimezone(to_zone)
           sdate = localzone.strftime(fmt)
-          query = """SELECT 1 FROM fujitsu WHERE whentime=%s AND uid=%s"""
+          query = """SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s"""
           values = (sdate, uid)
           print (query % values)
           with mydb:

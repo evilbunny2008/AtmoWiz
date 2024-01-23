@@ -7,7 +7,7 @@
 	$dataPoints4 = array();
 	$rc = 0;
 
-	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike,rssi FROM fujitsu WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
+	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike,rssi FROM sensibo WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{

@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS `fujitsu`;
-CREATE TABLE IF NOT EXISTS `fujitsu` (
+DROP TABLE IF EXISTS `sensibo`;
+CREATE TABLE IF NOT EXISTS `sensibo` (
   `whentime` datetime NOT NULL,
   `uid` varchar(20) NOT NULL DEFAULT '',
   `temperature` float NOT NULL DEFAULT 0,
