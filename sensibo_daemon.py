@@ -36,7 +36,7 @@ class SensiboClientAPI(object):
         return {x['room']['name']: x['id'] for x in result['result']}
 
     def pod_all_stats(self, podUid):
-        result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="*")
+        result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="acState,device")
         if(result == None):
             return None
         return result
