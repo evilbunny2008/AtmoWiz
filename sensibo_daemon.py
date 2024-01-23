@@ -21,13 +21,13 @@ class SensiboClientAPI(object):
 
     def _get(self, path, ** params):
         try:
-          params['apiKey'] = self._api_key
-          response = requests.get(_SERVER + path, params = params)
-          response.raise_for_status()
-          return response.json()
+            params['apiKey'] = self._api_key
+            response = requests.get(_SERVER + path, params = params)
+            response.raise_for_status()
+            return response.json()
         except requests.exceptions.RequestException as exc:
-          print ("Request1 failed with message %s" % exc)
-          return None
+            print ("Request1 failed with message %s" % exc)
+            return None
 
     def devices(self):
         result = self._get("/users/me/pods", fields="id,room")
@@ -42,7 +42,7 @@ class SensiboClientAPI(object):
         return result
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally.')
+    parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
                         help='Path to config file, /etc/sensibo.conf is the default')
     parser.add_argument('--logfile', type = str, default='/var/log/sensibo/sensibo.log',
@@ -61,45 +61,56 @@ if __name__ == "__main__":
     uid = configParser.getint('system', 'uid', fallback=0)
     gid = configParser.getint('system', 'gid', fallback=0)
 
+    fileuid = os.stat(args.config).st_uid
+    filegid = os.stat(args.config).st_gid
+
+    if(fileuid != 0 or filegid != 0):
+        print ("The config file isn't owned by root, can't continue.")
+        exit(1)
+
+    if(os.stat(args.config).st_mode != 33152):
+        print ("The config file isn't just rw as root, can't continue")
+        exit()
+
     if(apikey == 'apikey'):
-      print ('APIKEY is not set in config file.')
-      exit(1)
+        print ('APIKEY is not set in config file.')
+        exit(1)
 
     if(password == 'password'):
-      print ("DB Password is not set in the config file, can't continue")
-      exit(1)
+        print ("DB Password is not set in the config file, can't continue")
+        exit(1)
 
     if(uid == 0 or gid == 0):
-      print ("UID or GID is set to superuser, this is not recommended.")
+        print ("UID or GID is set to superuser, this is not recommended.")
 
     if(os.path.isfile(args.pidfile)):
-      file = open(args.pidfile, 'r')
-      file.seek(0)
-      old_pid = int(file.readline())
-      pid = os.getpid()
-      if(pid != old_pid):
-        print ("""Sensibo daemon is already running with pid %d, \
-                  and pidfile %s already exists, exiting...""" % (old_pid, args.pidfile))
+        file = open(args.pidfile, 'r')
+        file.seek(0)
+        old_pid = int(file.readline())
+        pid = os.getpid()
+        if(pid != old_pid):
+            print ("Sensibo daemon is already running with pid %d, and pidfile %s already exists, exiting..." %
+                  (old_pid, args.pidfile))
         exit(1)
     else:
-      mydir = os.path.dirname(os.path.abspath(args.pidfile))
-      if(mydir == '/var/run'):
-        print ("/var/run isn't a valid directory, can't continue.")
-        exit(1)
-      if(not os.path.isdir(mydir)):
-        print ('Making %s and setting uid to %d and gid to %d' % (mydir, uid, gid))
-        os.makedirs(mydir)
-        shutil.chown(mydir, uid, gid)
+        mydir = os.path.dirname(os.path.abspath(args.pidfile))
+        if(mydir == '/var/run'):
+            print ("/var/run isn't a valid directory, can't continue.")
+            exit(1)
+        if(not os.path.isdir(mydir)):
+            print ('Making %s and setting uid to %d and gid to %d' % (mydir, uid, gid))
+            os.makedirs(mydir)
+            shutil.chown(mydir, uid, gid)
 
     if(not os.path.isfile(args.logfile)):
-      mydir = os.path.dirname(os.path.abspath(args.logfile))
-      if(mydir == '/var/log'):
-        print ("/var/log isn't a valid directory, can't continue.")
-        exit(1)
-      if(not os.path.isdir(mydir)):
-        print ('Making %s and setting uid to %d and gid to %d' % (mydir, uid, gid))
-        os.makedirs(mydir)
-        shutil.chown(mydir, uid, gid)
+        mydir = os.path.dirname(os.path.abspath(args.logfile))
+        if(mydir == '/var/log'):
+            print ("/var/log isn't a valid directory, can't continue.")
+            exit(1)
+        if(not os.path.isdir(mydir)):
+            print ('Making %s and setting uid to %d and gid to %d' % (mydir, uid, gid))
+            os.makedirs(mydir)
+            shutil.chown(mydir, uid, gid)
 
     updatetime = 90
     fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -110,8 +121,9 @@ if __name__ == "__main__":
     client = SensiboClientAPI(apikey)
     devices = client.devices()
     if(devices == None):
-      print ("Unable to get a list of devices, check your internet connection and apikey and try again.")
-      exit(1)
+        print ("Unable to get a list of devices, check your internet connection and apikey and try again.")
+        exit(1)
+
     uidList = devices.values()
 
     logfile = open(args.logfile, 'a')
@@ -119,52 +131,56 @@ if __name__ == "__main__":
                                    pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
-      while True:
-        mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
-        sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi,
+        while True:
+            mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
+            sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi,
                         airconon, mode, targettemp, fanlevel, swing, horizontalswing)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-        start = time.time()
+            start = time.time()
 
-        for uid in uidList:
-          pod_measurement = client.pod_all_stats(uid)
-          if(pod_measurement == None):
-            continue
-          ac_state = pod_measurement['result'][0]['device']['acState']
-          measurements = pod_measurement['result'][0]['device']['measurements']
-          powerConsumption = pod_measurement['result'][0]['device']['powerConsumption']
-          print ("powerConsumption == ", powerConsumption)
-          acType = pod_measurement['result'][0]['device']['acType']
-          print ("acType == ", acType)
-          lastRunEnergyConsumption = pod_measurement['result'][0]['device']['lastRunEnergyConsumption']
-          print ("lastRunEnergyConsumption == ", lastRunEnergyConsumption)
-          acUsage = pod_measurement['result'][0]['device']['acUsage']
-          print ("acUsage == ", acUsage)
-          sstring = datetime.strptime(measurements['time']['time'], fromfmt)
-          utc = sstring.replace(tzinfo=from_zone)
-          localzone = utc.astimezone(to_zone)
-          sdate = localzone.strftime(fmt)
-          query = """SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s"""
-          values = (sdate, uid)
-          print (query % values)
-          with mydb:
-            with mydb.cursor() as cursor:
-              try:
-                cursor.execute(query, values)
-                row = cursor.fetchone()
-                if(row):
-                  continue
+            for uid in uidList:
+                pod_measurement = client.pod_all_stats(uid)
+                if(pod_measurement == None):
+                    continue
 
-                values = (sdate, uid, measurements['temperature'], measurements['humidity'], measurements['feelsLike'],
-                          measurements['rssi'], ac_state['on'], ac_state['mode'], ac_state['targetTemperature'],
-                          ac_state['fanLevel'], ac_state['swing'], ac_state['horizontalSwing'])
-                cursor.execute(sql, values)
-                print (sql % values)
-              except pymysql.err.IntegrityError as e:
-                print ("Skipping insert as the row already exists.")
-                pass
-        mydb.close()
-        end = time.time()
-        sleeptime = round(updatetime - (end - start), 1)
-        print ("Sleeping for %s seconds..." % str(sleeptime))
-        time.sleep(sleeptime)
+                ac_state = pod_measurement['result'][0]['device']['acState']
+                measurements = pod_measurement['result'][0]['device']['measurements']
+                powerConsumption = pod_measurement['result'][0]['device']['powerConsumption']
+                print ("powerConsumption == ", powerConsumption)
+                acType = pod_measurement['result'][0]['device']['acType']
+                print ("acType == ", acType)
+                lastRunEnergyConsumption = pod_measurement['result'][0]['device']['lastRunEnergyConsumption']
+                print ("lastRunEnergyConsumption == ", lastRunEnergyConsumption)
+                acUsage = pod_measurement['result'][0]['device']['acUsage']
+                print ("acUsage == ", acUsage)
+                sstring = datetime.strptime(measurements['time']['time'], fromfmt)
+                utc = sstring.replace(tzinfo=from_zone)
+                localzone = utc.astimezone(to_zone)
+                sdate = localzone.strftime(fmt)
+                query = """SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s"""
+                values = (sdate, uid)
+                print (query % values)
+
+                with mydb:
+                    with mydb.cursor() as cursor:
+                        try:
+                            cursor.execute(query, values)
+                            row = cursor.fetchone()
+                            if(row):
+                                continue
+
+                            values = (sdate, uid, measurements['temperature'], measurements['humidity'],
+                                      measurements['feelsLike'], measurements['rssi'], ac_state['on'],
+                                      ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
+                                      ac_state['swing'], ac_state['horizontalSwing'])
+                            cursor.execute(sql, values)
+                            print (sql % values)
+                        except pymysql.err.IntegrityError as e:
+                            print ("Skipping insert as the row already exists.")
+                            pass
+
+            mydb.close()
+            end = time.time()
+            sleeptime = round(updatetime - (end - start), 1)
+            print ("Sleeping for %s seconds..." % str(sleeptime))
+            time.sleep(sleeptime)
