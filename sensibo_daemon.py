@@ -27,18 +27,24 @@ class SensiboClientAPI(object):
           return response.json()
         except requests.exceptions.RequestException as exc:
           print ("Request1 failed with message %s" % exc)
-          exit(1)
+          return None
 
     def devices(self):
         result = self._get("/users/me/pods", fields="id,room")
+        if(result == None):
+            return None
         return {x['room']['name']: x['id'] for x in result['result']}
 
     def pod_ac_state(self, podUid):
         result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="acState")
+        if(result == None):
+            return None
         return result['result'][0]['acState']
 
     def pod_measurement(self, podUid):
         result = self._get("/pods/%s/measurements" % str(podUid))
+        if(result == None):
+            return None
         return result['result']
 
 if __name__ == "__main__":
@@ -105,9 +111,10 @@ if __name__ == "__main__":
 
     client = SensiboClientAPI(apikey)
     devices = client.devices()
-
+    if(devices == None):
+      print ("Unable to get a list of devices, check your internet connection and apikey and try again.")
+      exit(1)
     uidList = devices.values()
-    deviceNameByUID = {v:k for k,v in devices.items()}
 
     logfile = open(args.logfile, 'a')
     context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
@@ -121,6 +128,8 @@ if __name__ == "__main__":
 
         for uid in uidList:
           pod_measurement = client.pod_measurement(uid)
+          if(pod_measurement == None):
+            continue
           ac_state = pod_measurement[0]
           sstring = datetime.strptime(ac_state['time']['time'], fromfmt)
           utc = sstring.replace(tzinfo=from_zone)
@@ -140,6 +149,8 @@ if __name__ == "__main__":
                 pass
 
           ac_state2 = client.pod_ac_state(uid)
+          if(ac_state2 == None):
+            continue
 
           with mydb:
             with mydb.cursor() as cursor:
