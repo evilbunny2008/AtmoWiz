@@ -22,6 +22,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+<title>Sensibo Data Plotting</title>
 <meta charset="UTF-8">
 <script>
 window.onload = function () {
