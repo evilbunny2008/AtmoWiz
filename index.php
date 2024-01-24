@@ -28,11 +28,36 @@ window.onload = function () {
 
 var chart = new CanvasJS.Chart("chartContainer", {
 	animationEnabled: true,
+	zoomEnabled: true,
 	title:{
 		text: "Temperature Vs Humidity Vs Feels Like"
 	},
+	toolTip:
+	{
+		contentFormatter: function(e)
+		{
+			var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+			for(var i = 0; i < e.entries.length; i++)
+			{
+				var entry = e.entries[i];
+				if(entry.dataSeries.name == "Temperature [°C]")
+					content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Humidity [%]")
+					content += "</br><div style='color:#C0504E'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
+				else
+					content += "</br><div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+			}
+
+			return content;
+		},
+		shared: true,
+	},
 	axisX:{
 		title: "Time",
+		interval:2,
+		intervalType: "hour",
+		valueFormatString: "D MMM, hTT",
+		labelAngle: -20,
 	},
 	axisY:{
 		title: "Temperature [°C]",
@@ -54,28 +79,28 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		itemclick: toggleDataSeries
 	},
 	data: [{
-		type: "line",
-		name: "Temperature",
+		type: "spline",
+		name: "Temperature [°C]",
 		xValueType: "dateTime",
 		markerSize: 0,
-		toolTipContent: "Temperature: {y} °C",
+		//toolTipContent: "Temperature: {y} °C",
 		showInLegend: true,
 		dataPoints: <?php echo json_encode($dataPoints1, JSON_NUMERIC_CHECK); ?>
 	},{
-		type: "line",
+		type: "spline",
 		axisYType: "secondary",
-		name: "Humidity",
+		name: "Humidity [%]",
 		xValueType: "dateTime",
 		markerSize: 0,
-		toolTipContent: "{name}: {y} %",
+		//toolTipContent: "{name}: {y} %",
 		showInLegend: true,
 		dataPoints: <?php echo json_encode($dataPoints2, JSON_NUMERIC_CHECK); ?>
 	},{
-		type: "line",
-		name: "Feels Like",
+		type: "spline",
+		name: "Feels Like [°C]",
 		xValueType: "dateTime",
 		markerSize: 0,
-		toolTipContent: "{name}: {y} °C",
+		//toolTipContent: "{name}: {y} °C",
 		showInLegend: true,
 		dataPoints: <?php echo json_encode($dataPoints3, JSON_NUMERIC_CHECK); ?>
         }]
@@ -84,11 +109,31 @@ chart.render();
 
 var chart2 = new CanvasJS.Chart("rssiContainer", {
 	animationEnabled: true,
+	zoomEnabled: true,
 	title:{
 		text: "WIFI Signal Strength dBm"
 	},
+	toolTip:
+	{
+		contentFormatter: function(e)
+		{
+			var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+			for(var i = 0; i < e.entries.length; i++)
+			{
+				var entry = e.entries[i];
+				content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + " dBm</div>";
+			}
+
+			return content;
+		},
+		shared: true,
+	},
 	axisX:{
 		title: "Time",
+		interval:2,
+		intervalType: "hour",
+		valueFormatString: "D MMM, hTT",
+		labelAngle: -20,
 	},
 	axisY:{
 		title: "Signal Strength [dBm]",
@@ -103,11 +148,11 @@ var chart2 = new CanvasJS.Chart("rssiContainer", {
 		itemclick: toggleDataSeries
 	},
 	data: [{
-		type: "line",
-		name: "Signal Strength dBm",
+		type: "spline",
+		name: "Signal Strength [dBm]",
 		xValueType: "dateTime",
 		markerSize: 0,
-		toolTipContent: "{name}: {y} dBm",
+		//toolTipContent: "{name}: {y} dBm",
 		showInLegend: true,
 		dataPoints: <?php echo json_encode($dataPoints4, JSON_NUMERIC_CHECK); ?>
         }]
