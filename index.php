@@ -44,9 +44,9 @@ var chart = new CanvasJS.Chart("chartContainer", {
 				if(entry.dataSeries.name == "Temperature [°C]")
 					content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Humidity [%]")
-					content += "</br><div style='color:#C0504E'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
+					content += "<div style='color:#C0504E'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
 				else
-					content += "</br><div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+					content += "<div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 			}
 
 			return content;

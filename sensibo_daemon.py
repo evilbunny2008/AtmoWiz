@@ -145,14 +145,6 @@ if __name__ == "__main__":
 
                 ac_state = pod_measurement['result'][0]['device']['acState']
                 measurements = pod_measurement['result'][0]['device']['measurements']
-                powerConsumption = pod_measurement['result'][0]['device']['powerConsumption']
-                print ("powerConsumption == ", powerConsumption)
-                acType = pod_measurement['result'][0]['device']['acType']
-                print ("acType == ", acType)
-                lastRunEnergyConsumption = pod_measurement['result'][0]['device']['lastRunEnergyConsumption']
-                print ("lastRunEnergyConsumption == ", lastRunEnergyConsumption)
-                acUsage = pod_measurement['result'][0]['device']['acUsage']
-                print ("acUsage == ", acUsage)
                 sstring = datetime.strptime(measurements['time']['time'], fromfmt)
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
