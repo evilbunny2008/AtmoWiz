@@ -80,7 +80,7 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		itemclick: toggleDataSeries
 	},
 	data: [{
-		type: "spline",
+		type: "line",
 		name: "Temperature [°C]",
 		xValueType: "dateTime",
 		markerSize: 0,
@@ -88,7 +88,7 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		showInLegend: true,
 		dataPoints: <?php echo json_encode($dataPoints1, JSON_NUMERIC_CHECK); ?>
 	},{
-		type: "spline",
+		type: "line",
 		axisYType: "secondary",
 		name: "Humidity [%]",
 		xValueType: "dateTime",
@@ -97,7 +97,7 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		showInLegend: true,
 		dataPoints: <?php echo json_encode($dataPoints2, JSON_NUMERIC_CHECK); ?>
 	},{
-		type: "spline",
+		type: "line",
 		name: "Feels Like [°C]",
 		xValueType: "dateTime",
 		markerSize: 0,
@@ -149,7 +149,7 @@ var chart2 = new CanvasJS.Chart("rssiContainer", {
 		itemclick: toggleDataSeries
 	},
 	data: [{
-		type: "spline",
+		type: "line",
 		name: "Signal Strength [dBm]",
 		xValueType: "dateTime",
 		markerSize: 0,
