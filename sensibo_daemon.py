@@ -121,7 +121,7 @@ if __name__ == "__main__":
     with context:
         while True:
             mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
-            syslog.syslog("Connection to mariadb accepted")
+            syslog.syslog(syslog.LOG_INFO, "Connection to mariadb accepted")
             sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, """ + \
                   """airconon, mode, targettemp, fanlevel, swing, horizontalswing) """ + \
                   """VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
@@ -140,7 +140,7 @@ if __name__ == "__main__":
                 sdate = localzone.strftime(fmt)
                 query = """SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s"""
                 values = (sdate, uid)
-                syslog.syslog(query % values)
+                syslog.syslog(syslog.LOG_INFO, query % values)
 
                 with mydb:
                     with mydb.cursor() as cursor:
@@ -155,13 +155,13 @@ if __name__ == "__main__":
                                       ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                                       ac_state['swing'], ac_state['horizontalSwing'])
                             cursor.execute(sql, values)
-                            syslog.syslog(sql % values)
+                            syslog.syslog(syslog.LOG_INFO, sql % values)
                         except pymysql.err.IntegrityError as e:
-                            syslog.syslog("Skipping insert as the row already exists.")
+                            syslog.syslog(syslog.LOG_ERR, "Skipping insert as the row already exists.")
                             pass
 
             mydb.close()
             end = time.time()
             sleeptime = round(updatetime - (end - start), 1)
-            syslog.syslog("Sleeping for %s seconds..." % str(sleeptime))
+            syslog.syslog(syslog.LOG_INFO, "Sleeping for %s seconds..." % str(sleeptime))
             time.sleep(sleeptime)
