@@ -27,7 +27,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            syslog.syslog("Request1 failed with message %s" % exc)
+            syslog.syslog("Request1 failed url hidden to protect the API key")
             return None
 
     def devices(self):
