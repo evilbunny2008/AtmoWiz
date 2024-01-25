@@ -27,7 +27,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            print ("Request1 failed with message %s" % exc)
+            syslog.syslog("Request1 failed with message %s" % exc)
             return None
 
     def devices(self):
@@ -41,9 +41,6 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
         return result
-
-def print (line):
-    syslog.syslog(line)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
@@ -118,12 +115,13 @@ if __name__ == "__main__":
 
     uidList = devices.values()
 
+    syslog.openlog(ident='Sensibo Daemon', logoption=syslog.LOG_PID, facility=syslog.LOG_DAEMON)
     context = daemon.DaemonContext(pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
         while True:
             mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
-            print ("Connection to mariadb accepted")
+            syslog.syslog("Connection to mariadb accepted")
             sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, """ + \
                   """airconon, mode, targettemp, fanlevel, swing, horizontalswing) """ + \
                   """VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
@@ -142,7 +140,7 @@ if __name__ == "__main__":
                 sdate = localzone.strftime(fmt)
                 query = """SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s"""
                 values = (sdate, uid)
-                print (query % values)
+                syslog.syslog(query % values)
 
                 with mydb:
                     with mydb.cursor() as cursor:
@@ -157,13 +155,13 @@ if __name__ == "__main__":
                                       ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                                       ac_state['swing'], ac_state['horizontalSwing'])
                             cursor.execute(sql, values)
-                            print (sql % values)
+                            syslog.syslog(sql % values)
                         except pymysql.err.IntegrityError as e:
-                            print ("Skipping insert as the row already exists.")
+                            syslog.syslog("Skipping insert as the row already exists.")
                             pass
 
             mydb.close()
             end = time.time()
             sleeptime = round(updatetime - (end - start), 1)
-            print ("Sleeping for %s seconds..." % str(sleeptime))
+            syslog.syslog("Sleeping for %s seconds..." % str(sleeptime))
             time.sleep(sleeptime)
