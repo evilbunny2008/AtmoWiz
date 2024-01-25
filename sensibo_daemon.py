@@ -71,11 +71,11 @@ if __name__ == "__main__":
         print ("The config file isn't just rw as root, can't continue")
         exit()
 
-    if(apikey == 'apikey'):
+    if(apikey == 'apikey' or apikey == '<apikey from sensibo.com>'):
         print ('APIKEY is not set in config file.')
         exit(1)
 
-    if(password == 'password'):
+    if(password == 'password' or password == '<password for local db>'):
         print ("DB Password is not set in the config file, can't continue")
         exit(1)
 
