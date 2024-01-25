@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 
-import requests
-import json
 import argparse
+import configparser
+import json
+import os
+import requests
 from datetime import datetime
 from dateutil import tz
 
@@ -67,8 +69,15 @@ def tempFromMeasurements(measurement):
 
 
 if __name__ == "__main__":
+    apikey = ''
+
+    if(os.path.isfile('/etc/sensibo.conf') and os.access('/etc/sensibo.conf', os.R_OK)):
+        configParser = configparser.ConfigParser()
+        configParser.read("/etc/sensibo.conf")
+        apikey = configParser.get('sensibo', 'apikey', fallback='')
+
     parser = argparse.ArgumentParser(description='Sensibo client example parser')
-    parser.add_argument('--apikey', type = str, required=True)
+    parser.add_argument('--apikey', type = str, help='Sensibo API Key', default='')
     parser.add_argument('--deviceName', type = str, help='Device name')
     parser.add_argument('--allDevices', action='store_true', help='Query all devices')
     parser.add_argument('--showState', action='store_true',help='Display the AC state')
@@ -87,17 +96,24 @@ if __name__ == "__main__":
     if(args.last and args.last > 40):
         args.last = 40
 
+
+    if(args.apikey == ''):
+        if(apikey == ''):
+            print ("You need to supply an API key, either in config file or on the command line.")
+            parser.print_help()
+            exit(1)
+    else:
+        apikey = args.apikey
+
+
     fmt = '%d/%m/%Y %H:%M:%S'
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
 
-#    print(args)
-#    exit(1)
-
     if(not args.unitF and not args.unitC and not args.unitDual):
         args.unitC=True
 
-    client = SensiboClientAPI(args.apikey)
+    client = SensiboClientAPI(apikey)
     try:
         devices = client.devices()
         print ("-" * 10, "devices", "-" * 10)
