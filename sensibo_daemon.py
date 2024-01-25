@@ -4,8 +4,8 @@ import argparse
 import configparser
 import daemon
 import json
+import MySQLdb
 import os
-import pymysql.cursors
 import requests
 import shutil
 import syslog
@@ -91,15 +91,18 @@ if __name__ == "__main__":
             print ("Sensibo daemon is already running with pid %d, and pidfile %s already exists, exiting..." %
                   (old_pid, args.pidfile))
         exit(1)
-    else:
-        mydir = os.path.dirname(os.path.abspath(args.pidfile))
-        if(mydir == '/var/run'):
-            print ("/var/run isn't a valid directory, can't continue.")
-            exit(1)
-        if(not os.path.isdir(mydir)):
-            print ('Making %s and setting uid to %d and gid to %d' % (mydir, uid, gid))
-            os.makedirs(mydir)
-            shutil.chown(mydir, uid, gid)
+
+    mydir = os.path.dirname(os.path.abspath(args.pidfile))
+    if(mydir == '/var/run'):
+        print ("/var/run isn't a valid directory, can't continue.")
+        exit(1)
+    if(not os.path.isdir(mydir)):
+        print ('Making %s' % mydir)
+        os.makedirs(mydir)
+
+    if(os.path.isdir(mydir)):
+        print ('Setting %s uid to %d and gid to %d' % (mydir, uid, gid))
+        shutil.chown(mydir, uid, gid)
 
     updatetime = 90
     fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -115,13 +118,14 @@ if __name__ == "__main__":
 
     uidList = devices.values()
 
-    syslog.openlog(ident='Sensibo Daemon', logoption=syslog.LOG_PID, facility=syslog.LOG_DAEMON)
     context = daemon.DaemonContext(pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
+        syslog.openlog(ident='Sensibo Daemon', logoption=syslog.LOG_PID, facility=syslog.LOG_DAEMON)
+
         while True:
-            mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
-            syslog.syslog(syslog.LOG_INFO, "Connection to mariadb accepted")
+            mydb = MySQLdb.connect(hostname, username, password, database)
+            syslog.syslog("Connection to mariadb accepted")
             sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, """ + \
                   """airconon, mode, targettemp, fanlevel, swing, horizontalswing) """ + \
                   """VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
@@ -140,28 +144,27 @@ if __name__ == "__main__":
                 sdate = localzone.strftime(fmt)
                 query = """SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s"""
                 values = (sdate, uid)
-                syslog.syslog(syslog.LOG_INFO, query % values)
+                syslog.syslog(query % values)
 
-                with mydb:
-                    with mydb.cursor() as cursor:
-                        try:
-                            cursor.execute(query, values)
-                            row = cursor.fetchone()
-                            if(row):
-                                continue
+                cursor = mydb.cursor()
+                try:
+                    cursor.execute(query, values)
+                    row = cursor.fetchone()
+                    if(row):
+                        continue
 
-                            values = (sdate, uid, measurements['temperature'], measurements['humidity'],
-                                      measurements['feelsLike'], measurements['rssi'], ac_state['on'],
-                                      ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
-                                      ac_state['swing'], ac_state['horizontalSwing'])
-                            cursor.execute(sql, values)
-                            syslog.syslog(syslog.LOG_INFO, sql % values)
-                        except pymysql.err.IntegrityError as e:
-                            syslog.syslog(syslog.LOG_ERR, "Skipping insert as the row already exists.")
-                            pass
+                    values = (sdate, uid, measurements['temperature'], measurements['humidity'],
+                              measurements['feelsLike'], measurements['rssi'], ac_state['on'],
+                              ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
+                              ac_state['swing'], ac_state['horizontalSwing'])
+                    cursor.execute(sql, values)
+                    syslog.syslog(sql % values)
+                except MySQLdb.err.IntegrityError as e:
+                    syslog.syslog("Skipping insert as the row already exists.")
+                    pass
 
             mydb.close()
             end = time.time()
             sleeptime = round(updatetime - (end - start), 1)
-            syslog.syslog(syslog.LOG_INFO, "Sleeping for %s seconds..." % str(sleeptime))
+            syslog.syslog("Sleeping for %s seconds..." % str(sleeptime))
             time.sleep(sleeptime)
