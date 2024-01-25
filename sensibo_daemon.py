@@ -8,6 +8,7 @@ import os
 import pymysql.cursors
 import requests
 import shutil
+import syslog
 import time
 from daemon import pidfile
 from datetime import datetime
@@ -41,12 +42,13 @@ class SensiboClientAPI(object):
             return None
         return result
 
+def print (line):
+    syslog.syslog(line)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
                         help='Path to config file, /etc/sensibo.conf is the default')
-    parser.add_argument('--logfile', type = str, default='/var/log/sensibo/sensibo.log',
-                        help='File to log output to, /var/log/sensibo/sensibo.log is the default')
     parser.add_argument('--pidfile', type = str, default='/var/run/sensibo/sensibo.pid',
                         help='File to set the pid to, /var/run/sensibo/sensibo.pid is the default')
     args = parser.parse_args()
@@ -102,16 +104,6 @@ if __name__ == "__main__":
             os.makedirs(mydir)
             shutil.chown(mydir, uid, gid)
 
-    if(not os.path.isfile(args.logfile)):
-        mydir = os.path.dirname(os.path.abspath(args.logfile))
-        if(mydir == '/var/log'):
-            print ("/var/log isn't a valid directory, can't continue.")
-            exit(1)
-        if(not os.path.isdir(mydir)):
-            print ('Making %s and setting uid to %d and gid to %d' % (mydir, uid, gid))
-            os.makedirs(mydir)
-            shutil.chown(mydir, uid, gid)
-
     updatetime = 90
     fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
     fmt = '%Y-%m-%d %H:%M:%S'
@@ -126,16 +118,15 @@ if __name__ == "__main__":
 
     uidList = devices.values()
 
-    logfile = open(args.logfile, 'a')
-    context = daemon.DaemonContext(stdout = logfile, stderr = logfile,
-                                   pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
+    context = daemon.DaemonContext(pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
         while True:
             mydb = pymysql.connect(hostname, username, password, database, cursorclass=pymysql.cursors.DictCursor)
-            sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi,
-                        airconon, mode, targettemp, fanlevel, swing, horizontalswing)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            print ("Connection to mariadb accepted")
+            sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, """ + \
+                  """airconon, mode, targettemp, fanlevel, swing, horizontalswing) """ + \
+                  """VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             start = time.time()
 
             for uid in uidList:

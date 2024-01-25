@@ -1,0 +1,16 @@
+# systemd unit configuration file for sensibo_daemon
+#
+
+[Unit]
+Description=Sensibo Daemon
+Documentation=https://github.com/evilbunny2008/sensibo-python-sdk/
+
+Requires=time-sync.target
+After=time-sync.target
+RequiresMountsFor=/etc
+
+[Service]
+ExecStart=/usr/bin/sensibo_daemon.py
+
+[Install]
+WantedBy=multi-user.target
