@@ -1,3 +1,7 @@
+DROP DATABASE IF EXISTS `sensibo`;
+CREATE DATABASE IF NOT EXISTS `sensibo`;
+USE `sensibo`;
+
 DROP TABLE IF EXISTS `sensibo`;
 CREATE TABLE IF NOT EXISTS `sensibo` (
   `whentime` datetime NOT NULL,
@@ -14,4 +18,8 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   `horizontalswing` varchar(20) NOT NULL,
   PRIMARY KEY (`whentime`),
   KEY `uid` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB;
+
+DROP USER IF EXISTS `sensibo`@`localhost`;
+CREATE USER `sensibo`@`localhost` IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON `sensibo`.* TO `sensibo`@`localhost`;
