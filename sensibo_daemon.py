@@ -158,6 +158,7 @@ if __name__ == "__main__":
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                               ac_state['swing'], ac_state['horizontalSwing'])
                     cursor.execute(sql, values)
+                    mydb.commit()
                     syslog.syslog(sql % values)
                 except MySQLdb.err.IntegrityError as e:
                     syslog.syslog("Skipping insert as the row already exists.")
