@@ -174,5 +174,7 @@ if __name__ == "__main__":
             mydb.close()
             end = time.time()
             sleeptime = round(updatetime - (end - start), 1)
+            if(sleeptime < 0 or sleeptime > 90):
+                sleeptime = 90
             syslog.syslog("Sleeping for %s seconds..." % str(sleeptime))
             time.sleep(sleeptime)
