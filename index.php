@@ -252,7 +252,7 @@ function toggleDataSeries(e){
 		$date = $drow['wtdate'];
 		if($date != $lastdate)
 		{
-			echo "<li style='text-align:center;'>$date</li>\n";
+			echo "<li style='text-align:center;'><u><b>$date</b></u></li>\n";
 			$lastdate = $date;
 		}
 ?>
