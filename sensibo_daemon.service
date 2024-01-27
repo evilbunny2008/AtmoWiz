@@ -5,16 +5,15 @@
 Description=Sensibo Daemon
 Documentation=https://github.com/evilbunny2008/sensibo-python-sdk/
 
-Requires=time-sync.target
-After=time-sync.target
-RequiresMountsFor=/etc
+Requires=network.target time-sync.target mariadb.service
+After=network.target time-sync.target mariadb.service
 
 [Service]
 ExecStart=/usr/bin/sensibo_daemon.py
 Restart=always
 RestartSec=5s
-StandardOutput=syslog
-StandardError=syslog+console
+StandardOutput=journal
+StandardError=journal+console
 
 [Install]
 WantedBy=multi-user.target
