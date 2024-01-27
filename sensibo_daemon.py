@@ -27,7 +27,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            syslog.syslog("Request1 failed url hidden to protect the API key")
+            syslog.syslog("Request failed, full error messages hidden to protect the API key")
             return None
 
     def devices(self):
@@ -41,6 +41,12 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
         return result
+
+    def pod_status(self, podUid, lastlimit = 10):
+        result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState")
+        if(result == None):
+            return None
+        return result['result']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
@@ -101,8 +107,11 @@ if __name__ == "__main__":
         os.makedirs(mydir)
 
     if(os.path.isdir(mydir)):
-        print ('Setting %s uid to %d and gid to %d' % (mydir, uid, gid))
-        shutil.chown(mydir, uid, gid)
+        diruid = os.stat(mydir).st_uid
+        dirgid = os.stat(mydir).st_gid
+        if(uid != diruid or gid != dirgid):
+            print ('Setting %s uid to %d and gid to %d' % (mydir, uid, gid))
+            shutil.chown(mydir, uid, gid)
 
     updatetime = 90
     fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -125,17 +134,22 @@ if __name__ == "__main__":
 
     uidList = devices.values()
 
-    context = daemon.DaemonContext(pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
+    logfile = open('/tmp/sensibo.log', 'a')
+    context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
         syslog.openlog(facility=syslog.LOG_DAEMON)
 
+        sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, """ + \
+              """airconon, mode, targettemp, fanlevel, swing, horizontalswing) """ + \
+              """VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+
+        sqlquery = """INSERT INTO commands (whentime, uid, reason, status, airconon, mode) """ + \
+                   """VALUES (%s, %s, %s, %s, %s, %s)"""
+
         while True:
             mydb = MySQLdb.connect(hostname, username, password, database)
             syslog.syslog("Connection to mariadb accepted")
-            sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, """ + \
-                  """airconon, mode, targettemp, fanlevel, swing, horizontalswing) """ + \
-                  """VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             start = time.time()
 
             for uid in uidList:
@@ -151,13 +165,13 @@ if __name__ == "__main__":
                 sdate = localzone.strftime(fmt)
                 query = """SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s"""
                 values = (sdate, uid)
-                syslog.syslog(query % values)
 
-                cursor = mydb.cursor()
                 try:
+                    cursor = mydb.cursor()
                     cursor.execute(query, values)
                     row = cursor.fetchone()
                     if(row):
+                        syslog.syslog("Skipping insert due to row already existing.")
                         continue
 
                     values = (sdate, uid, measurements['temperature'], measurements['humidity'],
@@ -165,16 +179,38 @@ if __name__ == "__main__":
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                               ac_state['swing'], ac_state['horizontalSwing'])
                     cursor.execute(sql, values)
-                    mydb.commit()
                     syslog.syslog(sql % values)
-                except MySQLdb.err.IntegrityError as e:
+                    mydb.commit()
+
+                    last10 = client.pod_status(uid, 10)
+                    if(last10 == None):
+                        continue
+
+                    for last in last10:
+                        if(last['reason'] == 'UserRequest'):
+                            continue
+
+                        sstring = datetime.strptime(last['time']['time'], '%Y-%m-%dT%H:%M:%SZ')
+                        utc = sstring.replace(tzinfo=from_zone)
+                        localzone = utc.astimezone(to_zone)
+                        sdate = localzone.strftime(fmt)
+                        query = """SELECT 1 FROM commands WHERE whentime=%s AND uid=%s"""
+                        values = (sdate, uid)
+                        cursor.execute(query, values)
+                        row = cursor.fetchone()
+                        if(row):
+                            continue
+
+                        values = (sdate, uid, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
+                        cursor.execute(sqlquery, values)
+                        mydb.commit()
+                        syslog.syslog(sqlquery % values)
+                except MySQLdb._exceptions.ProgrammingError as e:
                     syslog.syslog("Skipping insert as the row already exists.")
                     pass
 
             mydb.close()
             end = time.time()
             sleeptime = round(updatetime - (end - start), 1)
-            if(sleeptime < 0 or sleeptime > 90):
-                sleeptime = 90
             syslog.syslog("Sleeping for %s seconds..." % str(sleeptime))
             time.sleep(sleeptime)

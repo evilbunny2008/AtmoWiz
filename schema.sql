@@ -20,6 +20,16 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   KEY `uid` (`uid`)
 ) ENGINE=InnoDB;
 
+DROP TABLE IF EXISTS `commands`;
+CREATE TABLE `commands` (
+  `whentime` datetime NOT NULL,
+  `uid` varchar(20) NOT NULL,
+  `reason` varchar(20) NOT NULL,
+  `status` varchar(20) NOT NULL,
+  `airconon` tinyint(1) NOT NULL,
+  `mode` varchar(20) NOT NULL
+) ENGINE=InnoDB;
+
 DROP USER IF EXISTS `sensibo`@`localhost`;
 CREATE USER `sensibo`@`localhost` IDENTIFIED BY 'password';
 GRANT ALL PRIVILEGES ON `sensibo`.* TO `sensibo`@`localhost`;

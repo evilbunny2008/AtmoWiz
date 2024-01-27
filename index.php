@@ -24,6 +24,54 @@
 <head>
 <title>Sensibo Data Plotting</title>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* Create two columns/boxes that floats next to each other */
+nav {
+  float: left;
+  width: 350px;
+  background: #ccc;
+  padding: 20px;
+}
+
+/* Style the list inside the menu */
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+article {
+  float: left;
+  padding: 20px;
+  background-color: #f1f1f1;
+}
+
+/* Clear floats after the columns */
+section::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
+@media (max-width: 600px) {
+  nav, article {
+    width: 100%;
+    height: auto;
+  }
+}
+</style>
 <script>
 window.onload = function () {
 
@@ -174,8 +222,46 @@ function toggleDataSeries(e){
 </script>
 </head>
 <body>
-<div id="chartContainer" style="height: 370px; width: 100%;"></div>
-<div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
+<section>
+  <nav>
+    <ul>
+<?php
+	$lastdate = '';
+	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands ORDER BY whentime DESC";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+
+		$date = $drow['wtdate'];
+		if($date != $lastdate)
+		{
+			echo "<li style='align: center;'>$date</li>\n";
+			$lastdate = $date;
+		}
+?>
+      <li><?php
+        echo $drow['wttime'].' -- ';
+	if($drow['reason'] == "ExternalIrCommand")
+		echo "Remote Control turned AC ";
+	else if($drow['reason'] == "UserAPI")
+		echo "API turned AC ";
+	else
+		echo "Unknown turned AC ";
+	if($drow['airconon'])
+		echo "on";
+	else
+		echo "off";
+?></li>
+<?php
+	}
+?>
+    </ul>
+  </nav>
+  <article style="width: calc(100% - 350px);">
+    <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+    <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
+  </article>
+</section>
 <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 </body>
 </html>

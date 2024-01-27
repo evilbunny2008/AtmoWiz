@@ -38,7 +38,7 @@ class SensiboClientAPI(object):
         result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="acState")
         return result['result'][0]['acState']
 
-    def pod_last_ac_state(self, podUid, nb):
+    def pod_last_ac_state(self, podUid, nb = 10):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="status,reason,time,acState")
         return result['result']
 
@@ -139,8 +139,6 @@ if __name__ == "__main__":
 
         try:
             for uid in uidList:
-                #print ("UID {}".format(uid))
-                #continue
                 if(args.terse and args.allDevices):
                     print(deviceNameByUID[uid])
                 if(args.showState or args.togglePower):
@@ -171,14 +169,12 @@ if __name__ == "__main__":
                 if(args.last):
                     last_ac_state = client.pod_last_ac_state(uid, args.last)
                     for ac_state in last_ac_state:
-                        sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%S.%fZ')
+                        sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%SZ')
                         utc = sstring.replace(tzinfo=from_zone)
                         localzone = utc.astimezone(to_zone)
                         sdate = localzone.strftime(fmt)
-                        print ("Command executed at %(date)s : %(state)s" % { 'date' : sdate, 'state': str(ac_state['acState'])})
+                        print ("Command executed at %(date)s : %(state)s -- Reason: %(reason)s, Status: %(status)s" % { 'date' : sdate, 'state': str(ac_state['acState']), 'reason': ac_state['reason'], 'status': ac_state['status']})
 
-
-#    client.pod_change_ac_state(uid, ac_state, "on", not ac_state['on'])
 
         except requests.exceptions.RequestException as exc:
             print ("Request failed with message %s" % exc)
