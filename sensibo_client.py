@@ -140,7 +140,7 @@ if __name__ == "__main__":
         try:
             for uid in uidList:
                 if(args.terse and args.allDevices):
-                    print(deviceNameByUID[uid])
+                    print (deviceNameByUID[uid])
                 if(args.showState or args.togglePower):
                     ac_state = client.pod_ac_state(uid)
                 if(args.showState):

@@ -1,2 +1,3 @@
 <?php
-    $link = mysqli_connect('localhost', 'sensibo', 'password', 'sensibo');
+	$link = mysqli_connect('localhost', 'sensibo', 'password', 'sensibo');
+	$apikey = "<insert APIkey here>";
