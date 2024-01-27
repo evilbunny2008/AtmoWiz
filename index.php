@@ -5,17 +5,27 @@
 	$dataPoints2 = array();
 	$dataPoints3 = array();
 	$dataPoints4 = array();
-	$rc = 0;
 
-	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike,rssi FROM sensibo WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
+	$airconon = -1;
+	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike,rssi,airconon FROM sensibo WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
-		$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature']);
+		if($row['airconon'] != $airconon)
+		{
+			$airconon = $row['airconon'];
+
+			$ac = "off";
+			if($airconon == 1)
+				$ac = "on";
+			$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature'], 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => '#4F81BC');
+		} else {
+			$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature']);
+		}
+
 		$dataPoints2[] = array('x' => $row['whentime'], 'y' => $row['humidity']);
 		$dataPoints3[] = array('x' => $row['whentime'], 'y' => $row['feelslike']);
 		$dataPoints4[] = array('x' => $row['whentime'], 'y' => $row['rssi']);
-		$rc++;
 	}
 
 ?>
@@ -89,6 +99,10 @@ var chart = new CanvasJS.Chart("chartContainer", {
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];
+
+				if(entry.dataPoint.markerType == 'cross')
+					content += "<div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
+
 				if(entry.dataSeries.name == "Temperature [°C]")
 					content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Humidity [%]")
@@ -129,6 +143,7 @@ var chart = new CanvasJS.Chart("chartContainer", {
 	},
 	data: [{
 		type: "line",
+		markerSize: 12,
 		name: "Temperature [°C]",
 		xValueType: "dateTime",
 		markerSize: 0,
@@ -137,6 +152,7 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		dataPoints: <?php echo json_encode($dataPoints1, JSON_NUMERIC_CHECK); ?>
 	},{
 		type: "line",
+		markerSize: 12,
 		axisYType: "secondary",
 		name: "Humidity [%]",
 		xValueType: "dateTime",
@@ -146,6 +162,7 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		dataPoints: <?php echo json_encode($dataPoints2, JSON_NUMERIC_CHECK); ?>
 	},{
 		type: "line",
+		markerSize: 12,
 		name: "Feels Like [°C]",
 		xValueType: "dateTime",
 		markerSize: 0,
