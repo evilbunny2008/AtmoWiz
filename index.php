@@ -6,12 +6,12 @@
 	$dataPoints3 = array();
 	$dataPoints4 = array();
 
-	$airconon = -1;
+	$airconon = '';
 	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike,rssi,airconon FROM sensibo WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
-		if($row['airconon'] != $airconon)
+		if($row['airconon'] != $airconon && $airconon != '')
 		{
 			$airconon = $row['airconon'];
 
@@ -21,6 +21,7 @@
 			$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature'], 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => '#4F81BC');
 		} else {
 			$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature']);
+			$airconon = $row['airconon'];
 		}
 
 		$dataPoints2[] = array('x' => $row['whentime'], 'y' => $row['humidity']);
@@ -50,6 +51,7 @@ body {
 /* Create two columns/boxes that floats next to each other */
 nav {
   float: left;
+  height: 100vh;
   width: 350px;
   background: #ccc;
   padding: 20px;
@@ -72,14 +74,6 @@ section::after {
   content: "";
   display: table;
   clear: both;
-}
-
-/* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
-@media (max-width: 600px) {
-  nav, article {
-    width: 100%;
-    height: auto;
-  }
 }
 </style>
 <script>
