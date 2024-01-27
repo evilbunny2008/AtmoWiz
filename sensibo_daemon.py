@@ -128,7 +128,7 @@ if __name__ == "__main__":
     context = daemon.DaemonContext(pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
-        syslog.openlog(ident='Sensibo Daemon', logoption=syslog.LOG_PID, facility=syslog.LOG_DAEMON)
+        syslog.openlog(facility=syslog.LOG_DAEMON)
 
         while True:
             mydb = MySQLdb.connect(hostname, username, password, database)
