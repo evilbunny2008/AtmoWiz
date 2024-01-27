@@ -110,6 +110,13 @@ if __name__ == "__main__":
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
 
+    try:
+        mydb = MySQLdb.connect(hostname, username, password, database)
+        mydb.close()
+    except MySQLdb.err.IntegrityError as e:
+        print ("There was a problem connecting to the DB, error was %s" % e)
+        exit(1)
+
     client = SensiboClientAPI(apikey)
     devices = client.devices()
     if(devices == None):

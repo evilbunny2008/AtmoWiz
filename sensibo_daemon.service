@@ -11,6 +11,8 @@ RequiresMountsFor=/etc
 
 [Service]
 ExecStart=/usr/bin/sensibo_daemon.py
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
