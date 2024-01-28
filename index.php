@@ -1,3 +1,44 @@
+<?php
+	require_once('mariadb.php');
+
+	$dataPoints1 = array();
+	$dataPoints2 = array();
+	$dataPoints3 = array();
+	$dataPoints4 = array();
+
+	$ac = '';
+	$airconon = '';
+	$query = "SELECT uid,UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike,rssi,airconon FROM sensibo WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
+	$res = mysqli_query($link, $query);
+	while($row = mysqli_fetch_assoc($res))
+	{
+		if($row['airconon'] != $airconon && $airconon != '')
+		{
+			$airconon = $row['airconon'];
+
+			$ac = "off";
+			if($airconon == 1)
+				$ac = "on";
+
+			if($ac == "on")
+				$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature'], 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => '#4F81BC');
+			else
+				$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature'], 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'tomato');
+		} else {
+			$dataPoints1[] = array('x' => $row['whentime'], 'y' => $row['temperature']);
+			$airconon = $row['airconon'];
+		}
+
+		$dataPoints2[] = array('x' => $row['whentime'], 'y' => $row['humidity']);
+		$dataPoints3[] = array('x' => $row['whentime'], 'y' => $row['feelslike']);
+		$dataPoints4[] = array('x' => $row['whentime'], 'y' => $row['rssi']);
+
+		$currtemp = $row['temperature'];
+		$currhumid = $row['humidity'];
+		$currfl = $row['feelslike'];
+		$curruid = $row['uid'];
+	}
+?>
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -13,14 +54,13 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-  min-height: 750px;
-  height: 750px;
+  min-height: 100vh;
 }
 
 /* Create two columns/boxes that floats next to each other */
 nav {
   float: left;
-  height: 780px;
+  height: 100vh;
   width: 350px;
   background: #ccc;
   padding: 20px;
@@ -45,169 +85,165 @@ section::after {
   clear: both;
 }
 </style>
-</head>
-<body>
-<section>
-  <nav style='overflow-x:hidden;overflow-y:scroll;height:780px;'>
-    <ul id='commands'>
-    </ul>
-  </nav>
-  <article style="width: calc(100% - 350px);">
-    <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-    <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
-  </article>
-</section>
-<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 <script>
-
-var uid = "";
-
-var chart = new CanvasJS.Chart("chartContainer",
+window.onload = function()
 {
-	animationEnabled: true,
-	zoomEnabled: true,
-	title:
+
+	var chart = new CanvasJS.Chart("chartContainer",
 	{
-		text: "Temperature Vs Humidity Vs Feels Like"
-	},
-	toolTip:
-	{
-		contentFormatter: function(e)
+		animationEnabled: true,
+		zoomEnabled: true,
+		title:
 		{
-			var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
-			for(var i = 0; i < e.entries.length; i++)
-			{
-				var entry = e.entries[i];
-
-				if(entry.dataPoint.markerType == 'cross')
-					content += "<div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
-
-				if(entry.dataSeries.name == "Temperature [°C]")
-					content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
-				else if(entry.dataSeries.name == "Humidity [%]")
-					content += "<div style='color:#C0504E'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
-				else
-				content += "<div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
-			}
-			return content;
+			text: "Temperature Vs Humidity Vs Feels Like"
 		},
-		shared: true,
-	},
-	axisX:
-	{
-		title: "Time",
-		interval:2,
-		intervalType: "hour",
-		valueFormatString: "D MMM, hTT",
-		labelAngle: -20,
-	},
-	axisY:
-	{
-		title: "Temperature [°C]",
-		titleFontColor: "#4F81BC",
-		lineColor: "#4F81BC",
-		labelFontColor: "#4F81BC",
-		tickColor: "#4F81BC"
-	},
-	axisY2:
-	{
-		title: "Humidity [%]",
-		titleFontColor: "#C0504E",
-		lineColor: "#C0504E",
-		labelFontColor: "#C0504E",
-		tickColor: "#C0504E"
-	},
-	legend:
-	{
-		cursor: "pointer",
-		dockInsidePlotArea: true,
-		itemclick: toggleDataSeries
-	},
-	data:
-	[
+		toolTip:
 		{
-			type: "line",
-			markerSize: 12,
-			name: "Temperature [°C]",
-			xValueType: "dateTime",
-			markerSize: 0,
-			showInLegend: true,
-		},{
-			type: "line",
-			markerSize: 12,
-			axisYType: "secondary",
-			name: "Humidity [%]",
-			xValueType: "dateTime",
-			markerSize: 0,
-			showInLegend: true,
-		},{
-			type: "line",
-			markerSize: 12,
-			name: "Feels Like [°C]",
-			xValueType: "dateTime",
-			markerSize: 0,
-			showInLegend: true,
-		}
-	]
-});
-
-var dataPoints = [];
-var chart2 = new CanvasJS.Chart("rssiContainer",
-{
-	animationEnabled: true,
-	zoomEnabled: true,
-	title:
-	{
-		text: "WIFI Signal Strength dBm"
-	},
-	toolTip:
-	{
-		contentFormatter: function(e)
-		{
-			var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
-			for(var i = 0; i < e.entries.length; i++)
+			contentFormatter: function(e)
 			{
-				var entry = e.entries[i];
-				content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + " dBm</div>";
-			}
-			return content;
+				var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+				for(var i = 0; i < e.entries.length; i++)
+				{
+					var entry = e.entries[i];
+
+					if(entry.dataPoint.markerType == 'cross')
+						content += "<div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
+
+					if(entry.dataSeries.name == "Temperature [°C]")
+						content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+					else if(entry.dataSeries.name == "Humidity [%]")
+						content += "<div style='color:#C0504E'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
+					else
+						content += "<div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				}
+
+				return content;
+			},
+			shared: true,
 		},
-		shared: true,
-	},
-	axisX:
-	{
-		title: "Time",
-		interval:2,
-		intervalType: "hour",
-		valueFormatString: "D MMM, hTT",
-		labelAngle: -20,
-	},
-	axisY:
-	{
-		title: "Signal Strength [dBm]",
-		titleFontColor: "#4F81BC",
-		lineColor: "#4F81BC",
-		labelFontColor: "#4F81BC",
-		tickColor: "#4F81BC"
-	},
-	legend:
-	{
-		cursor: "pointer",
-		dockInsidePlotArea: true,
-		itemclick: toggleDataSeries
-	},
-	data:
-	[
+		axisX:
 		{
-			type: "line",
-			name: "Signal Strength [dBm]",
-			xValueType: "dateTime",
-			markerSize: 0,
-			showInLegend: true,
-			dataPoints: dataPoints
-       		}
-	]
-});
+			title: "Time",
+			interval:2,
+			intervalType: "hour",
+			valueFormatString: "D MMM, hTT",
+			labelAngle: -20,
+		},
+		axisY:
+		{
+			title: "Temperature [°C]",
+			titleFontColor: "#4F81BC",
+			lineColor: "#4F81BC",
+			labelFontColor: "#4F81BC",
+			tickColor: "#4F81BC"
+		},
+		axisY2:
+		{
+			title: "Humidity [%]",
+			titleFontColor: "#C0504E",
+			lineColor: "#C0504E",
+			labelFontColor: "#C0504E",
+			tickColor: "#C0504E"
+		},
+		legend:
+		{
+			cursor: "pointer",
+			dockInsidePlotArea: true,
+			itemclick: toggleDataSeries
+		},
+		data:
+		[
+			{
+				type: "line",
+				markerSize: 12,
+				name: "Temperature [°C]",
+				xValueType: "dateTime",
+				markerSize: 0,
+				showInLegend: true,
+				dataPoints: <?php echo json_encode($dataPoints1, JSON_NUMERIC_CHECK); ?>
+			},{
+				type: "line",
+				markerSize: 12,
+				axisYType: "secondary",
+				name: "Humidity [%]",
+				xValueType: "dateTime",
+				markerSize: 0,
+				showInLegend: true,
+				dataPoints: <?php echo json_encode($dataPoints2, JSON_NUMERIC_CHECK); ?>
+			},{
+				type: "line",
+				markerSize: 12,
+				name: "Feels Like [°C]",
+				xValueType: "dateTime",
+				markerSize: 0,
+				showInLegend: true,
+				dataPoints: <?php echo json_encode($dataPoints3, JSON_NUMERIC_CHECK); ?>
+        		}
+		]
+	});
+
+	chart.render();
+
+	var chart2 = new CanvasJS.Chart("rssiContainer",
+	{
+		animationEnabled: true,
+		zoomEnabled: true,
+		title:
+		{
+			text: "WIFI Signal Strength dBm"
+		},
+		toolTip:
+		{
+			contentFormatter: function(e)
+			{
+				var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+				for(var i = 0; i < e.entries.length; i++)
+				{
+					var entry = e.entries[i];
+					content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + " dBm</div>";
+				}
+
+				return content;
+			},
+			shared: true,
+		},
+		axisX:
+		{
+			title: "Time",
+			interval:2,
+			intervalType: "hour",
+			valueFormatString: "D MMM, hTT",
+			labelAngle: -20,
+		},
+		axisY:
+		{
+			title: "Signal Strength [dBm]",
+			titleFontColor: "#4F81BC",
+			lineColor: "#4F81BC",
+			labelFontColor: "#4F81BC",
+			tickColor: "#4F81BC"
+		},
+		legend:
+		{
+			cursor: "pointer",
+			dockInsidePlotArea: true,
+			itemclick: toggleDataSeries
+		},
+		data:
+		[
+			{
+				type: "line",
+				name: "Signal Strength [dBm]",
+				xValueType: "dateTime",
+				markerSize: 0,
+				showInLegend: true,
+				dataPoints: <?php echo json_encode($dataPoints4, JSON_NUMERIC_CHECK); ?>
+        		}
+		]
+	});
+
+	chart2.render();
+}
 
 function toggleDataSeries(e)
 {
@@ -221,48 +257,86 @@ function toggleDataSeries(e)
 	chart.render();
 }
 
-async function toggleAC()
+async function toggleAC(line1)
 {
-	const url='toggleAC.php?uid='+uid;
+	line1 = line1 + "<a href='#' onClick='toggleAC(\"" + line1;
+	line2 = "\"); return false;'>Turn AC " + currmode + "</a>";
+	line = line1 + line2;
+
+	if(currmode == 'on')
+		currmode = 'off';
+	else
+		currmode = 'on';
+
+	const url='toggleAC.php?uid=<?=urlencode($curruid)?>';
 	const response = await fetch(url);
 	const ret = await response.json();
 	if(ret != 200)
 	{
-		alert("There was a problem with your request, " + ret);
+		alert("There was a problem with your request");
 		return;
 	}
+
+	const elem = document.getElementById("currCond");
+	elem.innerHTML = line;
 }
 
-async function DataLoop()
-{
-	setTimeout('DataLoop()', 90000);
-	startDataLoop();
-}
-
-async function startDataLoop()
-{
-	try
-	{
-		const url='data.php';
-		const response = await fetch(url);
-		const ret = await response.json();
-
-		document.getElementById("commands").innerHTML = ret['commands'];
-		uid = ret['uid'];
-
-		chart.options.data[0].dataPoints = ret['dataPoints1'];
-		chart.options.data[1].dataPoints = ret['dataPoints2'];
-		chart.options.data[2].dataPoints = ret['dataPoints3'];
-		chart.render();
-
-		chart2.options.data[0].dataPoints = ret['dataPoints4'];
-		chart2.render();
-	} catch (e) {
-		console.log(e)
-	}
-}
-
-DataLoop();
+currmode = "<?=$ac?>";
 </script>
+</head>
+<body>
+<section>
+  <nav>
+    <ul>
+	<li style='text-align:center;'><u><b>Current Conditions</b></u></li>
+<?php
+	$line1 = date("H:i")." -- ".$currtemp."°C, ".$currhumid."% ";
+?>
+	<li id='currCond'><?=date("H:i")." -- ".$currtemp."°C, ".$currhumid."%"?> <a href='#' onClick='toggleAC("<?=$line1?>"); return false;'>Turn AC
+<?php
+	if($ac == 'on')
+		echo "off";
+	else
+		echo "on";
+?>
+</a></li>
+<?php
+	$lastdate = '';
+	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands ORDER BY whentime DESC";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+
+		$date = $drow['wtdate'];
+		if($date != $lastdate)
+		{
+			echo "<li style='text-align:center;'><u><b>$date</b></u></li>\n";
+			$lastdate = $date;
+		}
+?>
+      <li><?php
+        echo $drow['wttime'].' -- ';
+	if($drow['reason'] == "ExternalIrCommand")
+		echo "Remote Control turned AC ";
+	else if($drow['reason'] == "UserAPI")
+		echo "API turned AC ";
+	else
+		echo "Unknown turned AC ";
+	if($drow['airconon'])
+		echo "on";
+	else
+		echo "off";
+?></li>
+<?php
+	}
+?>
+    </ul>
+  </nav>
+  <article style="width: calc(100% - 350px);">
+    <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+    <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
+  </article>
+</section>
+<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 </body>
 </html>

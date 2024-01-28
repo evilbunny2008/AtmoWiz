@@ -7,7 +7,7 @@
 	$dataPoints4 = array();
 
 	$airconon = '';
-	$query = "SELECT uid,UNIX_TIMESTAMP(whentime) * 1000 as whentime,temperature,humidity,feelslike,rssi,airconon FROM sensibo WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
+	$query = "SELECT uid,UNIX_TIMESTAMP(whentime) * 1000 as whentime,DATE_FORMAT(whentime, '%H:%i') as wttime,temperature,humidity,feelslike,rssi,airconon FROM sensibo WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
@@ -36,13 +36,14 @@
 		$currhumid = $row['humidity'];
 		$currfl = $row['feelslike'];
 		$curruid = $row['uid'];
+		$currtime = $row['wttime'];
 	}
 
 	$negac = "on";
 	if($ac == "on")
 		$negac = "off";
 
-	$line1 = date("H:i")." -- ".$currtemp."°C, ".$currhumid."% <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
+	$line1 = $currtime." -- ".$currtemp."°C, ".$currhumid."% <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
 
 	$lastdate = '';
 	$commands = "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
