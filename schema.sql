@@ -1,8 +1,6 @@
-DROP DATABASE IF EXISTS `sensibo`;
 CREATE DATABASE IF NOT EXISTS `sensibo`;
 USE `sensibo`;
 
-DROP TABLE IF EXISTS `sensibo`;
 CREATE TABLE IF NOT EXISTS `sensibo` (
   `whentime` datetime NOT NULL,
   `uid` varchar(20) NOT NULL DEFAULT '',
@@ -20,8 +18,7 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   KEY `uid` (`uid`)
 ) ENGINE=InnoDB;
 
-DROP TABLE IF EXISTS `commands`;
-CREATE TABLE `commands` (
+CREATE TABLE IF NOT EXISTS `commands` (
   `whentime` datetime NOT NULL,
   `uid` varchar(20) NOT NULL,
   `reason` varchar(20) NOT NULL,
@@ -30,6 +27,5 @@ CREATE TABLE `commands` (
   `mode` varchar(20) NOT NULL
 ) ENGINE=InnoDB;
 
-DROP USER IF EXISTS `sensibo`@`localhost`;
-CREATE USER `sensibo`@`localhost` IDENTIFIED BY 'password';
+CREATE USER IF NOT EXISTS `sensibo`@`localhost` IDENTIFIED BY 'password';
 GRANT ALL PRIVILEGES ON `sensibo`.* TO `sensibo`@`localhost`;
