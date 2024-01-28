@@ -62,22 +62,29 @@
 	$line1 = "<b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."% <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
 
 	$lastdate = '';
-	$commands = "<li style='text-align:center;'><u><b>Device List</b></u></li>\n";
-	$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
-	$commands .= "<select name='devices' id='devices' onChange='jsFunction(this.value); return false;'>\n";
+	$commands = '';
+	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
+
 
 	$query = "SELECT uid,name FROM devices ORDER BY name";
 	$res = mysqli_query($link, $query);
-	while($row = mysqli_fetch_assoc($res))
+	if(mysqli_num_rows($res) > 1)
 	{
-		$commands .= "<option value='".$row['uid']."'";
-		if($uid == $row['uid'])
-			$commands .= " selected";
-		$commands .= ">".$row['name']."</option>\n";
+		$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
+		$commands .= "<select name='devices' id='devices' onChange='jsFunction(this.value); return false;'>\n";
+
+		while($row = mysqli_fetch_assoc($res))
+		{
+			$commands .= "<option value='".$row['uid']."'";
+			if($uid == $row['uid'])
+				$commands .= " selected";
+			$commands .= ">".$row['name']."</option>\n";
+		}
+		$commands .= "</select></li>\n";
 	}
-	$commands .= "</select></li>\n";
-	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
+
 	$commands .= "<li>$line1</li>\n";
+
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))

@@ -232,15 +232,18 @@ async function toggleAC()
 
 async function DataLoop()
 {
-	setTimeout('DataLoop()', 90000);
-	startDataLoop();
+	setTimeout('DataLoop()', 5000);
+	startDataLoop('');
 }
 
 async function startDataLoop()
 {
 	try
 	{
-		const url='data.php';
+		var url = 'data.php';
+		if(uid != '')
+			url += "?uid=" + uid;
+
 		const response = await fetch(url);
 		const ret = await response.json();
 
@@ -261,7 +264,8 @@ async function startDataLoop()
 
 function jsFunction(value)
 {
-	alert(value);
+	uid = value;
+	startDataLoop();
 }
 
 DataLoop();
