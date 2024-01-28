@@ -259,6 +259,11 @@ async function startDataLoop()
 	}
 }
 
+function jsFunction(value)
+{
+	alert(value);
+}
+
 DataLoop();
 </script>
 </body>

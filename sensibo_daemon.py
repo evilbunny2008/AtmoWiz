@@ -88,6 +88,44 @@ if __name__ == "__main__":
     if(uid == 0 or gid == 0):
         print ("UID or GID is set to superuser, this is not recommended.")
 
+    updatetime = 90
+    fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
+    fmt = '%Y-%m-%d %H:%M:%S'
+    from_zone = tz.tzutc()
+    to_zone = tz.tzlocal()
+
+    try:
+        mydb = MySQLdb.connect(hostname, username, password, database)
+    except MySQLdb._exceptions.OperationalError as e:
+        print ("There was a problem connecting to the DB, error was %s" % e)
+        exit(1)
+
+    client = SensiboClientAPI(apikey)
+    devices = client.devices()
+    if(devices == None):
+        print ("Unable to get a list of devices, check your internet connection and apikey and try again.")
+        exit(1)
+
+    uidList = devices.values()
+
+    try:
+        for device in devices:
+            values = (devices[device], device)
+            query = """SELECT 1 FROM devices WHERE uid=%s AND name=%s"""
+            cursor = mydb.cursor()
+            cursor.execute(query, values)
+            row = cursor.fetchone()
+            if(row):
+                continue
+
+            query = """INSERT INTO devices (uid, name) VALUES (%s, %s)"""
+            cursor.execute(query, values)
+            mydb.commit()
+        mydb.close()
+    except MySQLdb._exceptions.OperationalError as e:
+        print ("There was a problem closing the DB, error was %s" % e)
+        exit(1)
+
     if(os.path.isfile(args.pidfile)):
         file = open(args.pidfile, 'r')
         file.seek(0)
@@ -112,27 +150,6 @@ if __name__ == "__main__":
         if(uid != diruid or gid != dirgid):
             print ('Setting %s uid to %d and gid to %d' % (mydir, uid, gid))
             shutil.chown(mydir, uid, gid)
-
-    updatetime = 90
-    fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
-    fmt = '%Y-%m-%d %H:%M:%S'
-    from_zone = tz.tzutc()
-    to_zone = tz.tzlocal()
-
-    try:
-        mydb = MySQLdb.connect(hostname, username, password, database)
-        mydb.close()
-    except MySQLdb.err.IntegrityError as e:
-        print ("There was a problem connecting to the DB, error was %s" % e)
-        exit(1)
-
-    client = SensiboClientAPI(apikey)
-    devices = client.devices()
-    if(devices == None):
-        print ("Unable to get a list of devices, check your internet connection and apikey and try again.")
-        exit(1)
-
-    uidList = devices.values()
 
     logfile = open('/tmp/sensibo.log', 'a')
     context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)

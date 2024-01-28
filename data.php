@@ -7,7 +7,25 @@
 	$dataPoints4 = array();
 
 	$airconon = '';
-	$query = "SELECT uid,UNIX_TIMESTAMP(whentime) * 1000 as whentime,DATE_FORMAT(whentime, '%H:%i') as wttime,temperature,humidity,feelslike,rssi,airconon FROM sensibo WHERE whentime >= now() - INTERVAL 2 DAY ORDER BY whentime ASC";
+	$uid = '';
+	$ac = 'off';
+        $currhumid = 0;
+        $currtemp = 0.0;
+        $currtime = "00:00";
+
+	if(isset($_REQUEST['uid']) && $_REQUEST['uid'] != '')
+		$uid = mysqli_real_escape_string($link, $_REQUEST['uid']);
+
+	$query = "SELECT uid FROM devices";
+	if($uid != '')
+		$query .= " WHERE uid='$uid'";
+	$query .= " LIMIT 1";
+	$res = mysqli_query($link, $query);
+	$uid = mysqli_fetch_assoc($res)['uid'];
+
+	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,DATE_FORMAT(whentime, '%H:%i') as wttime,".
+			"temperature,humidity,feelslike,rssi,airconon FROM sensibo ".
+			"WHERE whentime >= now() - INTERVAL 1.5 DAY AND uid='$uid' ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
@@ -34,8 +52,6 @@
 
 		$currtemp = $row['temperature'];
 		$currhumid = $row['humidity'];
-		$currfl = $row['feelslike'];
-		$curruid = $row['uid'];
 		$currtime = $row['wttime'];
 	}
 
@@ -46,9 +62,23 @@
 	$line1 = "<b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."% <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
 
 	$lastdate = '';
-	$commands = "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
+	$commands = "<li style='text-align:center;'><u><b>Device List</b></u></li>\n";
+	$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
+	$commands .= "<select name='devices' id='devices' onChange='jsFunction(this.value); return false;'>\n";
+
+	$query = "SELECT uid,name FROM devices ORDER BY name";
+	$res = mysqli_query($link, $query);
+	while($row = mysqli_fetch_assoc($res))
+	{
+		$commands .= "<option value='".$row['uid']."'";
+		if($uid == $row['uid'])
+			$commands .= " selected";
+		$commands .= ">".$row['name']."</option>\n";
+	}
+	$commands .= "</select></li>\n";
+	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
 	$commands .= "<li>$line1</li>\n";
-	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands ORDER BY whentime DESC";
+	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -74,5 +104,5 @@
 		$commands .= "</li>\n";
 	}
 
-	$data = array('uid' => $curruid, 'ac' => $ac, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'commands' => $commands, 'line1' => $line1);
+	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'commands' => $commands);
 	echo json_encode($data);
