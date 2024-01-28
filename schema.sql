@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   KEY `uid` (`uid`)
 ) ENGINE=InnoDB;
 
-CREATE TABLE `commands` (
+CREATE TABLE IF NOT EXISTS `commands` (
   `whentime` datetime NOT NULL,
   `uid` varchar(20) NOT NULL,
   `reason` varchar(20) NOT NULL,
