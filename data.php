@@ -71,7 +71,7 @@
 	if(mysqli_num_rows($res) > 1)
 	{
 		$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
-		$commands .= "<select name='devices' id='devices' onChange='jsFunction(this.value); return false;'>\n";
+		$commands .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
 
 		while($row = mysqli_fetch_assoc($res))
 		{

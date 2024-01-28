@@ -234,7 +234,7 @@ async function toggleAC()
 async function DataLoop()
 {
 	setTimeout('DataLoop()', 5000);
-	startDataLoop('');
+	startDataLoop();
 }
 
 async function startDataLoop()
@@ -268,7 +268,7 @@ async function startDataLoop()
 	}
 }
 
-function jsFunction(value)
+function changeAC(value)
 {
 	uid = value;
 	startDataLoop();
