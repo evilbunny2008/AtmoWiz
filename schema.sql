@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   KEY `uid` (`uid`)
 ) ENGINE=InnoDB;
 
+ALTER TABLE `sensibo` DROP INDEX IF EXISTS `PRIMARY`;
+ALTER TABLE `sensibo` DROP INDEX IF EXISTS `uid`;
+ALTER TABLE `sensibo` ADD PRIMARY KEY (`whentime`), ADD KEY `uid` (`uid`);
+
 CREATE TABLE IF NOT EXISTS `commands` (
   `whentime` datetime NOT NULL,
   `uid` varchar(20) NOT NULL,
@@ -26,6 +30,21 @@ CREATE TABLE IF NOT EXISTS `commands` (
   `airconon` tinyint(1) NOT NULL,
   `mode` varchar(20) NOT NULL
 ) ENGINE=InnoDB;
+
+ALTER TABLE `commands` DROP INDEX IF EXISTS `PRIMARY`;
+ALTER TABLE `commands` DROP INDEX IF EXISTS `uid`;
+ALTER TABLE `commands` ADD PRIMARY KEY (`whentime`), ADD KEY `uid` (`uid`);
+
+CREATE TABLE IF NOT EXISTS `devices` (
+  `uid` varchar(20) NOT NULL,
+  `name` varchar(20) NOT NULL
+) ENGINE=InnoDB;
+
+ALTER TABLE `devices` DROP INDEX IF EXISTS `PRIMARY`;
+ALTER TABLE `devices` DROP INDEX IF EXISTS `name`;
+ALTER TABLE `devices` ADD PRIMARY KEY (`uid`), ADD KEY `name` (`name`);
+
+COMMIT;
 
 CREATE USER IF NOT EXISTS `sensibo`@`localhost` IDENTIFIED BY 'password';
 GRANT ALL PRIVILEGES ON `sensibo`.* TO `sensibo`@`localhost`;
