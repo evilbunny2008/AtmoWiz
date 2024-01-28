@@ -68,7 +68,7 @@ var chart = new CanvasJS.Chart("chartContainer",
 	zoomEnabled: true,
 	title:
 	{
-		text: "Temperature Vs Humidity Vs Feels Like"
+		text: "Feels Like Vs Humidity Vs Temperature"
 	},
 	toolTip:
 	{
@@ -79,15 +79,15 @@ var chart = new CanvasJS.Chart("chartContainer",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataPoint.markerType == 'cross')
-					content += "<div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
-
 				if(entry.dataSeries.name == "Temperature [°C]")
-					content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+					content += "<div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Humidity [%]")
 					content += "<div style='color:#C0504E'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
-				else
-				content += "<div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Feels Like [°C]")
+					content += "<div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+
+				if(entry.dataPoint.markerType == 'cross')
+					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
 			}
 			return content;
 		},
@@ -127,26 +127,35 @@ var chart = new CanvasJS.Chart("chartContainer",
 	[
 		{
 			type: "line",
-			markerSize: 12,
-			name: "Temperature [°C]",
+			name: "Feels Like [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
+			titleFontColor: "#9BBB58",
+			lineColor: "#9BBB58",
+			labelFontColor: "#9BBB58",
+			tickColor: "#9BBB58"
 		},{
 			type: "line",
-			markerSize: 12,
 			axisYType: "secondary",
 			name: "Humidity [%]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
+			titleFontColor: "#C0504E",
+			lineColor: "#C0504E",
+			labelFontColor: "#C0504E",
+			tickColor: "#C0504E"
 		},{
 			type: "line",
-			markerSize: 12,
-			name: "Feels Like [°C]",
+			name: "Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
+			titleFontColor: "#4F81BC",
+			lineColor: "#4F81BC",
+			labelFontColor: "#4F81BC",
+			tickColor: "#4F81BC"
 		}
 	]
 });
@@ -250,9 +259,9 @@ async function startDataLoop()
 		document.getElementById("commands").innerHTML = ret['commands'];
 		uid = ret['uid'];
 
-		chart.options.data[0].dataPoints = ret['dataPoints1'];
+		chart.options.data[0].dataPoints = ret['dataPoints3'];
 		chart.options.data[1].dataPoints = ret['dataPoints2'];
-		chart.options.data[2].dataPoints = ret['dataPoints3'];
+		chart.options.data[2].dataPoints = ret['dataPoints1'];
 		chart.render();
 
 		chart2.options.data[0].dataPoints = ret['dataPoints4'];
