@@ -61,6 +61,7 @@ section::after {
 <script>
 
 var uid = "";
+var currtime = "";
 
 var chart = new CanvasJS.Chart("chartContainer",
 {
@@ -246,6 +247,11 @@ async function startDataLoop()
 
 		const response = await fetch(url);
 		const ret = await response.json();
+
+		if(currtime == ret['currtime'])
+			return;
+
+		currtime = ret['currtime'];
 
 		document.getElementById("commands").innerHTML = ret['commands'];
 		uid = ret['uid'];
