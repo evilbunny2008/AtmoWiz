@@ -43,7 +43,7 @@
 	if($ac == "on")
 		$negac = "off";
 
-	$line1 = $currtime." -- ".$currtemp."°C, ".$currhumid."% <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
+	$line1 = "<b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."% <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
 
 	$lastdate = '';
 	$commands = "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
@@ -60,7 +60,7 @@
 			$lastdate = $date;
 		}
 
-	        $commands .= "<li>".$drow['wttime'].' -- ';
+	        $commands .= "<li><b>".$drow['wttime'].'</b> -- ';
 		if($drow['reason'] == "ExternalIrCommand")
 			$commands .= "Remote Control turned AC ";
 		else if($drow['reason'] == "UserAPI")
