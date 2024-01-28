@@ -80,11 +80,11 @@ var chart = new CanvasJS.Chart("chartContainer",
 				var entry = e.entries[i];
 
 				if(entry.dataSeries.name == "Temperature [°C]")
-					content += "<div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+					content += "<div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Humidity [%]")
 					content += "<div style='color:#C0504E'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
 				else if(entry.dataSeries.name == "Feels Like [°C]")
-					content += "<div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+					content += "<div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
@@ -104,10 +104,10 @@ var chart = new CanvasJS.Chart("chartContainer",
 	axisY:
 	{
 		title: "Temperature [°C]",
-		titleFontColor: "#4F81BC",
-		lineColor: "#4F81BC",
-		labelFontColor: "#4F81BC",
-		tickColor: "#4F81BC"
+		titleFontColor: "#9BBB58",
+		lineColor: "#9BBB58",
+		labelFontColor: "#9BBB58",
+		tickColor: "#9BBB58"
 	},
 	axisY2:
 	{
@@ -131,10 +131,6 @@ var chart = new CanvasJS.Chart("chartContainer",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			titleFontColor: "#9BBB58",
-			lineColor: "#9BBB58",
-			labelFontColor: "#9BBB58",
-			tickColor: "#9BBB58"
 		},{
 			type: "line",
 			axisYType: "secondary",
@@ -142,20 +138,12 @@ var chart = new CanvasJS.Chart("chartContainer",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			titleFontColor: "#C0504E",
-			lineColor: "#C0504E",
-			labelFontColor: "#C0504E",
-			tickColor: "#C0504E"
 		},{
 			type: "line",
 			name: "Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			titleFontColor: "#4F81BC",
-			lineColor: "#4F81BC",
-			labelFontColor: "#4F81BC",
-			tickColor: "#4F81BC"
 		}
 	]
 });
