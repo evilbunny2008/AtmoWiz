@@ -20,26 +20,30 @@
 	}
 
 	$url = "https://home.sensibo.com/api/v2/pods/".$_REQUEST['uid']."/acStates?apiKey=".$apikey."&limit=1&fields=acState";
-	$ret = file_get_contents($url);
+	$opts = array('http' => array('method'=>"GET", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'timeout' => 5));
+	$context = stream_context_create($opts);
+	$ret = file_get_contents($url, false, $context);
+
+	$statusheader = explode(" ", $http_response_header['0'], 3)['1'];
+	if($statusheader != "200")
+	{
+		var_dump($http_response_header);
+		die;
+	}
+
 	$ret = json_decode($ret, true)['result']['0'];
 	$on = !$ret['acState']['on'];
 	$ac_state = json_encode($ret['acState']);
 
 	$url = "https://home.sensibo.com/api/v2/pods/".$_REQUEST['uid']."/acStates/on?apiKey=".$apikey;
-	$fields = json_encode(['currentAcState' => $ac_state, 'newValue' => $on]);
 
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array('accept: application/json', 'content-type: application/json'));
-	curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+	$body = json_encode(['currentAcState' => $ac_state, 'newValue' => $on]);
+	$opts = array('http' => array('method'=>"PATCH", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 5));
+	$context = stream_context_create($opts);
+	$ret = file_get_contents($url, false, $context);
 
-	$head = curl_exec($ch);
-	$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-	curl_close($ch);
-
-	if($status == 200)
+	$statusheader = explode(" ", $http_response_header['0'], 3)['1'];
+	if($statusheader == "200")
 		echo 200;
 	else
-		print_r($head);
+		echo $ret;
