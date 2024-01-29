@@ -74,7 +74,6 @@
 	$commands = '';
 	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u> -- <a href='graphs.php?logout=1'>Log Out</a></li>\n";
 
-
 	$query = "SELECT uid,name FROM devices ORDER BY name";
 	$res = mysqli_query($link, $query);
 	if(mysqli_num_rows($res) > 1)
@@ -93,6 +92,7 @@
 	}
 
 	$commands .= "<li>$line1</li>\n";
+	$commands .= "<li>&nbsp;</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
 	$dres = mysqli_query($link, $query);
