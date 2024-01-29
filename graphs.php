@@ -70,6 +70,7 @@ section::after {
   bottom: 0;
   left: 0;
   height: 32px;
+  z-index: 1;
 }
 
 #footer-content {
@@ -82,6 +83,12 @@ section::after {
 #footer a, #commands a {
   color: #085f24;
 }
+
+.child {
+  position: absolute;
+  z-index: 1;
+  top: 370px;
+}
 </style>
 </head>
 <body>
@@ -91,10 +98,12 @@ section::after {
     </ul>
   </nav>
   <article style="width:calc(100% - 350px);">
+    <div class="child"><img onClick="prevDay(); return false;" style='height:50px;' src='left.png' /></div>
     <div id="chartContainer" style="height: 370px; width: 100%;"></div>
     <div style="height:370px; width:100%; background:#fff;">
       <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
     </div>
+    <div class="child" style='right:20px;'><img onClick="nextDay(); return false;" style='height:50px;' src='right.png' /></div>
   </article>
 </section>
 <div style='height: 32px;width: 100%'></div>
@@ -106,6 +115,7 @@ section::after {
 
 var uid = "";
 var currtime = "";
+var startTS = new Date().getTime() - 86400000;
 
 var chart = new CanvasJS.Chart("chartContainer",
 {
@@ -193,7 +203,6 @@ var chart = new CanvasJS.Chart("chartContainer",
 	]
 });
 
-var dataPoints = [];
 var chart2 = new CanvasJS.Chart("rssiContainer",
 {
 	animationEnabled: true,
@@ -246,7 +255,6 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			dataPoints: dataPoints
        		}
 	]
 });
@@ -282,16 +290,21 @@ async function toggleAC()
 async function DataLoop()
 {
 	setTimeout('DataLoop()', 5000);
-	startDataLoop();
+
+	if(startTS >= new Date().getTime() - 60000 && startTS <= new Date().getTime() + 60000)
+	        startTS = new Date().getTime();
+
+	startDataLoop(false);
 }
 
-async function startDataLoop()
+async function startDataLoop(force)
 {
 	try
 	{
 		var url = 'data.php?time=' + new Date().getTime();
 		if(uid != '')
 			url += "&uid=" + uid;
+		url += "&startTS=" + startTS;
 
 		const response = await fetch(url);
 		const ret = await response.json();
@@ -304,10 +317,11 @@ async function startDataLoop()
 
 		content = ret['content'];
 
-		if(currtime == content['currtime'])
+		if(!force && currtime == content['currtime'])
 			return;
 
 		currtime = content['currtime'];
+		startTS = content['startTS'];
 
 		document.getElementById("commands").innerHTML = content['commands'];
 		uid = content['uid'];
@@ -327,6 +341,18 @@ async function startDataLoop()
 function changeAC(value)
 {
 	uid = value;
+	startDataLoop(true);
+}
+
+function prevDay()
+{
+	startTS -= 86400000;
+	startDataLoop(true);
+}
+
+function nextDay()
+{
+	startTS += 86400000;
 	startDataLoop();
 }
 

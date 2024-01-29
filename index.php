@@ -6,7 +6,7 @@
 	if(isset($_SESSION['authenticated']) && $_SESSION['authenticated'] == true)
 	{
 		header('Location: graphs.php');
-	} else if($arror == null) {
+	} else if($error == null) {
 		if(!empty($_POST))
 		{
 			$username = empty($_POST['username']) ? null : $_POST['username'];

@@ -9,6 +9,11 @@
 		exit;
 	}
 
+	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] != -1)
+		$startTS = doubleval($_REQUEST['startTS']);
+	else
+		$startTS = time() * 1000 - 86400000;
+
 	if($error != null)
 		reportError($error);
 
@@ -42,7 +47,8 @@
 
 	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,DATE_FORMAT(whentime, '%H:%i') as wttime,".
 			"temperature,humidity,feelslike,rssi,airconon FROM sensibo ".
-			"WHERE whentime >= now() - INTERVAL 36 HOUR AND uid='$uid' ORDER BY whentime ASC";
+			"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
+			"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + 86400000 ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
@@ -70,6 +76,9 @@
 		$currtemp = $row['temperature'];
 		$currhumid = $row['humidity'];
 		$currtime = $row['wttime'];
+
+		if($startTS == -1)
+			$startTS = $row['whentime'];
 	}
 
 	$negac = "on";
@@ -131,5 +140,5 @@
 		$commands .= "</li>\n";
 	}
 
-	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'commands' => $commands, 'currtime' => $currtime);
+	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS);
 	echo json_encode(array('status' => 200, 'content' => $data));
