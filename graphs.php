@@ -34,7 +34,6 @@ body {
   height: 750px;
 }
 
-/* Create two columns/boxes that floats next to each other */
 nav {
   float: left;
   height: 780px;
@@ -43,7 +42,6 @@ nav {
   padding: 20px;
 }
 
-/* Style the list inside the menu */
 nav ul {
   list-style-type: none;
   padding: 0;
@@ -55,11 +53,27 @@ article {
   background-color: #f1f1f1;
 }
 
-/* Clear floats after the columns */
 section::after {
   content: "";
   display: table;
   clear: both;
+}
+
+#footer {
+  height: 50px;
+}
+
+#footer-content {
+  text-align: center;
+  background-color: #f3e5f5;
+  border: 1px solid #ab47bc;
+  height: 32px;
+  padding: 8px;
+}
+
+a {
+  background-color: navy;
+  color: white;
 }
 </style>
 </head>
@@ -73,6 +87,9 @@ section::after {
     <div id="chartContainer" style="height: 370px; width: 100%;"></div>
     <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
   </article>
+  <footer id="footer">
+    <div id="footer-content"><a href='https://github.com/evilbunny2008/sensibo-python-sdk'>&copy; 2024 by </a><a href='https://evilbunny.org'>evilbunny</a></div>
+  </footer>
 </section>
 <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 <script>
