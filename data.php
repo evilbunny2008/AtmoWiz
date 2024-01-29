@@ -68,11 +68,11 @@
 	$line1 = "<b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%";
 
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
-		$line1 .= " <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
+		$line1 .= " -- <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
 
 	$lastdate = '';
 	$commands = '';
-	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
+	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u> -- <a href='graphs.php?logout=1'>Log Out</a></li>\n";
 
 
 	$query = "SELECT uid,name FROM devices ORDER BY name";
@@ -91,8 +91,6 @@
 		}
 		$commands .= "</select></li>\n";
 	}
-
-	$commands .= "<li style='text-align:center;'><a href='graphs.php?logout=1'>Log Out</a></li>";
 
 	$commands .= "<li>$line1</li>\n";
 

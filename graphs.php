@@ -73,7 +73,7 @@ section::after {
   text-align: center;
   height: 32px;
   padding: 8px;
-  width:100%;
+  width: 100%;
 }
 
 #footer a, #commands a {
@@ -83,7 +83,7 @@ section::after {
 </head>
 <body>
 <section>
-  <nav style='overflow-x:hidden;overflow-y:scroll;height:780px;'>
+  <nav style='overflow-x:hidden;overflow-y:scroll;height:'>
     <ul id='commands'>
     </ul>
   </nav>
@@ -92,6 +92,7 @@ section::after {
     <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
   </article>
 </section>
+<div style='height: 32px;width: 100%'></div>
 <footer id="footer">
   <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/sensibo-python-sdk'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
 </footer>
