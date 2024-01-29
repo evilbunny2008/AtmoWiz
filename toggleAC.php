@@ -3,19 +3,19 @@
 
 	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
 	{
-		echo json_encode("You don't have permission to do this.");
+		echo json_encode(array('status' => "You don't have permission to do this."));
 		exit;
 	}
 
 	if(!isset($_SESSION['rw']) || $_SESSION['rw'] != true)
 	{
-		echo json_encode("You don't have permission to do this.");
+		echo json_encode(array('status' => "You don't have permission to do this."));
 		exit;
 	}
 
 	if(!isset($_REQUEST['uid']) || $_REQUEST['uid'] == '')
 	{
-		echo json_encode("Invalid UID or UID is blank.");
+		echo json_encode(array('status' => "Invalid UID or UID is blank."));
 		exit;
 	}
 
@@ -39,4 +39,4 @@
 	$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 	curl_close($ch);
 
-	echo json_encode($status);
+	echo json_encode(array('status' => $status));

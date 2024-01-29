@@ -262,9 +262,9 @@ async function toggleAC()
 	const url='toggleAC.php?uid='+uid;
 	const response = await fetch(url);
 	const ret = await response.json();
-	if(ret != 200)
+	if(ret['status'] != 200)
 	{
-		alert("There was a problem with your request, " + ret);
+		alert("There was a problem with your request, " + ret['status']);
 		return;
 	}
 }
