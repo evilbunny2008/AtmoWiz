@@ -6,6 +6,14 @@
 		header('Location: index.php');
 		exit;
 	}
+
+	if(isset($_REQUEST['logout']) && $_REQUEST['logout'] == "1")
+	{
+		$_SESSION['authenticated'] = false;
+		$_SESSION['rw'] = false;
+		header('Location: index.php');
+		exit;
+	}
 ?>
 <!DOCTYPE HTML>
 <html>

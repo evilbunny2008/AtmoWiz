@@ -92,6 +92,8 @@
 		$commands .= "</select></li>\n";
 	}
 
+	$commands .= "<li style='text-align:center;'><a href='graphs.php?logout=1'>Log Out</a></li>";
+
 	$commands .= "<li>$line1</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
