@@ -44,17 +44,17 @@
 				$ac = "on";
 
 			if($ac == "on")
-				$dataPoints1[] = array('x' => intval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'green');
+				$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'green');
 			else
-				$dataPoints1[] = array('x' => intval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'tomato');
+				$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'tomato');
 		} else {
-			$dataPoints1[] = array('x' => intval($row['whentime']), 'y' => floatval($row['temperature']));
+			$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
 			$airconon = $row['airconon'];
 		}
 
-		$dataPoints2[] = array('x' => intval($row['whentime']), 'y' => floatval($row['humidity']));
-		$dataPoints3[] = array('x' => intval($row['whentime']), 'y' => floatval($row['feelslike']));
-		$dataPoints4[] = array('x' => intval($row['whentime']), 'y' => floatval($row['rssi']));
+		$dataPoints2[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['humidity']));
+		$dataPoints3[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['feelslike']));
+		$dataPoints4[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['rssi']));
 
 		$currtemp = $row['temperature'];
 		$currhumid = $row['humidity'];
