@@ -1,7 +1,7 @@
 <?php
 	require_once('mariadb.php');
 
-        if(isset($_SESSION['authenticated']) && $_SESSION['authenticated'] != true)
+        if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
         {
                 header('Location: index.php');
                 exit;

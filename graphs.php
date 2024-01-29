@@ -62,24 +62,22 @@ section::after {
 #footer {
   width: 100vw;
   height: 50px;
-  background-color: #f3e5f5;
-  border: 1px solid #ab47bc;
 }
 
 #footer-content {
   text-align: center;
-  background-color: #f3e5f5;
-  border: 1px solid #ab47bc;
   height: 32px;
   padding: 8px;
   width:100%;
 }
-/*
-a {
-  background-color: navy;
-  color: white;
+
+#footer a {
+  color: #085f24;
 }
-*/
+
+#commands a {
+  color: #085f24;
+}
 </style>
 </head>
 <body>
