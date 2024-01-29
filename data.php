@@ -1,11 +1,11 @@
 <?php
 	require_once('mariadb.php');
 
-        if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
-        {
-                header('Location: index.php');
-                exit;
-        }
+	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
+	{
+		header('Location: index.php');
+		exit;
+	}
 
 	$dataPoints1 = array();
 	$dataPoints2 = array();
@@ -15,9 +15,9 @@
 	$airconon = '';
 	$uid = '';
 	$ac = 'off';
-        $currhumid = 0;
-        $currtemp = 0.0;
-        $currtime = "00:00";
+	$currhumid = 0;
+	$currtemp = 0.0;
+	$currtime = "00:00";
 
 	if(isset($_REQUEST['uid']) && $_REQUEST['uid'] != '')
 		$uid = mysqli_real_escape_string($link, $_REQUEST['uid']);
@@ -108,7 +108,7 @@
 			$lastdate = $date;
 		}
 
-	        $commands .= "<li><b>".$drow['wttime'].'</b> -- ';
+		$commands .= "<li><b>".$drow['wttime'].'</b> -- ';
 		if($drow['reason'] == "ExternalIrCommand")
 			$commands .= "Remote Control turned AC ";
 		else if($drow['reason'] == "UserAPI")

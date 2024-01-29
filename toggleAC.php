@@ -1,11 +1,11 @@
 <?php
 	require_once('mariadb.php');
 
-        if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
-        {
-                header('Location: index.php');
-                exit;
-        }
+	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
+	{
+		echo json_encode("You don't have permission to do this.");
+		exit;
+	}
 
 	if(!isset($_SESSION['rw']) || $_SESSION['rw'] != true)
 	{
