@@ -17,7 +17,11 @@ from dateutil import tz
 _SERVER = 'https://home.sensibo.com/api/v2'
 _sql = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 _sqlquery = 'INSERT INTO commands (whentime, uid, reason, status, airconon, mode) VALUES (%s, %s, %s, %s, %s, %s)'
+_sqldevices = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
 
+_sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
+_sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
+_sqlselect3 = 'SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s'
 
 class SensiboClientAPI(object):
     def __init__(self, api_key):
@@ -97,12 +101,6 @@ if __name__ == "__main__":
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
 
-    try:
-        mydb = MySQLdb.connect(hostname, username, password, database)
-    except MySQLdb._exceptions.OperationalError as e:
-        print ("There was a problem connecting to the DB, error was %s" % e)
-        exit(1)
-
     client = SensiboClientAPI(apikey)
     devices = client.devices()
     if(devices == None):
@@ -112,47 +110,50 @@ if __name__ == "__main__":
     uidList = devices.values()
 
     try:
+        mydb = MySQLdb.connect(hostname, username, password, database)
+        cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
-            query = """SELECT 1 FROM devices WHERE uid=%s AND name=%s"""
-            cursor = mydb.cursor()
-            cursor.execute(query, values)
+            cursor.execute(_sqlselect2, values)
             row = cursor.fetchone()
             if(row):
                 continue
 
-            query = """INSERT INTO devices (uid, name) VALUES (%s, %s)"""
-            cursor.execute(query, values)
+            cursor.execute(_sqldevices, values)
             mydb.commit()
 
+        mydb.close()
 
-            for uid in uidList:
-                last40 = client.pod_status(uid, 40)
-                if(last40 == None):
+        mydb = MySQLdb.connect(hostname, username, password, database)
+        cursor = mydb.cursor()
+        for podUID in uidList:
+            last40 = client.pod_status(podUID, 40)
+            if(last40 == None):
+                continue
+
+            for last in last40:
+                if(last['reason'] == 'UserRequest'):
                     continue
 
-                for last in last40:
-                    if(last['reason'] == 'UserRequest'):
-                        continue
+                sstring = datetime.strptime(last['time']['time'], '%Y-%m-%dT%H:%M:%SZ')
+                utc = sstring.replace(tzinfo=from_zone)
+                localzone = utc.astimezone(to_zone)
+                sdate = localzone.strftime(fmt)
+                values = (sdate, podUID)
+                cursor.execute(_sqlselect1, values)
+                row = cursor.fetchone()
+                if(row):
+                    continue
 
-                    sstring = datetime.strptime(last['time']['time'], '%Y-%m-%dT%H:%M:%SZ')
-                    utc = sstring.replace(tzinfo=from_zone)
-                    localzone = utc.astimezone(to_zone)
-                    sdate = localzone.strftime(fmt)
-                    query = """SELECT 1 FROM commands WHERE whentime=%s AND uid=%s"""
-                    values = (sdate, uid)
-                    cursor.execute(query, values)
-                    row = cursor.fetchone()
-                    if(row):
-                        continue
-
-                    values = (sdate, uid, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
-                    cursor.execute(_sqlquery, values)
-                    mydb.commit()
-                    print (_sqlquery % values)
+                values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
+                cursor.execute(_sqlquery, values)
+                mydb.commit()
 
         mydb.close()
     except MySQLdb._exceptions.OperationalError as e:
+        print ("There was a problem closing the DB, error was %s" % e)
+        exit(1)
+    except MySQLdb._exceptions.IntegrityError as e:
         print ("There was a problem closing the DB, error was %s" % e)
         exit(1)
 
@@ -192,8 +193,8 @@ if __name__ == "__main__":
             syslog.syslog("Connection to mariadb accepted")
             start = time.time()
 
-            for uid in uidList:
-                pod_measurement = client.pod_all_stats(uid)
+            for podUID in uidList:
+                pod_measurement = client.pod_all_stats(podUID)
                 if(pod_measurement == None):
                     continue
 
@@ -203,18 +204,17 @@ if __name__ == "__main__":
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
-                query = """SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s"""
-                values = (sdate, uid)
+                values = (sdate, podUID)
 
                 try:
                     cursor = mydb.cursor()
-                    cursor.execute(query, values)
+                    cursor.execute(_sqlselect3, values)
                     row = cursor.fetchone()
                     if(row):
                         syslog.syslog("Skipping insert due to row already existing.")
                         continue
 
-                    values = (sdate, uid, measurements['temperature'], measurements['humidity'],
+                    values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                               measurements['feelsLike'], measurements['rssi'], ac_state['on'],
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                               ac_state['swing'], ac_state['horizontalSwing'])
@@ -222,11 +222,11 @@ if __name__ == "__main__":
                     syslog.syslog(_sql % values)
                     mydb.commit()
 
-                    last10 = client.pod_status(uid, 10)
-                    if(last10 == None):
+                    last5 = client.pod_status(podUID, 5)
+                    if(last5 == None):
                         continue
 
-                    for last in last10:
+                    for last in last5:
                         if(last['reason'] == 'UserRequest'):
                             continue
 
@@ -234,14 +234,13 @@ if __name__ == "__main__":
                         utc = sstring.replace(tzinfo=from_zone)
                         localzone = utc.astimezone(to_zone)
                         sdate = localzone.strftime(fmt)
-                        query = """SELECT 1 FROM commands WHERE whentime=%s AND uid=%s"""
-                        values = (sdate, uid)
-                        cursor.execute(query, values)
+                        values = (sdate, podUID)
+                        cursor.execute(_sqlselect1, values)
                         row = cursor.fetchone()
                         if(row):
                             continue
 
-                        values = (sdate, uid, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
+                        values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
                         cursor.execute(_sqlquery, values)
                         mydb.commit()
                         syslog.syslog(_sqlquery % values)
