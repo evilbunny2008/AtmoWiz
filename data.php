@@ -31,7 +31,7 @@
 
 	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,DATE_FORMAT(whentime, '%H:%i') as wttime,".
 			"temperature,humidity,feelslike,rssi,airconon FROM sensibo ".
-			"WHERE whentime >= now() - INTERVAL 1.5 DAY AND uid='$uid' ORDER BY whentime ASC";
+			"WHERE whentime >= now() - INTERVAL 36 HOUR AND uid='$uid' ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{

@@ -63,6 +63,8 @@ section::after {
   width: 100vw;
   height: 32px;
   background: #ccc;
+  position: absolute;
+  bottom: 0;
 }
 
 #footer-content {
@@ -259,12 +261,12 @@ function toggleDataSeries(e)
 
 async function toggleAC()
 {
-	const url='toggleAC.php?uid='+uid;
+	const url='toggleAC.php?time=' + new Date().getTime() + '&uid='+uid;
 	const response = await fetch(url);
-	const ret = await response.json();
-	if(ret['status'] != 200)
+	const ret = await response.text();
+	if(ret != 200)
 	{
-		alert("There was a problem with your request, " + ret['status']);
+		alert("There was a problem with your request, " + ret);
 		return;
 	}
 }
@@ -279,9 +281,9 @@ async function startDataLoop()
 {
 	try
 	{
-		var url = 'data.php';
+		var url = 'data.php?time=' + new Date().getTime();
 		if(uid != '')
-			url += "?uid=" + uid;
+			url += "&uid=" + uid;
 
 		const response = await fetch(url);
 		const ret = await response.json();
