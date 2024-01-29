@@ -1,12 +1,12 @@
 <?php
-	require_once('mariadb.php');
-
 	$error = null;
+
+	require_once('mariadb.php');
 
 	if(isset($_SESSION['authenticated']) && $_SESSION['authenticated'] == true)
 	{
 		header('Location: graphs.php');
-	} else {
+	} else if($arror == null) {
 		if(!empty($_POST))
 		{
 			$username = empty($_POST['username']) ? null : $_POST['username'];
@@ -47,7 +47,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Full-width input fields */
 input[type=text], input[type=password] {
   width: 100%;
   padding: 12px 20px;
@@ -57,7 +56,6 @@ input[type=text], input[type=password] {
   box-sizing: border-box;
 }
 
-/* Set a style for all buttons */
 button {
   background-color: #04AA6D;
   color: white;
@@ -103,8 +101,8 @@ span.password {
   z-index: 1;
   left: 0;
   top: 0;
-  width: 100%;
-  height: 100vh;
+  width: 80%;
+  height: 80vh;
   overflow: auto;
   background-color: rgb(0,0,0);
   background-color: rgba(0,0,0,0.4);
@@ -115,7 +113,7 @@ span.password {
   background-color: #fefefe;
   margin: 5% auto 15% auto;
   border: 1px solid #888;
-  width: 80%;
+  width: 40%;
 }
 
 #footer {
@@ -172,8 +170,8 @@ span.password {
 	if($error != null)
 	{
 ?>
-    <div style='width:100%;'>
-	<font style='width:100%;text-align:center;color:red'><?=$error?></font>
+    <div style='width:100%;text-align:center;'>
+	<font style='color:red'><?=$error?></font>
     </div>
 <?php
 	}

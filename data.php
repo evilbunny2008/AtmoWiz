@@ -1,11 +1,16 @@
 <?php
+	$error = null;
+
 	require_once('mariadb.php');
 
 	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
 	{
-		header('Location: index.php');
+		echo json_encode(array('status' => 403, 'error' => "You don't have access to this webpage"));
 		exit;
 	}
+
+	if($error != null)
+		reportError($error);
 
 	$dataPoints1 = array();
 	$dataPoints2 = array();
@@ -28,6 +33,12 @@
 	$query .= " LIMIT 1";
 	$res = mysqli_query($link, $query);
 	$uid = mysqli_fetch_assoc($res)['uid'];
+
+	if(!isset($uid) || $uid == '')
+	{
+		$error = "Unable to get a UID, please check your database/configs and try again";
+		reportError($error);
+	}
 
 	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,DATE_FORMAT(whentime, '%H:%i') as wttime,".
 			"temperature,humidity,feelslike,rssi,airconon FROM sensibo ".
@@ -92,7 +103,6 @@
 	}
 
 	$commands .= "<li>$line1</li>\n";
-	$commands .= "<li>&nbsp;</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
 	$dres = mysqli_query($link, $query);
@@ -102,6 +112,7 @@
 		$date = $drow['wtdate'];
 		if($date != $lastdate)
 		{
+			$commands .= "<li>&nbsp;</li>\n";
 			$commands .= "<li style='text-align:center;'><u><b>$date</b></u></li>\n";
 			$lastdate = $date;
 		}
@@ -121,4 +132,4 @@
 	}
 
 	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'commands' => $commands, 'currtime' => $currtime);
-	echo json_encode($data);
+	echo json_encode(array('status' => 200, 'content' => $data));

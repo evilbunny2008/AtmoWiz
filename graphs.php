@@ -1,4 +1,6 @@
 <?php
+	$error = null;
+
 	require_once('mariadb.php');
 
 	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
@@ -263,6 +265,10 @@ function toggleDataSeries(e)
 
 async function toggleAC()
 {
+<?php
+	if(!isset($apikey) || $apikey == "apikey" || $apikey == "<insert APIkey here>" || $apikey == "")
+		echo "\talert('API key isn\'t set in mariadb.php, can\'t toggle your AC');\n\treturn;\n\n";
+?>
 	const url='toggleAC.php?time=' + new Date().getTime() + '&uid='+uid;
 	const response = await fetch(url);
 	const ret = await response.text();
@@ -290,20 +296,28 @@ async function startDataLoop()
 		const response = await fetch(url);
 		const ret = await response.json();
 
-		if(currtime == ret['currtime'])
+		if(ret['status'] != 200)
+		{
+			alert(ret['error']);
+			return;
+		}
+
+		content = ret['content'];
+
+		if(currtime == content['currtime'])
 			return;
 
-		currtime = ret['currtime'];
+		currtime = content['currtime'];
 
-		document.getElementById("commands").innerHTML = ret['commands'];
-		uid = ret['uid'];
+		document.getElementById("commands").innerHTML = content['commands'];
+		uid = content['uid'];
 
-		chart.options.data[0].dataPoints = ret['dataPoints3'];
-		chart.options.data[1].dataPoints = ret['dataPoints2'];
-		chart.options.data[2].dataPoints = ret['dataPoints1'];
+		chart.options.data[0].dataPoints = content['dataPoints3'];
+		chart.options.data[1].dataPoints = content['dataPoints2'];
+		chart.options.data[2].dataPoints = content['dataPoints1'];
 		chart.render();
 
-		chart2.options.data[0].dataPoints = ret['dataPoints4'];
+		chart2.options.data[0].dataPoints = content['dataPoints4'];
 		chart2.render();
 	} catch (e) {
 		console.log(e)

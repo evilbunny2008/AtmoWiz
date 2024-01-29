@@ -22,7 +22,7 @@
 	$url = "https://home.sensibo.com/api/v2/pods/".$_REQUEST['uid']."/acStates?apiKey=".$apikey."&limit=1&fields=acState";
 	$opts = array('http' => array('method'=>"GET", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'timeout' => 5));
 	$context = stream_context_create($opts);
-	$ret = file_get_contents($url, false, $context);
+	$ret = @file_get_contents($url, false, $context);
 
 	$statusheader = explode(" ", $http_response_header['0'], 3)['1'];
 	if($statusheader != "200")
