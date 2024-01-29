@@ -1,3 +1,12 @@
 <?php
+	session_start();
+
 	$link = mysqli_connect('localhost', 'sensibo', 'password', 'sensibo');
 	$apikey = "<insert APIkey here>";
+
+	$rwusername = "admin";
+	$rwpassword = "admin";
+
+	$rousername = "user";
+	$ropassword = "user";
+

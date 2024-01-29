@@ -1,6 +1,12 @@
 <?php
 	require_once('mariadb.php');
 
+        if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
+        {
+                header('Location: index.php');
+                exit;
+        }
+
 	$dataPoints1 = array();
 	$dataPoints2 = array();
 	$dataPoints3 = array();
@@ -59,7 +65,10 @@
 	if($ac == "on")
 		$negac = "off";
 
-	$line1 = "<b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."% <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
+	$line1 = "<b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%";
+
+	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
+		$line1 .= " <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
 
 	$lastdate = '';
 	$commands = '';
