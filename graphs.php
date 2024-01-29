@@ -60,11 +60,13 @@ section::after {
 }
 
 #footer {
-  width: 100vw;
-  height: 32px;
+  margin-top:auto;
+  width: 100%;
   background: #ccc;
-  position: absolute;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  height: 32px;
 }
 
 #footer-content {
@@ -74,11 +76,7 @@ section::after {
   width:100%;
 }
 
-#footer a {
-  color: #085f24;
-}
-
-#commands a {
+#footer a, #commands a {
   color: #085f24;
 }
 </style>
