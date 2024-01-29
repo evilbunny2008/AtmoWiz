@@ -22,7 +22,7 @@
 	$url = "https://home.sensibo.com/api/v2/pods/".$_REQUEST['uid']."/acStates?apiKey=".$apikey."&limit=1&fields=acState";
 	$ret = file_get_contents($url);
 	$ret = json_decode($ret, true)['result']['0'];
-	$on = $ret['acState']['on'];
+	$on = !$ret['acState']['on'];
 	$ac_state = json_encode($ret['acState']);
 
 	$url = "https://home.sensibo.com/api/v2/pods/".$_REQUEST['uid']."/acStates/on?apiKey=".$apikey;
