@@ -75,7 +75,7 @@ button:hover {
 }
 
 img.avatar {
-  width: 10%;
+  width: 20%;
   border-radius: 50%;
 }
 
@@ -83,7 +83,7 @@ img.avatar {
   padding: 16px;
 }
 
-span.psw {
+span.password {
   float: right;
   padding-top: 16px;
 }
@@ -145,7 +145,7 @@ span.psw {
 
 /* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
-  span.psw {
+  span.password {
      display: block;
      float: none;
   }
@@ -164,8 +164,8 @@ span.psw {
 	if($error != null)
 	{
 ?>
-    <div>
-	<?=$error?>
+    <div style='width:100%;'>
+	<font style='width:100%;text-align:center;color:red'><?=$error?></font>
     </div>
 <?php
 	}
