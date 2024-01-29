@@ -61,7 +61,8 @@ section::after {
 
 #footer {
   width: 100vw;
-  height: 50px;
+  height: 32px;
+  background: #ccc;
 }
 
 #footer-content {
@@ -90,10 +91,10 @@ section::after {
     <div id="chartContainer" style="height: 370px; width: 100%;"></div>
     <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
   </article>
-  <footer id="footer">
-    <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/sensibo-python-sdk'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
-  </footer>
 </section>
+<footer id="footer">
+  <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/sensibo-python-sdk'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
+</footer>
 <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 <script>
 
