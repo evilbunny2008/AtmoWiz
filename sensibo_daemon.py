@@ -55,6 +55,12 @@ class SensiboClientAPI(object):
             return None
         return result['result']
 
+    def pod_get_past_24hours(self, podUid, lastlimit = 1):
+        result = self._get("/pods/%s/historicalMeasurements" % podUid, days = lastlimit)
+        if(result == None):
+            return None
+        return result['result']
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
@@ -147,6 +153,32 @@ if __name__ == "__main__":
 
                 values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
                 cursor.execute(_sqlquery, values)
+                mydb.commit()
+
+        mydb.close()
+
+        mydb = MySQLdb.connect(hostname, username, password, database)
+        cursor = mydb.cursor()
+        for podUID in uidList:
+            past24 = client.pod_get_past_24hours(podUID, 1)
+            if(past24 == None):
+                continue
+
+            for i in range(len(past24['temperature']) - 1):
+                temp = past24['temperature'][i]['value']
+                humid = past24['humidity'][i]['value']
+                sstring = datetime.strptime(past24['temperature'][i]['time'], '%Y-%m-%dT%H:%M:%SZ')
+                utc = sstring.replace(tzinfo=from_zone)
+                localzone = utc.astimezone(to_zone)
+                sdate = localzone.strftime(fmt)
+                values = (sdate, podUID)
+                cursor.execute(_sqlselect3, values)
+                row = cursor.fetchone()
+                if(row):
+                    continue
+
+                values = (sdate, podUID, temp, humid, temp, 0, 0, 'cool', 0, 'medium', 'fixedTop', 'fixedCenter')
+                cursor.execute(_sql, values)
                 mydb.commit()
 
         mydb.close()
