@@ -89,7 +89,7 @@ section::after {
   </nav>
   <article style="width:calc(100% - 350px);">
     <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-    <div style="height:370px; width:100%; background:#fff">
+    <div style="height:370px; width:100%; background:#fff;">
       <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
     </div>
   </article>
