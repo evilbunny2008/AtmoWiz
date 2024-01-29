@@ -1,5 +1,5 @@
 # Intro
-Sensibo Python SDK
+Python Code based on the Sensibo Python SDK and Pull Requests Authors
 
 Client script is a basic script to interogate the Sensibo API
 
