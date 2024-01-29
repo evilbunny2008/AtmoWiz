@@ -1,4 +1,4 @@
-# sensibo-python-sdk
+# Intro
 Sensibo Python SDK
 
 Client script is a basic script to interogate the Sensibo API
@@ -9,4 +9,11 @@ The PHP scripts are used to display the data as a line graphs and can turn your 
 
 [Click here](https://github.com/evilbunny2008/sensibo-python-sdk/wiki) to jump to the installation instructions on the wiki.
 
+# Screen Shot
+
 ![Screen Shot](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss.png)
+
+# Credits
+
+* [favicon.svg came from svgrepo.com](https://www.svgrepo.com/svg/268208/cooling-cooler)
+* [Graphs by CanvasJS.com](https://canvasjs.com/)  
