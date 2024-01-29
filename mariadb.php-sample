@@ -1,7 +1,14 @@
 <?php
 	session_start();
 
+	mysqli_report(MYSQLI_REPORT_OFF);
 	$link = mysqli_connect('localhost', 'sensibo', 'password', 'sensibo');
+	if(mysqli_connect_errno()) 
+	{
+		printf("DB error: %s", mysqli_connect_error());
+		exit;
+	}
+
 	$apikey = "<insert APIkey here>";
 
 	$rwusername = "admin";

@@ -87,9 +87,11 @@ section::after {
     <ul id='commands'>
     </ul>
   </nav>
-  <article style="width: calc(100% - 350px);">
+  <article style="width:calc(100% - 350px);">
     <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-    <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
+    <div style="height:370px; width:100%; background:#fff">
+      <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
+    </div>
   </article>
 </section>
 <div style='height: 32px;width: 100%'></div>

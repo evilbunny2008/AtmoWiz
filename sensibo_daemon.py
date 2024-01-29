@@ -15,6 +15,9 @@ from datetime import datetime
 from dateutil import tz
 
 _SERVER = 'https://home.sensibo.com/api/v2'
+_sql = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+_sqlquery = 'INSERT INTO commands (whentime, uid, reason, status, airconon, mode) VALUES (%s, %s, %s, %s, %s, %s)'
+
 
 class SensiboClientAPI(object):
     def __init__(self, api_key):
@@ -121,6 +124,33 @@ if __name__ == "__main__":
             query = """INSERT INTO devices (uid, name) VALUES (%s, %s)"""
             cursor.execute(query, values)
             mydb.commit()
+
+
+            for uid in uidList:
+                last40 = client.pod_status(uid, 40)
+                if(last40 == None):
+                    continue
+
+                for last in last40:
+                    if(last['reason'] == 'UserRequest'):
+                        continue
+
+                    sstring = datetime.strptime(last['time']['time'], '%Y-%m-%dT%H:%M:%SZ')
+                    utc = sstring.replace(tzinfo=from_zone)
+                    localzone = utc.astimezone(to_zone)
+                    sdate = localzone.strftime(fmt)
+                    query = """SELECT 1 FROM commands WHERE whentime=%s AND uid=%s"""
+                    values = (sdate, uid)
+                    cursor.execute(query, values)
+                    row = cursor.fetchone()
+                    if(row):
+                        continue
+
+                    values = (sdate, uid, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
+                    cursor.execute(_sqlquery, values)
+                    mydb.commit()
+                    print (_sqlquery % values)
+
         mydb.close()
     except MySQLdb._exceptions.OperationalError as e:
         print ("There was a problem closing the DB, error was %s" % e)
@@ -157,13 +187,6 @@ if __name__ == "__main__":
     with context:
         syslog.openlog(facility=syslog.LOG_DAEMON)
 
-        sql = """INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, """ + \
-              """airconon, mode, targettemp, fanlevel, swing, horizontalswing) """ + \
-              """VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-
-        sqlquery = """INSERT INTO commands (whentime, uid, reason, status, airconon, mode) """ + \
-                   """VALUES (%s, %s, %s, %s, %s, %s)"""
-
         while True:
             mydb = MySQLdb.connect(hostname, username, password, database)
             syslog.syslog("Connection to mariadb accepted")
@@ -195,8 +218,8 @@ if __name__ == "__main__":
                               measurements['feelsLike'], measurements['rssi'], ac_state['on'],
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                               ac_state['swing'], ac_state['horizontalSwing'])
-                    cursor.execute(sql, values)
-                    syslog.syslog(sql % values)
+                    cursor.execute(_sql, values)
+                    syslog.syslog(_sql % values)
                     mydb.commit()
 
                     last10 = client.pod_status(uid, 10)
@@ -219,9 +242,9 @@ if __name__ == "__main__":
                             continue
 
                         values = (sdate, uid, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
-                        cursor.execute(sqlquery, values)
+                        cursor.execute(_sqlquery, values)
                         mydb.commit()
-                        syslog.syslog(sqlquery % values)
+                        syslog.syslog(_sqlquery % values)
                 except MySQLdb._exceptions.ProgrammingError as e:
                     syslog.syslog("Skipping insert as the row already exists.")
                     pass
