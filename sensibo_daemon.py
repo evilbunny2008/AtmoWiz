@@ -151,13 +151,13 @@ if __name__ == "__main__":
 
         mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
-        print ("Skipping insert as the row already exists.")
+        print ("here was a problem, error was %s" % e)
         exit(1)
     except MySQLdb._exceptions.OperationalError as e:
-        print ("There was a problem closing the DB, error was %s" % e)
+        print ("There was a problem, error was %s" % e)
         exit(1)
     except MySQLdb._exceptions.IntegrityError as e:
-        print ("There was a problem closing the DB, error was %s" % e)
+        print ("There was a problem, error was %s" % e)
         exit(1)
 
     if(os.path.isfile(args.pidfile)):
@@ -248,13 +248,13 @@ if __name__ == "__main__":
                         mydb.commit()
                         syslog.syslog(_sqlquery % values)
                 except MySQLdb._exceptions.ProgrammingError as e:
-                    syslog.syslog("Skipping insert as the row already exists.")
+                    syslog.syslog("There was a problem, error was %s" % e)
                     pass
                 except MySQLdb._exceptions.IntegrityError as e:
-                    syslog.syslog("There was a problem closing the DB, error was %s" % e)
+                    syslog.syslog("There was a problem, error was %s" % e)
                     pass
                 except MySQLdb._exceptions.OperationalError as e:
-                    syslog.syslog("There was a problem closing the DB, error was %s" % e)
+                    syslog.syslog("There was a problem, error was %s" % e)
                     pass
 
             mydb.close()
