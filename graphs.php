@@ -291,8 +291,8 @@ async function DataLoop()
 {
 	setTimeout('DataLoop()', 5000);
 
-	if(startTS >= new Date().getTime() - 60000 && startTS <= new Date().getTime() + 60000)
-	        startTS = new Date().getTime();
+	if(startTS >= new Date().getTime() - 86460000 && startTS <= new Date().getTime() - 86340000)
+	        startTS = new Date().getTime() - 86400000;
 
 	startDataLoop(false);
 }
