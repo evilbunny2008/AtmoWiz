@@ -114,11 +114,14 @@
 	$commands .= "<li>$line1</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
-	$dres = mysqli_query($link, $query);
-	while($drow = mysqli_fetch_assoc($dres))
+	$res = mysqli_query($link, $query);
+	while($row = mysqli_fetch_assoc($res))
 	{
+		$query = "SELECT * FROM commands WHERE uid='$uid' AND whentime < '".$row['whentime']."' ORDER BY whentime DESC LIMIT 1";
+		$dres = mysqli_query($link, $query);
+		$drow = mysqli_fetch_assoc($dres);
 
-		$date = $drow['wtdate'];
+		$date = $row['wtdate'];
 		if($date != $lastdate)
 		{
 			$commands .= "<li>&nbsp;</li>\n";
@@ -126,17 +129,31 @@
 			$lastdate = $date;
 		}
 
-		$commands .= "<li><b>".$drow['wttime'].'</b> -- ';
-		if($drow['reason'] == "ExternalIrCommand")
-			$commands .= "Remote Control turned AC ";
-		else if($drow['reason'] == "UserAPI")
-			$commands .= "API turned AC ";
+		$commands .= "<li><b>".$row['wttime'].'</b> -- ';
+
+		if($row['reason'] == "ExternalIrCommand")
+			$commands .= "Remote Control ";
+		else if($row['reason'] == "UserRequest")
+			$commands .= "App ";
+		else if($row['reason'] == "UserAPI")
+			$commands .= "API ";
 		else
-			$commands .= "Unknown turned AC ";
-		if($drow['airconon'])
-			$commands .= "on";
-		else
-			$commands .= "off";
+			$commands .= "Unknown ";
+
+		if($row['targetTemperature'] != $drow['targetTemperature'] && isset($drow['targetTemperature']))
+		{
+			$commands .= " set temperature to ".$row['targetTemperature'];
+		} else if($row['mode'] != $drow['mode'] && isset($drow['targetTemperature'])) {
+			$commands .= " set mode to ".$row['mode'];
+		} else if($row['fanLevel'] != $drow['fanLevel'] && isset($drow['targetTemperature'])) {
+			$commands .= " set mode to ".$row['fanLevel'];
+		} else {
+			if($row['airconon'])
+				$commands .= " turned AC on";
+			else
+				$commands .= " turned AC off";
+		}
+
 		$commands .= "</li>\n";
 	}
 

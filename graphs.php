@@ -110,7 +110,7 @@ section::after {
 <footer id="footer">
   <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/sensibo-python-sdk'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
 </footer>
-<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+<script src="canvasjs.min.js"></script>
 <script>
 
 var uid = "";
