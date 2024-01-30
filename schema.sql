@@ -28,7 +28,12 @@ CREATE TABLE IF NOT EXISTS `commands` (
   `reason` varchar(20) NOT NULL,
   `status` varchar(20) NOT NULL,
   `airconon` tinyint(1) NOT NULL,
-  `mode` varchar(20) NOT NULL
+  `mode` varchar(20) NOT NULL,
+  `targetTemperature` tinyint(4) NOT NULL,
+  `temperatureUnit` varchar(1) NOT NULL,
+  `fanLevel` varchar(20) NOT NULL,
+  `swing` varchar(20) NOT NULL,
+  `horizontalSwing` varchar(20) NOT NULL
 ) ENGINE=InnoDB;
 
 ALTER TABLE `commands` DROP INDEX IF EXISTS `PRIMARY`;
