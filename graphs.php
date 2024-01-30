@@ -117,6 +117,11 @@ var uid = "";
 var currtime = "";
 var startTS = new Date().getTime() - 86400000;
 
+function logout()
+{
+	window.location = 'graphs.php?logout=1';
+}
+
 var chart = new CanvasJS.Chart("chartContainer",
 {
 	animationEnabled: true,
@@ -277,7 +282,15 @@ async function toggleAC()
 	if(!isset($apikey) || $apikey == "apikey" || $apikey == "<insert APIkey here>" || $apikey == "")
 		echo "\talert('API key isn\'t set in mariadb.php, can\'t toggle your AC');\n\treturn;\n\n";
 ?>
-	const url='toggleAC.php?time=' + new Date().getTime() + '&uid='+uid;
+
+	const img = document.getElementById("onoff");
+	const imgsrc = img.src.split('/');
+	if(imgsrc[imgsrc.length - 1] == 'on.png')
+		img.src = "off.png";
+	else
+		img.src = "on.png";
+
+	const url = 'toggleAC.php?time=' + new Date().getTime() + '&uid=' + uid;
 	const response = await fetch(url);
 	const ret = await response.text();
 	if(ret != 200)

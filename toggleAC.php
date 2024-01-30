@@ -1,4 +1,6 @@
 <?php
+	$error = null;
+
 	require_once('mariadb.php');
 
 	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
@@ -40,7 +42,7 @@
 	$body = json_encode(['currentAcState' => $ac_state, 'newValue' => $on]);
 	$opts = array('http' => array('method'=>"PATCH", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 5));
 	$context = stream_context_create($opts);
-	$ret = file_get_contents($url, false, $context);
+	$ret = @file_get_contents($url, false, $context);
 
 	$statusheader = explode(" ", $http_response_header['0'], 3)['1'];
 	if($statusheader == "200")

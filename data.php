@@ -95,18 +95,30 @@
 			$startTS = $row['whentime'];
 	}
 
-	$negac = "on";
-	if($ac == "on")
-		$negac = "off";
-
 	$line1 = "<b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%";
-
-	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
-		$line1 .= " -- <a href='#' onClick='toggleAC(); return false;'>Turn AC $negac</a>";
 
 	$lastdate = '';
 	$commands = '';
-	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u> -- <a href='graphs.php?logout=1'>Log Out</a></li>\n";
+
+	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
+	{
+		$commands .= "<li style='text-align:center'>";
+		$commands .= "<img style='width:32px;' onClick='temp(); return false;' src='temperature.png' />\n";
+		$commands .= "<img style='width:32px;' onClick='fan(); return false;' src='fan.png' />\n";
+
+		if($ac == "on")
+			$commands .= "<img id='onoff' style='width:32px;' onClick='toggleAC(); return false;' src='off.png' />\n";
+		else
+			$commands .= "<img id='onoff' style='width:32px;' onClick='toggleAC(); return false;' src='on.png' />\n";
+
+		$commands .= "<img style='width:32px;' onClick='logout(); return false;' src='exit.png' />\n";
+
+		$commands .= "</li>\n";
+		$commands .= "<li>&nbsp;</li>\n";
+	}
+
+	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
+	$commands .= "<li>$line1</li>\n";
 
 	$query = "SELECT uid,name FROM devices ORDER BY name";
 	$res = mysqli_query($link, $query);
@@ -124,8 +136,6 @@
 		}
 		$commands .= "</select></li>\n";
 	}
-
-	$commands .= "<li>$line1</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
 	$res = mysqli_query($link, $query);
