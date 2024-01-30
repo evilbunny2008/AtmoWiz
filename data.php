@@ -146,25 +146,25 @@
 
 		$who = getWho($row["reason"]);
 
-		if($row["targetTemperature"] != $drow["targetTemperature"] && isset($drow["targetTemperature"]))
+		if(isset($drow["targetTemperature"]) && $row["targetTemperature"] != $drow["targetTemperature"])
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set temperature to ".$row["targetTemperature"]."</li>\n";
 		}
 
-		if($row["mode"] != $drow["mode"] && isset($drow["targetTemperature"]))
+		if(isset($drow["targetTemperature"]) && $row["mode"] != $drow["mode"])
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set mode to ".$row["mode"]."</li>\n";
 		}
 
-		if($row["fanLevel"] != $drow["fanLevel"] && isset($drow["targetTemperature"]))
+		if(isset($drow["targetTemperature"]) && $row["fanLevel"] != $drow["fanLevel"])
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set fan to ".$row["fanLevel"]."</li>\n";
 		}
 
-		if($row["swing"] != $drow["swing"] && isset($drow["targetTemperature"]))
+		if(isset($drow["targetTemperature"]) && $row["swing"] != $drow["swing"])
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["swing"]."</li>\n";

@@ -292,7 +292,7 @@ async function DataLoop()
 	setTimeout('DataLoop()', 5000);
 
 	now = new Date().getTime();
-	if(startTS >= now - 86460000 && startTS <= now - 86340000)
+	if(startTS >= now - 87300000 && startTS <= now - 85500000)
 	        startTS = now - 86400000;
 
 	startDataLoop(false);
