@@ -153,11 +153,22 @@
 		}
 
 		if($row["mode"] != $drow["mode"] && isset($drow["targetTemperature"]))
+		{
+			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set mode to ".$row["mode"]."</li>\n";
+		}
+
 		if($row["fanLevel"] != $drow["fanLevel"] && isset($drow["targetTemperature"]))
+		{
+			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set fan to ".$row["fanLevel"]."</li>\n";
+		}
+
 		if($row["swing"] != $drow["swing"] && isset($drow["targetTemperature"]))
+		{
+			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["swing"]."</li>\n";
+		}
 
 		if($onoff)
 		{
