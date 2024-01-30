@@ -18,3 +18,4 @@ The PHP scripts are used to display the data as a line graphs and can turn your 
 * [favicon.svg came from svgrepo.com](https://www.svgrepo.com/svg/268208/cooling-cooler)
 * [Graphs by CanvasJS.com](https://canvasjs.com/)  
 * [Arrow Icons](https://svgsilh.com/00bcd4/image/34285.html)
+* [Flaticon Icons](https://www.flaticon.com)
