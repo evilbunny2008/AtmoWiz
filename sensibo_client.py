@@ -89,6 +89,15 @@ if __name__ == "__main__":
     parser.add_argument('--unitC', action='store_true',help='Use Celsius')
     parser.add_argument('--unitDual', action='store_true',help='Use F/C')
     parser.add_argument('--terse', action='store_true',help='Keep the response short')
+
+    # AC settings
+    parser.add_argument('--mode', type=str, help='Heat,Cool,Dry')
+    parser.add_argument('--fanLevel', type=str,help='Fan Level low,medium,etc ')
+    parser.add_argument('--targetTemp', type=int, help='set AC temp')
+    parser.add_argument('--tempUnit', type=str, help='C or F')
+    parser.add_argument('--verticalSwing', type=str, help='Vertical Swing Y')
+    parser.add_argument('--horizontalSwing', type=str, help='Horizontal Swing Z')
+
     args = parser.parse_args()
 
     if(args.last and args.last < 1):
@@ -175,6 +184,29 @@ if __name__ == "__main__":
                         sdate = localzone.strftime(fmt)
                         print ("Command executed at %(date)s : %(state)s -- Reason: %(reason)s, Status: %(status)s" % { 'date' : sdate, 'state': str(ac_state['acState']), 'reason': ac_state['reason'], 'status': ac_state['status']})
 
+                if(args.fanLevel):
+                    client.pod_change_ac_state(uid, ac_state, "fanLevel", args.fanLevel)
+                    print("Fan",args.fanLevel)
+
+                if(args.verticalSwing):
+                    client.pod_change_ac_state(uid, ac_state, "swing", args.verticalSwing)
+                    print("Vertical Swing",args.verticalSwing)  
+
+                if(args.horizontalSwing):
+                    client.pod_change_ac_state(uid, ac_state, "horizontalSwing", args.horizontalSwing)
+                    print("Horizontal Swing",args.horizontalSwing) 
+
+                if(args.mode):
+                    client.pod_change_ac_state(uid, ac_state, "mode", args.mode)
+                    print("Mode",args.mode)
+
+                if(args.targetTemp):
+                    client.pod_change_ac_state(uid, ac_state, "targetTemperature", args.targetTemp)
+                    print("Target Temp",args.targetTemp)
+
+                if(args.tempUnit):
+                    client.pod_change_ac_state(uid, ac_state, "temperatureUnit", args.tempUnit)
+                    print("Temp Unit",args.tempUnit)
 
         except requests.exceptions.RequestException as exc:
             print ("Request failed with message %s" % exc)

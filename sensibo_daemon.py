@@ -16,7 +16,7 @@ from dateutil import tz
 
 _SERVER = 'https://home.sensibo.com/api/v2'
 _sql = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-_sqlquery = 'INSERT INTO commands (whentime, uid, reason, status, airconon, mode) VALUES (%s, %s, %s, %s, %s, %s)'
+_sqlquery = 'INSERT INTO commands (whentime, uid, reason, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 _sqldevices = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
 
 _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
@@ -49,7 +49,7 @@ class SensiboClientAPI(object):
             return None
         return result
 
-    def pod_status(self, podUid, lastlimit = 10):
+    def pod_status(self, podUid, lastlimit = 5):
         result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState")
         if(result == None):
             return None
@@ -149,9 +149,14 @@ if __name__ == "__main__":
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
+                    query = "UPDATE commands SET targetTemperature=%s, temperatureUnit=%s, fanLevel=%s, swing=%s, horizontalSwing=%s WHERE whentime=%s AND uid=%s AND targetTemperature=0"
+                    values = (last['acState']['targetTemperature'], last['acState']['temperatureUnit'], last['acState']['fanLevel'], last['acState']['swing'], last['acState']['horizontalSwing'], sdate, podUID)
+                    cursor.execute(query, values)
+                    mydb.commit()
                     continue
 
-                values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
+                values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'], last['acState']['targetTemperature'],
+                          last['acState']['temperatureUnit'], last['acState']['fanLevel'], last['acState']['swing'], last['acState']['horizontalSwing'])
                 cursor.execute(_sqlquery, values)
                 mydb.commit()
 
@@ -275,7 +280,8 @@ if __name__ == "__main__":
                         if(row):
                             continue
 
-                        values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'])
+                        values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'], last['acState']['targetTemperature'],
+                                  last['acState']['temperatureUnit'], last['acState']['fanLevel'], last['acState']['swing'], last['acState']['horizontalSwing'])
                         cursor.execute(_sqlquery, values)
                         mydb.commit()
                         syslog.syslog(_sqlquery % values)
