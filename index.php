@@ -70,12 +70,6 @@ button:hover {
   opacity: 0.8;
 }
 
-.cancelbtn {
-  width: auto;
-  padding: 10px 18px;
-  background-color: #f44336;
-}
-
 .imgcontainer {
   text-align: center;
   margin: 24px 0 12px 0;
@@ -154,9 +148,6 @@ span.password {
   span.password {
      display: block;
      float: none;
-  }
-  .cancelbtn {
-     width: 100%;
   }
 }
 </style>

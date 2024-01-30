@@ -103,15 +103,14 @@
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
 	{
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:32px;' onClick='temp(); return false;' src='temperature.png' />\n";
-		$commands .= "<img style='width:32px;' onClick='fan(); return false;' src='fan.png' />\n";
+		$commands .= "<img style='width:80px;' onClick='settings(); return false;' src='settings.png' />\n";
 
 		if($ac == "on")
-			$commands .= "<img id='onoff' style='width:32px;' onClick='toggleAC(); return false;' src='off.png' />\n";
+			$commands .= "<img id='onoff' style='width:80px;' onClick='toggleAC(); return false;' src='on.png' />\n";
 		else
-			$commands .= "<img id='onoff' style='width:32px;' onClick='toggleAC(); return false;' src='on.png' />\n";
+			$commands .= "<img id='onoff' style='width:80px;' onClick='toggleAC(); return false;' src='off.png' />\n";
 
-		$commands .= "<img style='width:32px;' onClick='logout(); return false;' src='exit.png' />\n";
+		$commands .= "<img style='width:80px;' onClick='logout(); return false;' src='exit.png' />\n";
 
 		$commands .= "</li>\n";
 		$commands .= "<li>&nbsp;</li>\n";

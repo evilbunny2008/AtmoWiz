@@ -117,11 +117,6 @@ var uid = "";
 var currtime = "";
 var startTS = new Date().getTime() - 86400000;
 
-function logout()
-{
-	window.location = 'graphs.php?logout=1';
-}
-
 var chart = new CanvasJS.Chart("chartContainer",
 {
 	animationEnabled: true,
@@ -368,6 +363,15 @@ function nextDay()
 {
 	startTS += 86400000;
 	startDataLoop();
+}
+
+function logout()
+{
+	window.location = 'graphs.php?logout=1';
+}
+
+function settings()
+{
 }
 
 DataLoop();
