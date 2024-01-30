@@ -9,6 +9,20 @@
 		exit;
 	}
 
+	function getWho($reason)
+	{
+		if($reason == "ExternalIrCommand")
+			$who = "Remote";
+		else if($reason == "UserRequest")
+			$who = "App";
+		else if($reason == "UserAPI")
+			$who = "API";
+		else
+			$who = "Unknown";
+
+		return $who;
+	}
+
 	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] != -1)
 		$startTS = doubleval($_REQUEST['startTS']);
 	else
@@ -117,11 +131,12 @@
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
+		$onoff = true;
 		$query = "SELECT * FROM commands WHERE uid='$uid' AND whentime < '".$row['whentime']."' ORDER BY whentime DESC LIMIT 1";
 		$dres = mysqli_query($link, $query);
 		$drow = mysqli_fetch_assoc($dres);
 
-		$date = $row['wtdate'];
+		$date = $row["wtdate"];
 		if($date != $lastdate)
 		{
 			$commands .= "<li>&nbsp;</li>\n";
@@ -129,32 +144,28 @@
 			$lastdate = $date;
 		}
 
-		$commands .= "<li><b>".$row['wttime'].'</b> -- ';
+		$who = getWho($row["reason"]);
 
-		if($row['reason'] == "ExternalIrCommand")
-			$commands .= "Remote Control ";
-		else if($row['reason'] == "UserRequest")
-			$commands .= "App ";
-		else if($row['reason'] == "UserAPI")
-			$commands .= "API ";
-		else
-			$commands .= "Unknown ";
-
-		if($row['targetTemperature'] != $drow['targetTemperature'] && isset($drow['targetTemperature']))
+		if($row["targetTemperature"] != $drow["targetTemperature"] && isset($drow["targetTemperature"]))
 		{
-			$commands .= " set temperature to ".$row['targetTemperature'];
-		} else if($row['mode'] != $drow['mode'] && isset($drow['targetTemperature'])) {
-			$commands .= " set mode to ".$row['mode'];
-		} else if($row['fanLevel'] != $drow['fanLevel'] && isset($drow['targetTemperature'])) {
-			$commands .= " set mode to ".$row['fanLevel'];
-		} else {
-			if($row['airconon'])
-				$commands .= " turned AC on";
-			else
-				$commands .= " turned AC off";
+			$onoff = false;
+			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set temperature to ".$row["targetTemperature"]."</li>\n";
 		}
 
-		$commands .= "</li>\n";
+		if($row["mode"] != $drow["mode"] && isset($drow["targetTemperature"]))
+			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set mode to ".$row["mode"]."</li>\n";
+		if($row["fanLevel"] != $drow["fanLevel"] && isset($drow["targetTemperature"]))
+			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set fan to ".$row["fanLevel"]."</li>\n";
+		if($row["swing"] != $drow["swing"] && isset($drow["targetTemperature"]))
+			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["swing"]."</li>\n";
+
+		if($onoff)
+		{
+			if($row["airconon"])
+				$commands .= "<li><b>".$row["wttime"]."</b> -- $who set AC on</li>\n";
+			else
+				$commands .= "<li><b>".$row["wttime"]."</b> -- $who set AC off</li>\n";
+		}
 	}
 
 	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS);
