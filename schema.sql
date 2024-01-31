@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `commands` (
   `whentime` datetime NOT NULL,
   `uid` varchar(20) NOT NULL,
   `reason` varchar(20) NOT NULL,
+  `who` varchar(255) NOT NULL,
   `status` varchar(20) NOT NULL,
   `airconon` tinyint(1) NOT NULL,
   `mode` varchar(20) NOT NULL,
