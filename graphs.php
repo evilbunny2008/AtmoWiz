@@ -33,7 +33,7 @@
 		if($statusheader == "200")
 			return 200;
 		else
-			return $ret;
+			return json_encode(array('headers' => $http_response_header, 'ret' => $ret));
 	}
 
 	$query = "SELECT * FROM commands ORDER BY whentime DESC LIMIT 1";
