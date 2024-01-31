@@ -16,7 +16,7 @@ from dateutil import tz
 
 _SERVER = 'https://home.sensibo.com/api/v2'
 _sql = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targettemp, fanlevel, swing, horizontalswing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-_sqlquery = 'INSERT INTO commands (whentime, uid, reason, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+_sqlquery = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 _sqldevices = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
 
 _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
@@ -50,13 +50,13 @@ class SensiboClientAPI(object):
         return result
 
     def pod_status(self, podUid, lastlimit = 5):
-        result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState")
+        result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser")
         if(result == None):
             return None
         return result['result']
 
     def pod_get_past_24hours(self, podUid, lastlimit = 1):
-        result = self._get("/pods/%s/historicalMeasurements" % podUid, days = lastlimit)
+        result = self._get("/pods/%s/historicalMeasurements" % podUid, days = lastlimit, fields="status,reason,time,acState,causedByUser")
         if(result == None):
             return None
         return result['result']
@@ -149,14 +149,21 @@ if __name__ == "__main__":
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
-                    query = "UPDATE commands SET targetTemperature=%s, temperatureUnit=%s, fanLevel=%s, swing=%s, horizontalSwing=%s WHERE whentime=%s AND uid=%s AND targetTemperature=0"
-                    values = (last['acState']['targetTemperature'], last['acState']['temperatureUnit'], last['acState']['fanLevel'], last['acState']['swing'], last['acState']['horizontalSwing'], sdate, podUID)
+                    if(last['causedByUser'] == None):
+                        last['causedByUser'] = {}
+                        last['causedByUser']['firstName'] = 'Remote'
+
+                    query = "UPDATE commands SET who=%s WHERE whentime=%s AND uid=%s AND who=''"
+                    values = (last['causedByUser']['firstName'], sdate, podUID)
                     cursor.execute(query, values)
                     mydb.commit()
                     continue
 
-                values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'], last['acState']['targetTemperature'],
-                          last['acState']['temperatureUnit'], last['acState']['fanLevel'], last['acState']['swing'], last['acState']['horizontalSwing'])
+                values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
+                          last['status'], last['acState']['on'], last['acState']['mode'],
+                          last['acState']['targetTemperature'],
+                          last['acState']['temperatureUnit'], last['acState']['fanLevel'],
+                          last['acState']['swing'], last['acState']['horizontalSwing'])
                 cursor.execute(_sqlquery, values)
                 mydb.commit()
 
@@ -223,7 +230,8 @@ if __name__ == "__main__":
             shutil.chown(mydir, uid, gid)
 
     logfile = open('/tmp/sensibo.log', 'a')
-    context = daemon.DaemonContext(stdout = logfile, stderr = logfile, pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
+    context = daemon.DaemonContext(stdout = logfile, stderr = logfile,
+              pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
         syslog.openlog(facility=syslog.LOG_DAEMON)
@@ -280,8 +288,15 @@ if __name__ == "__main__":
                         if(row):
                             continue
 
-                        values = (sdate, podUID, last['reason'], last['status'], last['acState']['on'], last['acState']['mode'], last['acState']['targetTemperature'],
-                                  last['acState']['temperatureUnit'], last['acState']['fanLevel'], last['acState']['swing'], last['acState']['horizontalSwing'])
+                        if(last['causedByUser'] == None):
+                            last['causedByUser'] = {}
+                            last['causedByUser']['firstName'] = 'Remote'
+
+                        values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
+                                  last['status'], last['acState']['on'], last['acState']['mode'],
+                                  last['acState']['targetTemperature'],
+                                  last['acState']['temperatureUnit'], last['acState']['fanLevel'],
+                                  last['acState']['swing'], last['acState']['horizontalSwing'])
                         cursor.execute(_sqlquery, values)
                         mydb.commit()
                         syslog.syslog(_sqlquery % values)

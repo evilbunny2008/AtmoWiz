@@ -165,14 +165,16 @@
 		$drow = mysqli_fetch_assoc($dres);
 
 		$date = $row["wtdate"];
+		$who = $row['who'];
+		if($who == '')
+			$who = getWho($row["reason"]);
+
 		if($date != $lastdate)
 		{
 			$commands .= "<li>&nbsp;</li>\n";
 			$commands .= "<li style='text-align:center;'><u><b>$date</b></u></li>\n";
 			$lastdate = $date;
 		}
-
-		$who = getWho($row["reason"]);
 
 		if(isset($drow["targetTemperature"]) && $row["targetTemperature"] != $drow["targetTemperature"])
 		{

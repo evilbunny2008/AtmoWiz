@@ -44,19 +44,32 @@
 	{
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID']);
 
-		if($row['mode'] != $_REQUEST['mode'])
-			changeState($row['uid'], 'mode', $_REQUEST['mode']);
+		if(isset($_REQUEST['mode']))
+		{
+			if($row['mode'] != $_REQUEST['mode'])
+			{
+				changeState($row['uid'], 'mode', $_REQUEST['mode']);
+				$row['mode'] = mysqli_real_escape_string($link, $_REQUEST['mode']);
+			}
+		}
 
-		if($row['targetTemperature'] != $_REQUEST['targetTemperature'])
-			changeState($row['uid'], 'targetTemperature', $_REQUEST['targetTemperature']);
+		if(isset($_REQUEST['targetTemperature']))
+		{
+			if($row['targetTemperature'] != $_REQUEST['targetTemperature'])
+			{
+				changeState($row['uid'], 'targetTemperature', $_REQUEST['targetTemperature']);
+				$row['targetTemperature'] = mysqli_real_escape_string($link, $_REQUEST['temp']);
+			}
+		}
 
-		if($row['fanLevel'] != $_REQUEST['fanLevel'])
-			changeState($row['uid'], 'fanLevel', $_REQUEST['fanLevel']);
-
-
-		$row['mode'] = mysqli_real_escape_string($link, $_REQUEST['mode']);
-		$row['targetTemperature'] = mysqli_real_escape_string($link, $_REQUEST['temp']);
-		$row['fanLevel'] = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
+		if(isset($_REQUEST['fanLevel']))
+		{
+			if($row['fanLevel'] != $_REQUEST['fanLevel'])
+			{
+				changeState($row['uid'], 'fanLevel', $_REQUEST['fanLevel']);
+				$row['fanLevel'] = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
+			}
+		}
 	}
 
 	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
