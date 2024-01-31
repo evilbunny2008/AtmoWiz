@@ -22,6 +22,9 @@ class SensiboClientAPI(object):
 
     def _patch(self, path, data, ** params):
         params['apiKey'] = self._api_key
+        print(_SERVER + path)
+        print(params)
+        print(data)
         response = requests.patch(_SERVER + path, params = params, data = data)
         response.raise_for_status()
         return response.json()

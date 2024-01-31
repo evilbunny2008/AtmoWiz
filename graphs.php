@@ -85,6 +85,34 @@
 				$row['fanLevel'] = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
 			}
 		}
+
+		if(isset($_REQUEST['swing']))
+		{
+			if($row['swing'] != $_REQUEST['swing'])
+			{
+				$ret = changeState($row['uid'], 'swing', $_REQUEST['swing']);
+				if($ret != 200)
+				{
+					echo $ret;
+					die;
+				}
+				$row['swing'] = mysqli_real_escape_string($link, $_REQUEST['swing']);
+			}
+		}
+
+		if(isset($_REQUEST['horizontalSwing']))
+		{
+			if($row['horizontalSwing'] != $_REQUEST['horizontalSwing'])
+			{
+				$ret = changeState($row['uid'], 'horizontalSwing', $_REQUEST['horizontalSwing']);
+				if($ret != 200)
+				{
+					echo $ret;
+					die;
+				}
+				$row['horizontalSwing'] = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+			}
+		}
 	}
 
 	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
@@ -167,7 +195,7 @@ section::after {
 
 body {font-family: Arial, Helvetica, sans-serif;}
 
-#mode, #targetTemperature, #fanLevel {
+#mode, #targetTemperature, #fanLevel, #swing, #horizontalSwing {
   width: 100%;
   padding: 12px 20px;
   margin: 8px 0;
@@ -333,11 +361,37 @@ span.psw {
 	<label for="fanLevel"><b>Fan Level:</b></label>
 	<select id='fanLevel' name="fanLevel">
 <?php
-	$fanlevels = array('auto' => 'Auto', 'low' => 'Low', 'medium' => 'Medium', 'high' => 'High');
+	$fanlevels = array('auto' => 'Auto', 'quiet' => 'Quite', 'low' => 'Low', 'medium' => 'Medium', 'high' => 'High');
 	foreach($fanlevels as $k => $v)
 	{
 		echo "\t\t<option value='$k'";
 			if($row['fanLevel'] == $k)
+				echo ' selected';
+		echo ">$v</option>\n";
+	}
+?>
+	</select>
+	<label for="swing"><b>Swing:</b></label>
+	<select id="swing" name="swing">
+<?php
+	$swings = array("stopped", "fixedTop", "fixedMiddleTop", "fixedMiddleBottom", "fixedBottom", "rangeFull");
+	foreach($swings as $v)
+	{
+		echo "\t\t<option value='$v'";
+			if($row['swing'] == $v)
+				echo ' selected';
+		echo ">$v</option>\n";
+	}
+?>
+	</select>
+	<label for="horizontalSwing"><b>Horizontal Swing:</b></label>
+	<select id="horizontalSwing" name="horizontalSwing">
+<?php
+	$swings = array("stopped", "fixedLeft", "fixedCenterLeft", "fixedCenter", "fixedCenterRight", "fixedRight", "rangeFull");
+	foreach($swings as $v)
+	{
+		echo "\t\t<option value='$v'";
+			if($row['horizontalSwing'] == $v)
 				echo ' selected';
 		echo ">$v</option>\n";
 	}

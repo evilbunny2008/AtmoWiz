@@ -49,6 +49,12 @@ class SensiboClientAPI(object):
             return None
         return result
 
+    def pod_get_remote_capabilities(self, podUid):
+        result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="device,remoteCapabilities")
+        if(result == None):
+            return None
+        return result['result']
+
     def pod_status(self, podUid, lastlimit = 5):
         result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser")
         if(result == None):
@@ -132,6 +138,30 @@ if __name__ == "__main__":
 
         mydb = MySQLdb.connect(hostname, username, password, database)
         cursor = mydb.cursor()
+        cursor.execute("TRUNCATE meta")
+        mydb.commit()
+
+        for podUID in uidList:
+            remoteCapabilities = client.pod_get_remote_capabilities(podUID)
+            if(remoteCapabilities == None):
+                continue
+
+            device = remoteCapabilities[0]['device']['remoteCapabilities']
+            for mode in ['cool', 'heat', 'dry', 'auto']:
+                for temp in device['modes'][mode]['temperatures']['C']['values']:
+                    query = "INSERT INTO meta (uid, mode, keyval, value) VALUES (%s, %s, %s, %s)"
+                    cursor.execute(query, (podUID, mode, 'temperatures', temp))
+
+                for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
+                    for fanLevel in device['modes'][mode][keyval]:
+                        query = "INSERT INTO meta (uid, mode, keyval, value) VALUES (%s, %s, %s, %s)"
+                        cursor.execute(query, (podUID, mode, keyval, fanLevel))
+
+        mydb.commit()
+        mydb.close()
+
+        mydb = MySQLdb.connect(hostname, username, password, database)
+        cursor = mydb.cursor()
         for podUID in uidList:
             last40 = client.pod_status(podUID, 40)
             if(last40 == None):
@@ -150,15 +180,6 @@ if __name__ == "__main__":
                 row = cursor.fetchone()
                 if(row):
                     continue
-#                    if(last['causedByUser'] == None):
-#                        last['causedByUser'] = {}
-#                        last['causedByUser']['firstName'] = 'Remote'
-#
-#                    query = "UPDATE commands SET who=%s WHERE whentime=%s AND uid=%s AND who=''"
-#                    values = (last['causedByUser']['firstName'], sdate, podUID)
-#                    cursor.execute(query, values)
-#                    mydb.commit()
-#                    continue
 
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                           last['status'], last['acState']['on'], last['acState']['mode'],

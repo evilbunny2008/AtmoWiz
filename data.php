@@ -200,6 +200,12 @@
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["swing"]."</li>\n";
 		}
 
+		if(isset($drow["targetTemperature"]) && $row["horizontalSwing"] != $drow["horizontalSwing"])
+		{
+			$onoff = false;
+			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["horizontalSwing"]."</li>\n";
+		}
+
 		if($onoff)
 		{
 			if($row["airconon"])
