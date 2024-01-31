@@ -58,7 +58,7 @@
 			if($row['targetTemperature'] != $_REQUEST['targetTemperature'])
 			{
 				changeState($row['uid'], 'targetTemperature', $_REQUEST['targetTemperature']);
-				$row['targetTemperature'] = mysqli_real_escape_string($link, $_REQUEST['temp']);
+				$row['targetTemperature'] = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
 			}
 		}
 
@@ -152,7 +152,7 @@ section::after {
 
 body {font-family: Arial, Helvetica, sans-serif;}
 
-#mode, #temp, #fanLevel {
+#mode, #targetTemperature, #fanLevel {
   width: 100%;
   padding: 12px 20px;
   margin: 8px 0;
@@ -303,8 +303,8 @@ span.psw {
 	}
 ?>
 	</select>
-	<label for="temp"><b>Temperature:</b></label>
-	<select id='temp' name="temp">
+	<label for='targetTemperature'><b>Target Temperature:</b></label>
+	<select id='targetTemperature' name='targetTemperature'>
 <?php
 	for($i = 18; $i <= 30; $i++)
 	{

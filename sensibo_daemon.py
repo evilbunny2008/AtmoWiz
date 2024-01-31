@@ -149,21 +149,23 @@ if __name__ == "__main__":
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
-                    if(last['causedByUser'] == None):
-                        last['causedByUser'] = {}
-                        last['causedByUser']['firstName'] = 'Remote'
-
-                    query = "UPDATE commands SET who=%s WHERE whentime=%s AND uid=%s AND who=''"
-                    values = (last['causedByUser']['firstName'], sdate, podUID)
-                    cursor.execute(query, values)
-                    mydb.commit()
                     continue
+#                    if(last['causedByUser'] == None):
+#                        last['causedByUser'] = {}
+#                        last['causedByUser']['firstName'] = 'Remote'
+#
+#                    query = "UPDATE commands SET who=%s WHERE whentime=%s AND uid=%s AND who=''"
+#                    values = (last['causedByUser']['firstName'], sdate, podUID)
+#                    cursor.execute(query, values)
+#                    mydb.commit()
+#                    continue
 
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                           last['status'], last['acState']['on'], last['acState']['mode'],
                           last['acState']['targetTemperature'],
                           last['acState']['temperatureUnit'], last['acState']['fanLevel'],
                           last['acState']['swing'], last['acState']['horizontalSwing'])
+                print (_sqlquery % values)
                 cursor.execute(_sqlquery, values)
                 mydb.commit()
 
@@ -297,6 +299,7 @@ if __name__ == "__main__":
                                   last['acState']['targetTemperature'],
                                   last['acState']['temperatureUnit'], last['acState']['fanLevel'],
                                   last['acState']['swing'], last['acState']['horizontalSwing'])
+                        print (_sqlquery % values)
                         cursor.execute(_sqlquery, values)
                         mydb.commit()
                         syslog.syslog(_sqlquery % values)
