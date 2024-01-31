@@ -332,15 +332,16 @@ span.psw {
     <div class="container">
 	<input id="startTS" type="hidden" name="startTS" value="<?=$startTS?>" />
 	<input id="podUID" type="hidden" name="podUID" value="<?=$row['uid']?>" />
-
 	<label for="mode"><b>Mode:</b></label>
-	<select id='mode' name="mode">
+	<select id='mode' name="mode" onChange='populateSelect(this.value); return false;'>
 <?php
-	$modes = array('cool' => 'Cool', 'heat' => 'Heat', 'dry' => 'Dry', 'fan' => 'Fan');
-	foreach($modes as $k => $v)
+	$dquery = "SELECT mode FROM meta GROUP BY mode";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
 	{
-		echo "\t\t<option value='$k'";
-			if($row['mode'] == $k)
+		$v = $drow['mode'];
+		echo "\t\t<option value='$v'";
+			if($row['mode'] == $v)
 				echo ' selected';
 		echo ">$v</option>\n";
 	}
@@ -348,54 +349,15 @@ span.psw {
 	</select>
 	<label for='targetTemperature'><b>Target Temperature:</b></label>
 	<select id='targetTemperature' name='targetTemperature'>
-<?php
-	for($i = 16; $i <= 30; $i++)
-	{
-		echo "\t\t<option value='$i'";
-		if($row['targetTemperature'] == $i)
-			echo ' selected';
-		echo ">$i</option>\n";
-	}
-?>
 	</select>
 	<label for="fanLevel"><b>Fan Level:</b></label>
 	<select id='fanLevel' name="fanLevel">
-<?php
-	$fanlevels = array('auto' => 'Auto', 'quiet' => 'Quite', 'low' => 'Low', 'medium' => 'Medium', 'high' => 'High');
-	foreach($fanlevels as $k => $v)
-	{
-		echo "\t\t<option value='$k'";
-			if($row['fanLevel'] == $k)
-				echo ' selected';
-		echo ">$v</option>\n";
-	}
-?>
 	</select>
 	<label for="swing"><b>Swing:</b></label>
 	<select id="swing" name="swing">
-<?php
-	$swings = array("stopped", "fixedTop", "fixedMiddleTop", "fixedMiddleBottom", "fixedBottom", "rangeFull");
-	foreach($swings as $v)
-	{
-		echo "\t\t<option value='$v'";
-			if($row['swing'] == $v)
-				echo ' selected';
-		echo ">$v</option>\n";
-	}
-?>
 	</select>
 	<label for="horizontalSwing"><b>Horizontal Swing:</b></label>
 	<select id="horizontalSwing" name="horizontalSwing">
-<?php
-	$swings = array("stopped", "fixedLeft", "fixedCenterLeft", "fixedCenter", "fixedCenterRight", "fixedRight", "rangeFull");
-	foreach($swings as $v)
-	{
-		echo "\t\t<option value='$v'";
-			if($row['horizontalSwing'] == $v)
-				echo ' selected';
-		echo ">$v</option>\n";
-	}
-?>
 	</select>
 	<button type="submit">Update</button>
     </div>
@@ -647,6 +609,65 @@ async function startDataLoop(force)
 
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
 		chart2.render();
+
+		populateSelect();
+	} catch (e) {
+		console.log(e)
+	}
+}
+/*
+        <select id='mode' name="mode" onChange='populateSelect(this.value); return false;'>
+        </select>
+        <label for='targetTemperature'><b>Target Temperature:</b></label>
+        <select id='targetTemperature' name='targetTemperature'>
+        </select>
+        <label for="fanLevel"><b>Fan Level:</b></label>
+        <select id='fanLevel' name="fanLevel">
+        </select>
+        <label for="swing"><b>Swing:</b></label>
+        <select id="swing" name="swing">
+        </select>
+        <label for="horizontalSwing"><b>Horizontal Swing:</b></label>
+        <select id="horizontalSwing" name="horizontalSwing">
+*/
+async function popSelect(dropdown, content, current)
+{
+	dropdown.innerHTML = '';
+	for(let i = 0; i < content.length; i++)
+	{
+		var opt = document.createElement('option');
+		opt.value = content[i];
+		opt.innerHTML = content[i];
+		if(content[i] == current)
+			opt.selected = true;
+		dropdown.appendChild(opt);
+	}
+}
+
+async function doPop(mode, val, type)
+{
+	var url = 'modes.php?time=' + new Date().getTime() + '&uid=' + uid + '&mode=' + mode + '&keyval=' + val;
+
+	const response = await fetch(url);
+	const ret = await response.json();
+console.log(ret);
+	if(ret['status'] == 200)
+		popSelect(document.getElementById(type), ret['content'], ret[type]);
+	else
+		console.log(ret);
+}
+
+async function populateSelect()
+{
+	try
+	{
+		var e = document.getElementById("mode");
+		var value = e.options[e.selectedIndex].value;
+
+		doPop(value, 'temperatures', 'targetTemperature');
+		doPop(value, 'fanLevels', 'fanLevel');
+		doPop(value, 'swing', 'swing');
+		doPop(value, 'horizontalSwing', 'horizontalSwing');
 	} catch (e) {
 		console.log(e)
 	}
