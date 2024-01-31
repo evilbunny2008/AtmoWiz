@@ -48,7 +48,12 @@
 		{
 			if($row['mode'] != $_REQUEST['mode'])
 			{
-				changeState($row['uid'], 'mode', $_REQUEST['mode']);
+				$ret = changeState($row['uid'], 'mode', $_REQUEST['mode']);
+				if($ret != 200)
+				{
+					echo $ret;
+					die;
+				}
 				$row['mode'] = mysqli_real_escape_string($link, $_REQUEST['mode']);
 			}
 		}
@@ -57,8 +62,13 @@
 		{
 			if($row['targetTemperature'] != $_REQUEST['targetTemperature'])
 			{
-				changeState($row['uid'], 'targetTemperature', $_REQUEST['targetTemperature']);
-				$row['targetTemperature'] = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
+				$ret = changeState($row['uid'], 'targetTemperature', intval($_REQUEST['targetTemperature']));
+				if($ret != 200)
+				{
+					echo $ret;
+					die;
+				}
+				$row['targetTemperature'] = intval($_REQUEST['targetTemperature']);
 			}
 		}
 
@@ -66,7 +76,12 @@
 		{
 			if($row['fanLevel'] != $_REQUEST['fanLevel'])
 			{
-				changeState($row['uid'], 'fanLevel', $_REQUEST['fanLevel']);
+				$ret = changeState($row['uid'], 'fanLevel', $_REQUEST['fanLevel']);
+				if($ret != 200)
+				{
+					echo $ret;
+					die;
+				}
 				$row['fanLevel'] = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
 			}
 		}
@@ -306,7 +321,7 @@ span.psw {
 	<label for='targetTemperature'><b>Target Temperature:</b></label>
 	<select id='targetTemperature' name='targetTemperature'>
 <?php
-	for($i = 18; $i <= 30; $i++)
+	for($i = 16; $i <= 30; $i++)
 	{
 		echo "\t\t<option value='$i'";
 		if($row['targetTemperature'] == $i)

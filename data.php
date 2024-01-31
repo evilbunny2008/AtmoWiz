@@ -153,7 +153,7 @@
 	}
 
 	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
-	$line1 = "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
+	$commands .= "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
 	$res = mysqli_query($link, $query);
