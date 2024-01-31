@@ -636,7 +636,7 @@ async function doPop(mode, val, type)
 
 	const response = await fetch(url);
 	const ret = await response.json();
-console.log(ret);
+
 	if(ret['status'] == 200)
 		popSelect(document.getElementById(type), ret['content'], ret[type]);
 	else

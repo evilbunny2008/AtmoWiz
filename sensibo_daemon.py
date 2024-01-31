@@ -4,6 +4,7 @@ import argparse
 import configparser
 import daemon
 import json
+import math
 import MySQLdb
 import os
 import requests
@@ -66,6 +67,30 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
         return result['result']
+
+def calcAT(temp, humid, country = 'au'):
+    if(country == 'au'):
+        # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
+        vp = (humid / 100) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
+        at = round(temp + (0.33 * vp) - 4, 1)
+        return at
+    else:
+        if(temp <= 80 and temp >= 50):
+            HI = 0.5 * (temp + 61.0 + ((temp - 68.0) * 1.2) + (humid * 0.094))
+        elif(temp > 50):
+            # North American Heat Index -- https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
+            HI = -42.379 + 2.04901523 * temp + 10.14333127 * humid - .22475541 * temp * humid - .00683783 * temp * temp - .05481717 * humid * humid + .00122874 * temp * temp * humid + .00085282 * temp * humid * humid - .00000199 * temp * temp * humid * humid
+
+            if(temp > 80 and humid < 13):
+                HI -= ((13 - humid) / 4) * math.sqrt((17 - math.abs(temp - 95)) / 17)
+
+            if(temp >= 80 and temp <= 87 and humid >= 85):
+                HI += ((humid - 85) / 10) * ((87 - temp) / 5)
+
+            return HI
+        else:
+            WC = 35.74 + 0.6215 * temp
+            return WC
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
@@ -147,15 +172,23 @@ if __name__ == "__main__":
                 continue
 
             device = remoteCapabilities[0]['device']['remoteCapabilities']
-            for mode in ['cool', 'heat', 'dry', 'auto']:
-                for temp in device['modes'][mode]['temperatures']['C']['values']:
-                    query = "INSERT INTO meta (uid, mode, keyval, value) VALUES (%s, %s, %s, %s)"
-                    cursor.execute(query, (podUID, mode, 'temperatures', temp))
+
+            corf = "C"
+            if(device['modes']['cool']['temperatures']['F']['isNative'] == True):
+                corf = "F"
+
+            query = "INSERT INTO meta (uid, mode, keyval, value) VALUES (%s, %s, %s, %s)"
+
+            for mode in ['cool', 'heat', 'dry', 'auto', 'fan']:
+                if(mode != "fan"):
+                    for temp in device['modes'][mode]['temperatures'][corf]['values']:
+                        # print (query % (podUID, mode, 'temperatures', temp))
+                        cursor.execute(query, (podUID, mode, 'temperatures', temp))
 
                 for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
-                    for fanLevel in device['modes'][mode][keyval]:
-                        query = "INSERT INTO meta (uid, mode, keyval, value) VALUES (%s, %s, %s, %s)"
-                        cursor.execute(query, (podUID, mode, keyval, fanLevel))
+                    for modes in device['modes'][mode][keyval]:
+                        # print (query % (podUID, mode, keyval, modes))
+                        cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
         mydb.close()
@@ -212,7 +245,9 @@ if __name__ == "__main__":
                 if(row):
                     continue
 
-                values = (sdate, podUID, temp, humid, temp, 0, 0, 'cool', 0, 'medium', 'fixedTop', 'fixedCenter')
+                at = calcAT(temp, humid)
+                values = (sdate, podUID, temp, humid, at, 0, 0, 'cool', 0, 'medium', 'fixedTop', 'fixedCenter')
+                print (_sql % values)
                 cursor.execute(_sql, values)
                 mydb.commit()
 
@@ -285,8 +320,10 @@ if __name__ == "__main__":
                         syslog.syslog("Skipping insert due to row already existing.")
                         continue
 
+                    at = calcAT(temp, humid)
+
                     values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
-                              measurements['feelsLike'], measurements['rssi'], ac_state['on'],
+                              at, measurements['rssi'], ac_state['on'],
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                               ac_state['swing'], ac_state['horizontalSwing'])
                     cursor.execute(_sql, values)
