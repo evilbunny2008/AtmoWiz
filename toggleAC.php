@@ -39,7 +39,7 @@
 
 	$url = "https://home.sensibo.com/api/v2/pods/".$_REQUEST['uid']."/acStates/on?apiKey=".$apikey;
 
-	$body = json_encode(['currentAcState' => $ac_state, 'newValue' => $on]);
+	$body = json_encode(array('newValue' => $on));
 	$opts = array('http' => array('method'=>"PATCH", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 5));
 	$context = stream_context_create($opts);
 	$ret = @file_get_contents($url, false, $context);

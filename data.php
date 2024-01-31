@@ -9,6 +9,22 @@
 		exit;
 	}
 
+	function reportError($error)
+	{
+		if(!isset($_SESSION['shownError']) || $_SESSION['shownError'] < time())
+		{
+			$_SESSION['shownError'] = time() + 600;
+			echo json_encode(array('status' => 403, 'error' => $error));
+			exit;
+		}
+
+		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
+		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
+		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(), 'dataPoints4' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
+		echo json_encode(array('status' => 200, 'content' => $data));
+		exit;
+	}
+
 	function getWho($reason)
 	{
 		if($reason == "ExternalIrCommand")
@@ -81,6 +97,10 @@
 		} else {
 			$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
 			$airconon = $row['airconon'];
+
+			$ac = "off";
+			if($airconon == 1)
+				$ac = "on";
 		}
 
 		$dataPoints2[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['humidity']));
@@ -94,8 +114,6 @@
 		if($startTS == -1)
 			$startTS = $row['whentime'];
 	}
-
-	$line1 = "<b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%";
 
 	$lastdate = '';
 	$commands = '';
@@ -113,28 +131,29 @@
 		$commands .= "<img style='width:80px;' onClick='logout(); return false;' src='exit.png' />\n";
 
 		$commands .= "</li>\n";
+
+		$query = "SELECT uid,name FROM devices ORDER BY name";
+		$res = mysqli_query($link, $query);
+		if(mysqli_num_rows($res) > 1)
+		{
+			$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
+			$commands .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
+
+			while($row = mysqli_fetch_assoc($res))
+			{
+				$commands .= "<option value='".$row['uid']."'";
+				if($uid == $row['uid'])
+					$commands .= " selected";
+				$commands .= ">".$row['name']."</option>\n";
+			}
+			$commands .= "</select></li>\n";
+		}
+
 		$commands .= "<li>&nbsp;</li>\n";
 	}
 
 	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
-	$commands .= "<li>$line1</li>\n";
-
-	$query = "SELECT uid,name FROM devices ORDER BY name";
-	$res = mysqli_query($link, $query);
-	if(mysqli_num_rows($res) > 1)
-	{
-		$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
-		$commands .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
-
-		while($row = mysqli_fetch_assoc($res))
-		{
-			$commands .= "<option value='".$row['uid']."'";
-			if($uid == $row['uid'])
-				$commands .= " selected";
-			$commands .= ">".$row['name']."</option>\n";
-		}
-		$commands .= "</select></li>\n";
-	}
+	$line1 = "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
 	$res = mysqli_query($link, $query);

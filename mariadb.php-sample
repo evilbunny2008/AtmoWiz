@@ -1,34 +1,19 @@
 <?php
+	$apikey = "<insert APIkey here>";
+	$dbpass = "<insert DB password here>";
+
+	$rwusername = "admin";
+	$rwpassword = "admin";
+
+	$rousername = "user";
+	$ropassword = "user";
+
 	session_start();
 
 	mysqli_report(MYSQLI_REPORT_OFF);
-	$link = @mysqli_connect('localhost', 'sensibo', 'password', 'sensibo');
+	$link = @mysqli_connect('localhost', 'sensibo', $dbpass, 'sensibo');
 	if(!isset($link))
 		$error = "DB error occured, check your settings in mariadb.php and try again";
 
 	if($error == null && mysqli_connect_errno())
 		$error = "DB error: " . mysqli_connect_error();
-
-	$apikey = "<insert APIkey here>";
-
-	$rwusername = "admin";
-	$rwpassword = "admin";
-
-	$rousername = "user1";
-	$ropassword = "user1";
-
-	function reportError($error)
-	{
-		if(!isset($_SESSION['shownError']) || $_SESSION['shownError'] < time())
-		{
-			$_SESSION['shownError'] = time() + 600;
-			echo json_encode(array('status' => 403, 'error' => $error));
-			exit;
-		}
-
-		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
-		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
-		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(), 'dataPoints4' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
-		echo json_encode(array('status' => 200, 'content' => $data));
-		exit;
-	}

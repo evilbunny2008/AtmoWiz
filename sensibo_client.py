@@ -39,7 +39,7 @@ class SensiboClientAPI(object):
         return result['result'][0]['acState']
 
     def pod_last_ac_state(self, podUid, nb = 10):
-        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="status,reason,time,acState")
+        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="status,reason,time,acState,causedByUser,causedByScheduleID,causedByScheduleType")
         return result['result']
 
     def pod_change_ac_state(self, podUid, currentAcState, propertyToChange, newValue):
@@ -183,6 +183,7 @@ if __name__ == "__main__":
                         localzone = utc.astimezone(to_zone)
                         sdate = localzone.strftime(fmt)
                         print ("Command executed at %(date)s : %(state)s -- Reason: %(reason)s, Status: %(status)s" % { 'date' : sdate, 'state': str(ac_state['acState']), 'reason': ac_state['reason'], 'status': ac_state['status']})
+                        print (ac_state)
 
                 if(args.fanLevel):
                     client.pod_change_ac_state(uid, ac_state, "fanLevel", args.fanLevel)
