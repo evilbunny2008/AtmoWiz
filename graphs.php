@@ -615,21 +615,7 @@ async function startDataLoop(force)
 		console.log(e)
 	}
 }
-/*
-        <select id='mode' name="mode" onChange='populateSelect(this.value); return false;'>
-        </select>
-        <label for='targetTemperature'><b>Target Temperature:</b></label>
-        <select id='targetTemperature' name='targetTemperature'>
-        </select>
-        <label for="fanLevel"><b>Fan Level:</b></label>
-        <select id='fanLevel' name="fanLevel">
-        </select>
-        <label for="swing"><b>Swing:</b></label>
-        <select id="swing" name="swing">
-        </select>
-        <label for="horizontalSwing"><b>Horizontal Swing:</b></label>
-        <select id="horizontalSwing" name="horizontalSwing">
-*/
+
 async function popSelect(dropdown, content, current)
 {
 	dropdown.innerHTML = '';
