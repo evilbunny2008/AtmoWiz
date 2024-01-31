@@ -68,7 +68,7 @@ class SensiboClientAPI(object):
             return None
         return result['result']
 
-def calcAT(temp, humid, country = 'au'):
+def calcAT(temp, humid, country):
     if(country == 'au'):
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         vp = (humid / 100) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
@@ -109,6 +109,7 @@ if __name__ == "__main__":
     password = configParser.get('mariadb', 'password', fallback='password')
     uid = configParser.getint('system', 'uid', fallback=0)
     gid = configParser.getint('system', 'gid', fallback=0)
+    country = configParser.getint('system', 'country', fallback='au')
 
     fileuid = os.stat(args.config).st_uid
     filegid = os.stat(args.config).st_gid
@@ -245,7 +246,7 @@ if __name__ == "__main__":
                 if(row):
                     continue
 
-                at = calcAT(temp, humid)
+                at = calcAT(temp, humid, country)
                 values = (sdate, podUID, temp, humid, at, 0, 0, 'cool', 0, 'medium', 'fixedTop', 'fixedCenter')
                 print (_sql % values)
                 cursor.execute(_sql, values)
@@ -320,7 +321,7 @@ if __name__ == "__main__":
                         syslog.syslog("Skipping insert due to row already existing.")
                         continue
 
-                    at = calcAT(temp, humid)
+                    at = calcAT(temp, humid, country)
 
                     values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                               at, measurements['rssi'], ac_state['on'],
