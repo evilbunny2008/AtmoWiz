@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   `fanLevel` varchar(20) NOT NULL DEFAULT 'medium',
   `swing` varchar(20) NOT NULL DEFAULT 'fixedTop',
   `horizontalSwing` varchar(20) NOT NULL DEFAULT 'fixedCenter',
+  `cost` float NOT NULL DEFAULT 0,
   PRIMARY KEY (`whentime`),
   KEY `uid` (`uid`)
 ) ENGINE=InnoDB;
