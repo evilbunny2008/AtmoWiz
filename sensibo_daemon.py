@@ -220,13 +220,13 @@ if __name__ == "__main__":
                 continue
 
             for last in last40:
-                print (last)
+                # print (last)
                 sstring = datetime.strptime(last['time']['time'], '%Y-%m-%dT%H:%M:%SZ')
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
-                print (_sqlselect1 % values)
+                # print (_sqlselect1 % values)
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
@@ -429,7 +429,7 @@ if __name__ == "__main__":
                         localzone = utc.astimezone(to_zone)
                         sdate = localzone.strftime(fmt)
                         values = (sdate, podUID)
-                        print (_sqlselect1 % values)
+                        # print (_sqlselect1 % values)
                         cursor.execute(_sqlselect1, values)
                         row = cursor.fetchone()
                         if(row):
