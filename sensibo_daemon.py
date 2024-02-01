@@ -215,15 +215,12 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for podUID in uidList:
             last40 = client.pod_status(podUID, 40)
-            print (last40)
 
             if(last40 == None):
                 continue
 
             for last in last40:
-                if(last['reason'] == 'UserRequest'):
-                    continue
-
+                print (last)
                 sstring = datetime.strptime(last['time']['time'], '%Y-%m-%dT%H:%M:%SZ')
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
