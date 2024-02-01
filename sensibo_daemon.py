@@ -167,7 +167,7 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
-            print (_sqlselect2, values)
+            print (_sqlselect2 % values)
             cursor.execute(_sqlselect2, values)
             row = cursor.fetchone()
             if(row):
@@ -200,12 +200,12 @@ if __name__ == "__main__":
             for mode in ['cool', 'heat', 'dry', 'auto', 'fan']:
                 if(mode != "fan"):
                     for temp in device['modes'][mode]['temperatures'][corf]['values']:
-                        print (query % (podUID, mode, 'temperatures', temp))
+                        # print (query % (podUID, mode, 'temperatures', temp))
                         cursor.execute(query, (podUID, mode, 'temperatures', temp))
 
                 for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
                     for modes in device['modes'][mode][keyval]:
-                        print (query % (podUID, mode, keyval, modes))
+                        # print (query % (podUID, mode, keyval, modes))
                         cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
@@ -215,6 +215,8 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for podUID in uidList:
             last40 = client.pod_status(podUID, 40)
+            print (last40)
+
             if(last40 == None):
                 continue
 
@@ -261,11 +263,11 @@ if __name__ == "__main__":
                 values = (sdate, podUID)
 
                 try:
-                    print (_sqlselect3 % values)
+                    # print (_sqlselect3 % values)
                     cursor.execute(_sqlselect3, values)
                     row = cursor.fetchone()
                     if(row):
-                        print ("Skipping insert due to row already existing.")
+                        # print ("Skipping insert due to row already existing.")
                         continue
 
                     at = calcAT(measurements['temperature'], measurements['humidity'], country)
@@ -307,7 +309,7 @@ if __name__ == "__main__":
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
-                print (_sqlselect3 % values)
+                # print (_sqlselect3 % values)
                 cursor.execute(_sqlselect3, values)
                 row = cursor.fetchone()
                 if(row):
@@ -386,11 +388,11 @@ if __name__ == "__main__":
 
                     try:
                         cursor = mydb.cursor()
-                        print (_sqlselect3 % values)
+                        # print (_sqlselect3 % values)
                         cursor.execute(_sqlselect3, values)
                         row = cursor.fetchone()
                         if(row):
-                            syslog.syslog("Skipping insert due to row already existing.")
+                            # syslog.syslog("Skipping insert due to row already existing.")
                             continue
 
                         at = calcAT(temp, humid, country)
