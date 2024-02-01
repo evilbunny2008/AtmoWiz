@@ -1,4 +1,6 @@
 CREATE DATABASE IF NOT EXISTS `sensibo`;
+CREATE USER IF NOT EXISTS `sensibo`@`localhost` IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON `sensibo`.* TO `sensibo`@`localhost`;
 USE `sensibo`;
 
 START TRANSACTION;
@@ -15,16 +17,12 @@ CREATE TABLE IF NOT EXISTS `commands` (
   `temperatureUnit` varchar(1) NOT NULL,
   `fanLevel` varchar(20) NOT NULL,
   `swing` varchar(20) NOT NULL,
-  `horizontalSwing` varchar(20) NOT NULL,
-  PRIMARY KEY (`whentime`),
-  KEY `uid` (`uid`)
+  `horizontalSwing` varchar(20) NOT NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `devices` (
   `uid` varchar(20) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  PRIMARY KEY (`uid`),
-  KEY `name` (`name`)
+  `name` varchar(255) NOT NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `meta` (
@@ -47,12 +45,11 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   `fanLevel` varchar(20) NOT NULL DEFAULT 'medium',
   `swing` varchar(20) NOT NULL DEFAULT 'fixedTop',
   `horizontalSwing` varchar(20) NOT NULL DEFAULT 'fixedCenter',
-  `cost` float NOT NULL DEFAULT 0,
-  PRIMARY KEY (`whentime`),
-  KEY `uid` (`uid`)
+  `cost` float NOT NULL DEFAULT 0
 ) ENGINE=InnoDB;
 
+ALTER TABLE `commands` ADD PRIMARY KEY (`whentime`,`uid`) USING BTREE;
+ALTER TABLE `devices` ADD PRIMARY KEY (`uid`), ADD KEY `name` (`name`);
+ALTER TABLE `meta` ADD KEY `uid` (`uid`), ADD KEY `mode` (`mode`), ADD KEY `keyval` (`keyval`);
+ALTER TABLE `sensibo` ADD PRIMARY KEY (`whentime`,`uid`) USING BTREE;
 COMMIT;
-
-CREATE USER IF NOT EXISTS `sensibo`@`localhost` IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON `sensibo`.* TO `sensibo`@`localhost`;
