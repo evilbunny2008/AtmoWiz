@@ -232,6 +232,10 @@ if __name__ == "__main__":
                 if(row):
                     continue
 
+                if(last['causedByUser'] == None):
+                    last['causedByUser'] = {}
+                    last['causedByUser']['firstName'] = 'Remote'
+
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                           last['status'], last['acState']['on'], last['acState']['mode'],
                           last['acState']['targetTemperature'],
