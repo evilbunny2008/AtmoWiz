@@ -2,6 +2,7 @@
 <?php
 	// https://www.currentforce.com.au/compare-air-conditioners/
 	// https://airconwa.com.au/air-conditioning-cost-to-run/
+	// SELECT uid, sum(cost) as cost, count(uid) * 90 / 3600 as `count` FROM `sensibo` WHERE whentime LIKE '2024-02-01%' group by uid
 
 	$EER = 3.38;
 	$COP = 3.36;
