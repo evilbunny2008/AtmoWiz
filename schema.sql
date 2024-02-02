@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS `commands` (
   `temperatureUnit` varchar(1) NOT NULL,
   `fanLevel` varchar(20) NOT NULL,
   `swing` varchar(20) NOT NULL,
-  `horizontalSwing` varchar(20) NOT NULL
+  `horizontalSwing` varchar(20) NOT NULL,
+  `changes` varchar(255) NOT NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `devices` (
@@ -52,4 +53,5 @@ ALTER TABLE `commands` ADD PRIMARY KEY (`whentime`,`uid`) USING BTREE;
 ALTER TABLE `devices` ADD PRIMARY KEY (`uid`), ADD KEY `name` (`name`);
 ALTER TABLE `meta` ADD KEY `uid` (`uid`), ADD KEY `mode` (`mode`), ADD KEY `keyval` (`keyval`);
 ALTER TABLE `sensibo` ADD PRIMARY KEY (`whentime`,`uid`) USING BTREE;
+
 COMMIT;
