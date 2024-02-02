@@ -25,7 +25,6 @@ _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
 _sqlselect3 = 'SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s'
 
-_logging = "print"
 _hasPlus = False
 
 class SensiboClientAPI(object):
@@ -39,10 +38,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            if(_logging == 'journald'):
-                log.error("Request failed, full error messages hidden to protect the API key")
-            else:
-                print ("Request failed, full error messages hidden to protect the API key")
+            log.error("Request failed, full error messages hidden to protect the API key")
             return None
 
     def devices(self):
@@ -52,10 +48,10 @@ class SensiboClientAPI(object):
         return {x['room']['name']: x['id'] for x in result['result']}
 
     def pod_all_stats(self, podUid, nb = 1):
-        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,time")
+        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,feelsLike")
         if(result == None):
             return None
-        return result
+        return result['result']
 
     def pod_get_remote_capabilities(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,remoteCapabilities,features")
@@ -71,13 +67,8 @@ class SensiboClientAPI(object):
         try:
             return result['result']
         except Exception as e:
-            if(_logging == 'journald'):
-                log.error(result)
-                log.error(full_stack())
-            else:
-                print (result)
-                print (full_stack())
-                return None
+            log.error(result)
+            log.error(full_stack())
             return None
 
     def pod_get_past_24hours(self, podUid, lastlimit = 1):
@@ -86,15 +77,17 @@ class SensiboClientAPI(object):
             return None
         return result['result']
 
-def calcAT(temp, humid, country):
-    if(country == 'au' or country == 'None'):
+def calcAT(temp, humid, country, feelslike):
+    if(feelslike != None and country == 'None'):
+        return feelslike
+
+    if(country == 'au' or feelslike == None):
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         # UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1)
         vp = (humid / 100.0) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
-        logfile.write("vp = %f\n" % vp)
+        log.info("vp = %f" % vp)
         at = round(temp + (0.33 * vp) - 4.0, 1)
-        logfile.write("at = %f\n" % at)
-        logfile.flush()
+        log.info("at = %f" % at)
         return at
     else:
         if(temp <= 80 and temp >= 50):
@@ -109,13 +102,11 @@ def calcAT(temp, humid, country):
             if(temp >= 80 and temp <= 87 and humid >= 85):
                 HI += ((humid - 85) / 10) * ((87 - temp) / 5)
 
-            logfile.write("HI = %d\n" % HI)
-            logfile.flush()
+            log.info("HI = %d" % HI)
             return HI
         else:
             WC = 35.74 + 0.6215 * temp
-            logfile.write("WC = %d\n" % WC)
-            logfile.flush()
+            log.info("WC = %d" % WC)
             return WC
 
 def full_stack():
@@ -133,7 +124,11 @@ def full_stack():
     return stackstr
 
 if __name__ == "__main__":
-    logfile = open('/tmp/sensibo.log', 'a')
+    log = logging.getLogger('Sensibo Daemon')
+    log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
+    log.setLevel(logging.INFO)
+    log.info("Daemon started....")
+
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
                         help='Path to config file, /etc/sensibo.conf is the default')
@@ -156,23 +151,23 @@ if __name__ == "__main__":
     filegid = os.stat(args.config).st_gid
 
     if(fileuid != 0 or filegid != 0):
-        print ("The config file isn't owned by root, can't continue.")
+        log.info("The config file isn't owned by root, can't continue.")
         exit(1)
 
     if(os.stat(args.config).st_mode != 33152):
-        print ("The config file isn't just rw as root, can't continue")
+        log.info("The config file isn't just rw as root, can't continue")
         exit(1)
 
     if(apikey == 'apikey' or apikey == '<apikey from sensibo.com>'):
-        print ('APIKEY is not set in config file.')
+        log.info('APIKEY is not set in config file.')
         exit(1)
 
     if(password == 'password' or password == '<password for local db>'):
-        print ("DB Password is not set in the config file, can't continue")
+        log.info("DB Password is not set in the config file, can't continue")
         exit(1)
 
     if(uid == 0 or gid == 0):
-        print ("UID or GID is set to superuser, this is not recommended.")
+        log.info("UID or GID is set to superuser, this is not recommended.")
 
     updatetime = 90
     fromfmt1 = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -184,7 +179,7 @@ if __name__ == "__main__":
     client = SensiboClientAPI(apikey)
     devices = client.devices()
     if(devices == None):
-        print ("Unable to get a list of devices, check your internet connection and apikey and try again.")
+        log.info("Unable to get a list of devices, check your internet connection and apikey and try again.")
         exit(1)
 
     uidList = devices.values()
@@ -194,13 +189,13 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
-            # print (_sqlselect2 % values)
+            # log.info(_sqlselect2 % values)
             cursor.execute(_sqlselect2, values)
             row = cursor.fetchone()
             if(row):
                 continue
 
-            print (_sqlquery2 % values)
+            log.info(_sqlquery2 % values)
             cursor.execute(_sqlquery2, values)
             mydb.commit()
 
@@ -230,12 +225,12 @@ if __name__ == "__main__":
             for mode in ['cool', 'heat', 'dry', 'auto', 'fan']:
                 if(mode != "fan"):
                     for temp in device['modes'][mode]['temperatures'][corf]['values']:
-                        # print (query % (podUID, mode, 'temperatures', temp))
+                        # log.info(query % (podUID, mode, 'temperatures', temp))
                         cursor.execute(query, (podUID, mode, 'temperatures', temp))
 
                 for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
                     for modes in device['modes'][mode][keyval]:
-                        # print (query % (podUID, mode, keyval, modes))
+                        # log.info(query % (podUID, mode, keyval, modes))
                         cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
@@ -255,15 +250,15 @@ if __name__ == "__main__":
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
-                #print (_sqlselect1 % values)
+                #log.info(_sqlselect1 % values)
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
                     changes = last['changedProperties']
-                    print (changes)
+                    #log.info(changes)
                     query = "UPDATE commands SET changes=%s WHERE whentime=%s AND uid=%s AND changes=''"
                     values = (str(changes), sdate, podUID)
-                    print (query % values)
+                    #log.info(query % values)
                     cursor.execute(query, values)
                     mydb.commit()
                     continue
@@ -279,7 +274,7 @@ if __name__ == "__main__":
                           last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
                           acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
                           acState['horizontalSwing'], str(changes))
-                print (_sqlquery1 % values)
+                log.info(_sqlquery1 % values)
                 cursor.execute(_sqlquery1, values)
                 mydb.commit()
 
@@ -288,95 +283,72 @@ if __name__ == "__main__":
         mydb = MySQLdb.connect(hostname, username, password, database)
         cursor = mydb.cursor()
         for podUID in uidList:
-            pod_measurement40 = client.pod_all_stats(podUID, 40)
-            if(pod_measurement40 == None):
-                continue
-
-            for pod_measurement in pod_measurement40['result']:
-                ac_state = pod_measurement['device']['acState']
-                measurements = pod_measurement['device']['measurements']
-                sstring = datetime.strptime(pod_measurement['time']['time'], fromfmt2)
-                utc = sstring.replace(tzinfo=from_zone)
-                localzone = utc.astimezone(to_zone)
-                sdate = localzone.strftime(fmt)
-                values = (sdate, podUID)
-
-                try:
-                    # print (_sqlselect3 % values)
-                    cursor.execute(_sqlselect3, values)
-                    row = cursor.fetchone()
-                    if(row):
-                        # print ("Skipping insert due to row already existing.")
-                        continue
-
-                    if(country == 'None'):
-                        at = measurements['feelslike']
-                    else:
-                        at = calcAT(measurements['temperature'], measurements['humidity'], country)
-
-                    values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
-                              at, measurements['rssi'], ac_state['on'],
-                              ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
-                              ac_state['swing'], ac_state['horizontalSwing'])
-                    print (_sqlquery3 % values)
-                    cursor.execute(_sqlquery3, values)
-                    mydb.commit()
-                except MySQLdb._exceptions.ProgrammingError as e:
-                    print ("There was a problem, error was %s" % e)
-                    print (full_stack())
-                    exit(1)
-                except MySQLdb._exceptions.IntegrityError as e:
-                    print ("There was a problem, error was %s" % e)
-                    print (full_stack())
-                    exit(1)
-                except MySQLdb._exceptions.OperationalError as e:
-                    print ("There was a problem, error was %s" % e)
-                    print (full_stack())
-                    exi(1)
-        mydb.close()
-
-        mydb = MySQLdb.connect(hostname, username, password, database)
-        cursor = mydb.cursor()
-        for podUID in uidList:
             if(_hasPlus):
-                past24 = client.pod_get_past_24hours(podUID, 30)
+                past24 = client.pod_get_past_24hours(podUID, 1)
             else:
                 past24 = client.pod_get_past_24hours(podUID, 1)
             if(past24 == None):
                 continue
 
-            for i in range(len(past24['temperature']) - 1):
+            pod_measurement40 = client.pod_all_stats(podUID, 40)
+            if(pod_measurement40 == None):
+                continue
+
+            rc = 0
+            for i in range(len(past24['temperature']) - 1, 0, -1):
+                # print("rc = %d, i = %d" % (rc, i))
                 temp = past24['temperature'][i]['value']
                 humid = past24['humidity'][i]['value']
+
+                if(rc < len(pod_measurement40)):
+                    feelslike = pod_measurement40[rc]['device']['measurements']['feelsLike']
+                    rssi = pod_measurement40[rc]['device']['measurements']['rssi']
+                    airconon = pod_measurement40[rc]['device']['acState']['on']
+                    mode = pod_measurement40[rc]['device']['acState']['mode']
+                    targetTemperature = pod_measurement40[rc]['device']['acState']['targetTemperature']
+                    fanLevel = pod_measurement40[rc]['device']['acState']['fanLevel']
+                    swing = pod_measurement40[rc]['device']['acState']['swing']
+                    horizontalSwing = pod_measurement40[rc]['device']['acState']['horizontalSwing']
+                else:
+                    feelslike = None
+                    rssi = 0
+                    airconon = 0
+                    mode = 'cool'
+                    targetTemperature = 0
+                    fanLevel = 'medium'
+                    swing = 'fixedTop'
+                    horizontalSwing = 'fixedCenter'
+
                 sstring = datetime.strptime(past24['temperature'][i]['time'], '%Y-%m-%dT%H:%M:%SZ')
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
-                # print (_sqlselect3 % values)
+                #log.info(_sqlselect3 % values)
                 cursor.execute(_sqlselect3, values)
                 row = cursor.fetchone()
                 if(row):
                     continue
 
-                at = calcAT(temp, humid, country)
-                values = (sdate, podUID, temp, humid, at, 0, 0, 'cool', 0, 'medium', 'fixedTop', 'fixedCenter')
-                print (_sqlquery3 % values)
+                at = calcAT(temp, humid, country, feelslike)
+                values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing)
+                log.info(_sqlquery3 % values)
                 cursor.execute(_sqlquery3, values)
                 mydb.commit()
+                rc += 1
 
         mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
-        print ("here was a problem, error was %s" % e)
-        print (full_stack())
+        log.error("here was a problem, error was %s" % e)
+        log.error(full_stack())
         exit(1)
     except MySQLdb._exceptions.OperationalError as e:
-        print ("There was a problem, error was %s" % e)
-        print (full_stack())
+        log.error("There was a problem, error was %s" % e)
+        log.error(full_stack())
         exit(1)
     except MySQLdb._exceptions.IntegrityError as e:
-        print ("There was a problem, error was %s" % e)
-        print (full_stack())
+        log.error("There was a problem, error was %s" % e)
+        log.error(full_stack())
         exit(1)
 
     if(os.path.isfile(args.pidfile)):
@@ -385,90 +357,81 @@ if __name__ == "__main__":
         old_pid = int(file.readline())
         pid = os.getpid()
         if(pid != old_pid):
-            print ("Sensibo daemon is already running with pid %d, and pidfile %s already exists, exiting..." %
+            log.error("Sensibo daemon is already running with pid %d, and pidfile %s already exists, exiting..." %
                   (old_pid, args.pidfile))
         exit(1)
 
     mydir = os.path.dirname(os.path.abspath(args.pidfile))
     if(mydir == '/var/run'):
-        print ("/var/run isn't a valid directory, can't continue.")
+        log.error("/var/run isn't a valid directory, can't continue.")
         exit(1)
     if(not os.path.isdir(mydir)):
-        print ('Making %s' % mydir)
+        log.info('Making %s' % mydir)
         os.makedirs(mydir)
 
     if(os.path.isdir(mydir)):
         diruid = os.stat(mydir).st_uid
         dirgid = os.stat(mydir).st_gid
         if(uid != diruid or gid != dirgid):
-            print ('Setting %s uid to %d and gid to %d' % (mydir, uid, gid))
+            log.info('Setting %s uid to %d and gid to %d' % (mydir, uid, gid))
             shutil.chown(mydir, uid, gid)
 
-    context = daemon.DaemonContext(stdout = logfile, stderr = logfile,
-              pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
+#    context = daemon.DaemonContext(pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
-    with context:
-        log = logging.getLogger('Sensibo Daemon')
-        log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
-        log.setLevel(logging.INFO)
-        log.info("Daemon started....")
-        _logging = "journald"
-
+#    with context:
         while True:
             mydb = MySQLdb.connect(hostname, username, password, database)
             log.info("Connection to mariadb accepted")
             secondsAgo = -1;
 
             for podUID in uidList:
-                pod_measurement5 = client.pod_all_stats(podUID, 5)
-                if(pod_measurement5 == None):
+                pod_measurement = client.pod_all_stats(podUID, 1)
+                if(pod_measurement == None):
                     continue
 
-                for pod_measurement in pod_measurement5['result']:
-                    ac_state = pod_measurement['device']['acState']
-                    measurements = pod_measurement['device']['measurements']
-                    sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
-                    if(secondsAgo == -1):
-                        #log.info("secondsAgo = %d" % measurements['time']['secondsAgo'])
-                        secondsAgo = 100 - measurements['time']['secondsAgo']
-                    utc = sstring.replace(tzinfo=from_zone)
-                    localzone = utc.astimezone(to_zone)
-                    sdate = localzone.strftime(fmt)
-                    values = (sdate, podUID)
+                pod_measurement = pod_measurement[0]
+                ac_state = pod_measurement['device']['acState']
+                measurements = pod_measurement['device']['measurements']
+                sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
 
-                    try:
-                        cursor = mydb.cursor()
-                        # print (_sqlselect3 % values)
-                        cursor.execute(_sqlselect3, values)
-                        row = cursor.fetchone()
-                        if(row):
-                            # log.info("Skipping insert due to row already existing.")
-                            continue
+                if(secondsAgo == -1):
+                    #log.info("secondsAgo = %d" % measurements['time']['secondsAgo'])
+                    secondsAgo = 100 - measurements['time']['secondsAgo']
+                utc = sstring.replace(tzinfo=from_zone)
+                localzone = utc.astimezone(to_zone)
+                sdate = localzone.strftime(fmt)
+                values = (sdate, podUID)
 
-                        if(country == 'None'):
-                            at = measurements['feelslike']
-                        else:
-                            at = calcAT(measurements['temperature'], measurements['humidity'], country)
+                try:
+                    cursor = mydb.cursor()
+                    #log.info(_sqlselect3 % values)
+                    cursor.execute(_sqlselect3, values)
+                    row = cursor.fetchone()
+                    if(row):
+                        #log.info("Skipping insert due to row already existing.")
+                        continue
 
-                        values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
-                                  at, measurements['rssi'], ac_state['on'],
-                                  ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
-                                  ac_state['swing'], ac_state['horizontalSwing'])
-                        log.info(_sqlquery3 % values)
-                        cursor.execute(_sqlquery3, values)
-                        mydb.commit()
-                    except MySQLdb._exceptions.ProgrammingError as e:
-                        log.error("There was a problem, error was %s" % e)
-                        log.error(full_stack())
-                        pass
-                    except MySQLdb._exceptions.IntegrityError as e:
-                        log.error("There was a problem, error was %s" % e)
-                        log.error(full_stack())
-                        pass
-                    except MySQLdb._exceptions.OperationalError as e:
-                        log.error("There was a problem, error was %s" % e)
-                        log.error(full_stack())
-                        pass
+                    at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
+
+                    values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
+                              at, measurements['rssi'], ac_state['on'],
+                              ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
+                              ac_state['swing'], ac_state['horizontalSwing'])
+                    log.info(_sqlquery3 % values)
+                    cursor.execute(_sqlquery3, values)
+                    mydb.commit()
+                except MySQLdb._exceptions.ProgrammingError as e:
+                    log.error("There was a problem, error was %s" % e)
+                    log.error(full_stack())
+                    pass
+                except MySQLdb._exceptions.IntegrityError as e:
+                    log.error("There was a problem, error was %s" % e)
+                    log.error(full_stack())
+                    pass
+                except MySQLdb._exceptions.OperationalError as e:
+                    log.error("There was a problem, error was %s" % e)
+                    log.error(full_stack())
+                    pass
 
                 last5 = client.pod_status(podUID, 5)
                 if(last5 == None):
@@ -485,7 +448,7 @@ if __name__ == "__main__":
                         localzone = utc.astimezone(to_zone)
                         sdate = localzone.strftime(fmt)
                         values = (sdate, podUID)
-                        # print (_sqlselect1 % values)
+                        #log.info(_sqlselect1 % values)
                         cursor.execute(_sqlselect1, values)
                         row = cursor.fetchone()
                         if(row):

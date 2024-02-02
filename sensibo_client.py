@@ -45,9 +45,9 @@ class SensiboClientAPI(object):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="status,reason,time,acState,causedByUser")
         return result['result']
 
-    def pod_change_ac_state(self, podUid, currentAcState, propertyToChange, newValue):
+    def pod_change_ac_state(self, podUid, propertyToChange, newValue):
         self._patch("/pods/%s/acStates/%s" % (podUid, propertyToChange),
-                json.dumps({'currentAcState': currentAcState, 'newValue': newValue}))
+                json.dumps({'newValue': newValue}))
 
 def tempFromMeasurements(measurement):
     unitId=''
@@ -159,7 +159,7 @@ if __name__ == "__main__":
                     not args.terse and print ("-" * 10, "AC State of %s" % deviceNameByUID[uid], "-" * 10)
                     print (ac_state)
                 if(args.togglePower):
-                    client.pod_change_ac_state(uid, ac_state, "on", not ac_state['on'])
+                    client.pod_change_ac_state(uid, "on", not ac_state['on'])
                 if(args.showMeasurements or args.showTempMeasurement):
                     pod_measurement = client.pod_measurement(uid)
                 if(args.showMeasurements):
@@ -180,36 +180,38 @@ if __name__ == "__main__":
                     print ("Command executed at %(date)s : %(state)s" % { 'date' : sdate, 'state': tempFromMeasurements(pod_measurement[0])})
                 if(args.last):
                     last_ac_state = client.pod_last_ac_state(uid, args.last)
+                    print(last_ac_state)
+                    exit(0)
                     for ac_state in last_ac_state:
                         sstring = datetime.strptime(ac_state['time']['time'],'%Y-%m-%dT%H:%M:%SZ')
                         utc = sstring.replace(tzinfo=from_zone)
                         localzone = utc.astimezone(to_zone)
                         sdate = localzone.strftime(fmt)
-                        print ("Command executed at %(date)s : %(state)s -- Reason: %(reason)s, Status: %(status)s" % { 'date' : sdate, 'state': str(ac_state['acState']), 'reason': ac_state['reason'], 'status': ac_state['status']})
-                        print (ac_state)
+                        #print ("Command executed at %(date)s : %(state)s -- Reason: %(reason)s, Status: %(status)s" % { 'date' : sdate, 'state': str(ac_state['acState']), 'reason': ac_state['reason'], 'status': ac_state['status']})
+                        #print (ac_state)
 
                 if(args.fanLevel):
-                    client.pod_change_ac_state(uid, ac_state, "fanLevel", args.fanLevel)
+                    client.pod_change_ac_state(uid, "fanLevel", args.fanLevel)
                     print("Fan", args.fanLevel)
 
                 if(args.verticalSwing):
-                    client.pod_change_ac_state(uid, ac_state, "swing", args.verticalSwing)
+                    client.pod_change_ac_state(uid, "swing", args.verticalSwing)
                     print("Vertical Swing", args.verticalSwing)
 
                 if(args.horizontalSwing):
-                    client.pod_change_ac_state(uid, ac_state, "horizontalSwing", args.horizontalSwing)
+                    client.pod_change_ac_state(uid, "horizontalSwing", args.horizontalSwing)
                     print("Horizontal Swing", args.horizontalSwing)
 
                 if(args.mode):
-                    client.pod_change_ac_state(uid, ac_state, "mode", args.mode)
+                    client.pod_change_ac_state(uid, "mode", args.mode)
                     print("Mode", args.mode)
 
                 if(args.targetTemp):
-                    client.pod_change_ac_state(uid, ac_state, "targetTemperature", args.targetTemp)
+                    client.pod_change_ac_state(uid, "targetTemperature", args.targetTemp)
                     print("Target Temp", args.targetTemp)
 
                 if(args.tempUnit):
-                    client.pod_change_ac_state(uid, ac_state, "temperatureUnit", args.tempUnit)
+                    client.pod_change_ac_state(uid, "temperatureUnit", args.tempUnit)
                     print("Temp Unit", args.tempUnit)
 
         except requests.exceptions.RequestException as exc:
