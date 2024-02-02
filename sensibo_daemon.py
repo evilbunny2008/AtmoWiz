@@ -69,7 +69,7 @@ class SensiboClientAPI(object):
         return result['result']
 
 def calcAT(temp, humid, country):
-    if(country == 'au'):
+    if(country == 'au' or country == 'None'):
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         # UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1)
         vp = (humid / 100) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
@@ -271,7 +271,10 @@ if __name__ == "__main__":
                         # print ("Skipping insert due to row already existing.")
                         continue
 
-                    at = calcAT(measurements['temperature'], measurements['humidity'], country)
+                    if(country == 'None'):
+                        at = measurements['feelslike']
+                    else:
+                        at = calcAT(measurements['temperature'], measurements['humidity'], country)
 
                     values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                               at, measurements['rssi'], ac_state['on'],
@@ -396,7 +399,10 @@ if __name__ == "__main__":
                             # syslog.syslog("Skipping insert due to row already existing.")
                             continue
 
-                        at = calcAT(temp, humid, country)
+                        if(country == 'None'):
+                            at = measurements['feelslike']
+                        else:
+                            at = calcAT(measurements['temperature'], measurements['humidity'], country)
 
                         values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                                   at, measurements['rssi'], ac_state['on'],
@@ -448,10 +454,9 @@ if __name__ == "__main__":
                                   last['acState']['targetTemperature'],
                                   last['acState']['temperatureUnit'], last['acState']['fanLevel'],
                                   last['acState']['swing'], last['acState']['horizontalSwing'])
-                        print (_sqlquery % values)
+                        syslog.syslog(_sqlquery % values)
                         cursor.execute(_sqlquery, values)
                         mydb.commit()
-                        syslog.syslog(_sqlquery % values)
                     except MySQLdb._exceptions.ProgrammingError as e:
                         syslog.syslog("There was a problem, error was %s" % e)
                         syslog.syslog(full_stack())
