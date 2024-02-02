@@ -4,16 +4,17 @@ import argparse
 import configparser
 import daemon
 import json
+import logging
 import math
 import MySQLdb
 import os
 import requests
 import shutil
-import syslog
 import time
 from daemon import pidfile
 from datetime import datetime
 from dateutil import tz
+from systemd.journal import JournalHandler
 
 _SERVER = 'https://home.sensibo.com/api/v2'
 _sql = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
@@ -35,7 +36,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            syslog.syslog("Request failed, full error messages hidden to protect the API key")
+            log.error("Request failed, full error messages hidden to protect the API key")
             return None
 
     def devices(self):
@@ -72,8 +73,10 @@ def calcAT(temp, humid, country):
     if(country == 'au' or country == 'None'):
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         # UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1)
-        vp = (humid / 100) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
-        at = round(temp + (0.33 * vp) - 4, 1)
+        vp = (humid / 100.0) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
+        print ("vp = %f" % vp)
+        at = round(temp + (0.33 * vp) - 4.0, 1)
+        print ("at = %f" % at)
         return at
     else:
         if(temp <= 80 and temp >= 50):
@@ -369,12 +372,15 @@ if __name__ == "__main__":
               pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
     with context:
-        syslog.openlog(facility=syslog.LOG_DAEMON)
+        log = logging.getLogger('Sensibo Daemon')
+        log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
+        log.setLevel(logging.INFO)
+        log.info("Daemon started....")
 
         while True:
             mydb = MySQLdb.connect(hostname, username, password, database)
-            syslog.syslog("Connection to mariadb accepted")
-            start = time.time()
+            log.info("Connection to mariadb accepted")
+            secondsAgo = -1;
 
             for podUID in uidList:
                 pod_measurement5 = client.pod_all_stats(podUID, 5)
@@ -385,6 +391,9 @@ if __name__ == "__main__":
                     ac_state = pod_measurement['device']['acState']
                     measurements = pod_measurement['device']['measurements']
                     sstring = datetime.strptime(measurements['time']['time'], fromfmt)
+                    if(secondsAgo == -1):
+                        #log.info("secondsAgo = %d" % measurements['time']['secondsAgo'])
+                        secondsAgo = 100 - measurements['time']['secondsAgo']
                     utc = sstring.replace(tzinfo=from_zone)
                     localzone = utc.astimezone(to_zone)
                     sdate = localzone.strftime(fmt)
@@ -396,7 +405,7 @@ if __name__ == "__main__":
                         cursor.execute(_sqlselect3, values)
                         row = cursor.fetchone()
                         if(row):
-                            # syslog.syslog("Skipping insert due to row already existing.")
+                            # log.info("Skipping insert due to row already existing.")
                             continue
 
                         if(country == 'None'):
@@ -408,20 +417,20 @@ if __name__ == "__main__":
                                   at, measurements['rssi'], ac_state['on'],
                                   ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                                   ac_state['swing'], ac_state['horizontalSwing'])
-                        syslog.syslog(_sql % values)
+                        log.info(_sql % values)
                         cursor.execute(_sql, values)
                         mydb.commit()
                     except MySQLdb._exceptions.ProgrammingError as e:
-                        syslog.syslog("There was a problem, error was %s" % e)
-                        syslog.syslog(full_stack())
+                        log.error("There was a problem, error was %s" % e)
+                        log.error(full_stack())
                         pass
                     except MySQLdb._exceptions.IntegrityError as e:
-                        syslog.syslog("There was a problem, error was %s" % e)
-                        syslog.syslog(full_stack())
+                        log.error("There was a problem, error was %s" % e)
+                        log.error(full_stack())
                         pass
                     except MySQLdb._exceptions.OperationalError as e:
-                        syslog.syslog("There was a problem, error was %s" % e)
-                        syslog.syslog(full_stack())
+                        log.error("There was a problem, error was %s" % e)
+                        log.error(full_stack())
                         pass
 
                 last5 = client.pod_status(podUID, 5)
@@ -454,24 +463,22 @@ if __name__ == "__main__":
                                   last['acState']['targetTemperature'],
                                   last['acState']['temperatureUnit'], last['acState']['fanLevel'],
                                   last['acState']['swing'], last['acState']['horizontalSwing'])
-                        syslog.syslog(_sqlquery % values)
+                        log.info(_sqlquery % values)
                         cursor.execute(_sqlquery, values)
                         mydb.commit()
                     except MySQLdb._exceptions.ProgrammingError as e:
-                        syslog.syslog("There was a problem, error was %s" % e)
-                        syslog.syslog(full_stack())
+                        log.error("There was a problem, error was %s" % e)
+                        log.error(full_stack())
                         pass
                     except MySQLdb._exceptions.IntegrityError as e:
-                        syslog.syslog("There was a problem, error was %s" % e)
-                        syslog.syslog(full_stack())
+                        log.error("There was a problem, error was %s" % e)
+                        log.error(full_stack())
                         pass
                     except MySQLdb._exceptions.OperationalError as e:
-                        syslog.syslog("There was a problem, error was %s" % e)
-                        syslog.syslog(full_stack())
+                        log.error("There was a problem, error was %s" % e)
+                        log.error(full_stack())
                         pass
 
             mydb.close()
-            end = time.time()
-            sleeptime = round(updatetime - (end - start), 1)
-            syslog.syslog("Sleeping for %s seconds..." % str(sleeptime))
-            time.sleep(sleeptime)
+            log.info("Sleeping for %d seconds..." % secondsAgo)
+            time.sleep(secondsAgo)
