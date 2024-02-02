@@ -31,7 +31,7 @@
 	while($row = mysqli_fetch_assoc($res))
 		$ret[] = $row['value'];
 
-	$query = "SELECT targetTemperature,fanLevel,swing,horizontalSwing FROM commands ORDER BY whentime DESC LIMIT 1";
+	$query = "SELECT targetTemperature,fanLevel,swing,horizontalSwing FROM commands WHERE uid='$uid ORDER BY whentime DESC LIMIT 1";
 	$res = mysqli_query($link, $query);
 	$row = mysqli_fetch_assoc($res);
 
