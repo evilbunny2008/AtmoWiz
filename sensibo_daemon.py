@@ -25,6 +25,8 @@ _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
 _sqlselect3 = 'SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s'
 
+_logging = "print"
+
 class SensiboClientAPI(object):
     def __init__(self, api_key):
         self._api_key = api_key
@@ -36,7 +38,10 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            log.error("Request failed, full error messages hidden to protect the API key")
+            if(_logging == 'journald'):
+                log.error("Request failed, full error messages hidden to protect the API key")
+            else:
+                print ("Request failed, full error messages hidden to protect the API key")
             return None
 
     def devices(self):
@@ -376,6 +381,7 @@ if __name__ == "__main__":
         log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
         log.setLevel(logging.INFO)
         log.info("Daemon started....")
+        _logging = "journald"
 
         while True:
             mydb = MySQLdb.connect(hostname, username, password, database)
@@ -480,5 +486,9 @@ if __name__ == "__main__":
                         pass
 
             mydb.close()
+
+            if(secondsAgo == -1):
+                secondsAgo = 90
+
             log.info("Sleeping for %d seconds..." % secondsAgo)
             time.sleep(secondsAgo)
