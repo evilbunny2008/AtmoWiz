@@ -33,6 +33,8 @@
 			$who = "App";
 		else if($reason == "UserAPI")
 			$who = "API";
+		else if($reason == "Trigger")
+			$who = "Climate React";
 		else
 			$who = "Unknown";
 
@@ -168,6 +170,8 @@
 		$who = $row['who'];
 		if($who == '')
 			$who = getWho($row["reason"]);
+		else if($row['who'] != $row["reason"])
+			$who = $who." (".getWho($row["reason"]).")";
 
 		if($date != $lastdate)
 		{

@@ -255,21 +255,11 @@ if __name__ == "__main__":
                     last['causedByUser'] = {}
                     last['causedByUser']['firstName'] = 'Remote'
 
-                try:
-                    print (last['acState']['swing'])
-                except Exception as e:
-                    last['acState']['swing'] = ''
-
-                try:
-                    print (last['acState']['horizontalSwing'])
-                except Exception as e:
-                    last['acState']['horizontalSwing'] = ''
-
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
-                          last['status'], last['acState']['on'], last['acState']['mode'],
-                          last['acState']['targetTemperature'],
-                          last['acState']['temperatureUnit'], last['acState']['fanLevel'],
-                          last['acState']['swing'], last['acState']['horizontalSwing'])
+                          last['status'], last['resultingAcState']['on'], last['resultingAcState']['mode'],
+                          last['resultingAcState']['targetTemperature'],
+                          last['resultingAcState']['temperatureUnit'], last['resultingAcState']['fanLevel'],
+                          last['resultingAcState']['swing'], last['resultingAcState']['horizontalSwing'])
                 print (_sqlquery % values)
                 cursor.execute(_sqlquery, values)
                 mydb.commit()
@@ -485,21 +475,11 @@ if __name__ == "__main__":
                             last['causedByUser'] = {}
                             last['causedByUser']['firstName'] = 'Remote'
 
-                        try:
-                            print (last['acState']['swing'])
-                        except Exception as e:
-                            last['acState']['swing'] = ''
-
-                        try:
-                            print (last['acState']['horizontalSwing'])
-                        except Exception as e:
-                            last['acState']['horizontalSwing'] = ''
-
                         values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
-                                  last['status'], last['acState']['on'], last['acState']['mode'],
-                                  last['acState']['targetTemperature'],
-                                  last['acState']['temperatureUnit'], last['acState']['fanLevel'],
-                                  last['acState']['swing'], last['acState']['horizontalSwing'])
+                                  last['status'], last['resultingAcState']['on'], last['resultingAcState']['mode'],
+                                  last['resultingAcState']['targetTemperature'],
+                                  last['resultingAcState']['temperatureUnit'], last['resultingAcState']['fanLevel'],
+                                  last['resultingAcState']['swing'], last['resultingAcState']['horizontalSwing'])
                         log.info(_sqlquery % values)
                         cursor.execute(_sqlquery, values)
                         mydb.commit()
