@@ -261,11 +261,15 @@ if __name__ == "__main__":
                     last['causedByUser'] = {}
                     last['causedByUser']['firstName'] = 'Remote'
 
+                try:
+                    acState = last['resultingAcState']
+                except Exception as e:
+                    acState = last['acState']
+
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
-                          last['status'], last['resultingAcState']['on'], last['resultingAcState']['mode'],
-                          last['resultingAcState']['targetTemperature'],
-                          last['resultingAcState']['temperatureUnit'], last['resultingAcState']['fanLevel'],
-                          last['resultingAcState']['swing'], last['resultingAcState']['horizontalSwing'])
+                          last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
+                          acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
+                          acState['horizontalSwing'])
                 print (_sqlquery % values)
                 cursor.execute(_sqlquery, values)
                 mydb.commit()
@@ -480,11 +484,15 @@ if __name__ == "__main__":
                             last['causedByUser'] = {}
                             last['causedByUser']['firstName'] = 'Remote'
 
+                        try:
+                            acState = last['resultingAcState']
+                        except Exception as e:
+                            acState = last['acState']
+
                         values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
-                                  last['status'], last['resultingAcState']['on'], last['resultingAcState']['mode'],
-                                  last['resultingAcState']['targetTemperature'],
-                                  last['resultingAcState']['temperatureUnit'], last['resultingAcState']['fanLevel'],
-                                  last['resultingAcState']['swing'], last['resultingAcState']['horizontalSwing'])
+                                  last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
+                                  acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
+                                  acState['horizontalSwing'])
                         log.info(_sqlquery % values)
                         cursor.execute(_sqlquery, values)
                         mydb.commit()
