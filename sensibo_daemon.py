@@ -66,7 +66,18 @@ class SensiboClientAPI(object):
         result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser")
         if(result == None):
             return None
-        return result['result']
+
+        try:
+            return result['result']
+        except Exception as e:
+            if(_logging == 'journald'):
+                log.error(result)
+                log.error(full_stack())
+            else:
+                print (result)
+                print (full_stack())
+                return None
+            return None
 
     def pod_get_past_24hours(self, podUid, lastlimit = 1):
         result = self._get("/pods/%s/historicalMeasurements" % podUid, days = lastlimit, fields="status,reason,time,acState,causedByUser")
@@ -243,6 +254,16 @@ if __name__ == "__main__":
                 if(last['causedByUser'] == None):
                     last['causedByUser'] = {}
                     last['causedByUser']['firstName'] = 'Remote'
+
+                try:
+                    print (last['acState']['swing'])
+                except Exception as e:
+                    last['acState']['swing'] = ''
+
+                try:
+                    print (last['acState']['horizontalSwing'])
+                except Exception as e:
+                    last['acState']['horizontalSwing'] = ''
 
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                           last['status'], last['acState']['on'], last['acState']['mode'],
@@ -463,6 +484,16 @@ if __name__ == "__main__":
                         if(last['causedByUser'] == None):
                             last['causedByUser'] = {}
                             last['causedByUser']['firstName'] = 'Remote'
+
+                        try:
+                            print (last['acState']['swing'])
+                        except Exception as e:
+                            last['acState']['swing'] = ''
+
+                        try:
+                            print (last['acState']['horizontalSwing'])
+                        except Exception as e:
+                            last['acState']['horizontalSwing'] = ''
 
                         values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                                   last['status'], last['acState']['on'], last['acState']['mode'],
