@@ -11,7 +11,6 @@ import os
 import requests
 import shutil
 import time
-from daemon import pidfile
 from datetime import datetime
 from dateutil import tz
 from systemd.journal import JournalHandler
@@ -132,8 +131,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
                         help='Path to config file, /etc/sensibo.conf is the default')
-    parser.add_argument('--pidfile', type = str, default='/var/run/sensibo/sensibo.pid',
-                        help='File to set the pid to, /var/run/sensibo/sensibo.pid is the default')
     args = parser.parse_args()
 
     configParser = configparser.ConfigParser()
@@ -168,6 +165,9 @@ if __name__ == "__main__":
 
     if(uid == 0 or gid == 0):
         log.info("UID or GID is set to superuser, this is not recommended.")
+    else:
+        os.setgid(gid)
+        os.setuid(uid)
 
     updatetime = 90
     fromfmt1 = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     client = SensiboClientAPI(apikey)
     devices = client.devices()
     if(devices == None):
-        log.info("Unable to get a list of devices, check your internet connection and apikey and try again.")
+        log.error("Unable to get a list of devices, check your internet connection and apikey and try again.")
         exit(1)
 
     uidList = devices.values()
@@ -351,35 +351,8 @@ if __name__ == "__main__":
         log.error(full_stack())
         exit(1)
 
-    if(os.path.isfile(args.pidfile)):
-        file = open(args.pidfile, 'r')
-        file.seek(0)
-        old_pid = int(file.readline())
-        pid = os.getpid()
-        if(pid != old_pid):
-            log.error("Sensibo daemon is already running with pid %d, and pidfile %s already exists, exiting..." %
-                  (old_pid, args.pidfile))
-        exit(1)
-
-    mydir = os.path.dirname(os.path.abspath(args.pidfile))
-    if(mydir == '/var/run'):
-        log.error("/var/run isn't a valid directory, can't continue.")
-        exit(1)
-    if(not os.path.isdir(mydir)):
-        log.info('Making %s' % mydir)
-        os.makedirs(mydir)
-
-    if(os.path.isdir(mydir)):
-        diruid = os.stat(mydir).st_uid
-        dirgid = os.stat(mydir).st_gid
-        if(uid != diruid or gid != dirgid):
-            log.info('Setting %s uid to %d and gid to %d' % (mydir, uid, gid))
-            shutil.chown(mydir, uid, gid)
-
-#    context = daemon.DaemonContext(pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
-
-#    with context:
-        while True:
+    while True:
+        try:
             mydb = MySQLdb.connect(hostname, username, password, database)
             log.info("Connection to mariadb accepted")
             secondsAgo = -1;
@@ -488,3 +461,7 @@ if __name__ == "__main__":
 
             log.info("Sleeping for %d seconds..." % secondsAgo)
             time.sleep(secondsAgo)
+        except Exception as e:
+            log.error("There was a problem, error was %s" % e)
+            log.error(full_stack())
+            exit(1)
