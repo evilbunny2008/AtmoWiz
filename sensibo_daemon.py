@@ -17,9 +17,9 @@ from dateutil import tz
 from systemd.journal import JournalHandler
 
 _SERVER = 'https://home.sensibo.com/api/v2'
-_sql = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-_sqlquery = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-_sqldevices = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
+_sqlquery1 = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+_sqlquery2 = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
+_sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
 _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
@@ -51,7 +51,7 @@ class SensiboClientAPI(object):
         return {x['room']['name']: x['id'] for x in result['result']}
 
     def pod_all_stats(self, podUid, nb = 1):
-        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device")
+        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,time")
         if(result == None):
             return None
         return result
@@ -63,7 +63,7 @@ class SensiboClientAPI(object):
         return result['result']
 
     def pod_status(self, podUid, lastlimit = 5):
-        result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser")
+        result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser,resultingAcState")
         if(result == None):
             return None
 
@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     if(os.stat(args.config).st_mode != 33152):
         print ("The config file isn't just rw as root, can't continue")
-        exit()
+        exit(1)
 
     if(apikey == 'apikey' or apikey == '<apikey from sensibo.com>'):
         print ('APIKEY is not set in config file.')
@@ -174,7 +174,8 @@ if __name__ == "__main__":
         print ("UID or GID is set to superuser, this is not recommended.")
 
     updatetime = 90
-    fromfmt = '%Y-%m-%dT%H:%M:%S.%fZ'
+    fromfmt1 = '%Y-%m-%dT%H:%M:%S.%fZ'
+    fromfmt2 = '%Y-%m-%dT%H:%M:%SZ'
     fmt = '%Y-%m-%d %H:%M:%S'
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
@@ -198,8 +199,8 @@ if __name__ == "__main__":
             if(row):
                 continue
 
-            print (_sqldevices % values)
-            cursor.execute(_sqldevices, values)
+            print (_sqlquery2 % values)
+            cursor.execute(_sqlquery2, values)
             mydb.commit()
 
         mydb.close()
@@ -245,13 +246,12 @@ if __name__ == "__main__":
                 continue
 
             for last in last40:
-                # print (last)
-                sstring = datetime.strptime(last['time']['time'], '%Y-%m-%dT%H:%M:%SZ')
+                sstring = datetime.strptime(last['time']['time'], fromfmt2)
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
-                # print (_sqlselect1 % values)
+                #print (_sqlselect1 % values)
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
@@ -261,17 +261,14 @@ if __name__ == "__main__":
                     last['causedByUser'] = {}
                     last['causedByUser']['firstName'] = 'Remote'
 
-                try:
-                    acState = last['resultingAcState']
-                except Exception as e:
-                    acState = last['acState']
+                acState = last['resultingAcState']
 
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                           last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
                           acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
                           acState['horizontalSwing'])
-                print (_sqlquery % values)
-                cursor.execute(_sqlquery, values)
+                #print (_sqlquery1 % values)
+                cursor.execute(_sqlquery1, values)
                 mydb.commit()
 
         mydb.close()
@@ -286,14 +283,14 @@ if __name__ == "__main__":
             for pod_measurement in pod_measurement40['result']:
                 ac_state = pod_measurement['device']['acState']
                 measurements = pod_measurement['device']['measurements']
-                sstring = datetime.strptime(measurements['time']['time'], fromfmt)
+                sstring = datetime.strptime(pod_measurement['time']['time'], fromfmt2)
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
 
                 try:
-                    # print (_sqlselect3 % values)
+                    print (_sqlselect3 % values)
                     cursor.execute(_sqlselect3, values)
                     row = cursor.fetchone()
                     if(row):
@@ -309,8 +306,8 @@ if __name__ == "__main__":
                               at, measurements['rssi'], ac_state['on'],
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                               ac_state['swing'], ac_state['horizontalSwing'])
-                    print (_sql % values)
-                    cursor.execute(_sql, values)
+                    print (_sqlquery3 % values)
+                    cursor.execute(_sqlquery3, values)
                     mydb.commit()
                 except MySQLdb._exceptions.ProgrammingError as e:
                     print ("There was a problem, error was %s" % e)
@@ -325,7 +322,6 @@ if __name__ == "__main__":
                     print (full_stack())
                     exi(1)
         mydb.close()
-
 
         mydb = MySQLdb.connect(hostname, username, password, database)
         cursor = mydb.cursor()
@@ -350,8 +346,8 @@ if __name__ == "__main__":
 
                 at = calcAT(temp, humid, country)
                 values = (sdate, podUID, temp, humid, at, 0, 0, 'cool', 0, 'medium', 'fixedTop', 'fixedCenter')
-                print (_sql % values)
-                cursor.execute(_sql, values)
+                print (_sqlquery3 % values)
+                cursor.execute(_sqlquery3, values)
                 mydb.commit()
 
         mydb.close()
@@ -416,7 +412,7 @@ if __name__ == "__main__":
                 for pod_measurement in pod_measurement5['result']:
                     ac_state = pod_measurement['device']['acState']
                     measurements = pod_measurement['device']['measurements']
-                    sstring = datetime.strptime(measurements['time']['time'], fromfmt)
+                    sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
                     if(secondsAgo == -1):
                         #log.info("secondsAgo = %d" % measurements['time']['secondsAgo'])
                         secondsAgo = 100 - measurements['time']['secondsAgo']
@@ -443,8 +439,8 @@ if __name__ == "__main__":
                                   at, measurements['rssi'], ac_state['on'],
                                   ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                                   ac_state['swing'], ac_state['horizontalSwing'])
-                        log.info(_sql % values)
-                        cursor.execute(_sql, values)
+                        log.info(_sqlquery3 % values)
+                        cursor.execute(_sqlquery3, values)
                         mydb.commit()
                     except MySQLdb._exceptions.ProgrammingError as e:
                         log.error("There was a problem, error was %s" % e)
@@ -487,14 +483,18 @@ if __name__ == "__main__":
                         try:
                             acState = last['resultingAcState']
                         except Exception as e:
+                            logfile.write("e == " + str(e) + "\n")
+                            logfile.flush()
                             acState = last['acState']
+                            acState['swing'] = ''
+                            acState['horizontalSwing'] = ''
 
                         values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                                   last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
                                   acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
                                   acState['horizontalSwing'])
-                        log.info(_sqlquery % values)
-                        cursor.execute(_sqlquery, values)
+                        log.info(_sqlquery1 % values)
+                        cursor.execute(_sqlquery1, values)
                         mydb.commit()
                     except MySQLdb._exceptions.ProgrammingError as e:
                         log.error("There was a problem, error was %s" % e)
@@ -511,7 +511,7 @@ if __name__ == "__main__":
 
             mydb.close()
 
-            if(secondsAgo == -1):
+            if(secondsAgo <= 0):
                 secondsAgo = 90
 
             log.info("Sleeping for %d seconds..." % secondsAgo)

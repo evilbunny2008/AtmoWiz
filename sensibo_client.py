@@ -42,7 +42,7 @@ class SensiboClientAPI(object):
         return result['result'][0]['acState']
 
     def pod_last_ac_state(self, podUid, nb = 10):
-        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="status,reason,time,acState,causedByUser,causedByScheduleID,causedByScheduleType")
+        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="status,reason,time,acState,causedByUser")
         return result['result']
 
     def pod_change_ac_state(self, podUid, currentAcState, propertyToChange, newValue):
@@ -190,27 +190,27 @@ if __name__ == "__main__":
 
                 if(args.fanLevel):
                     client.pod_change_ac_state(uid, ac_state, "fanLevel", args.fanLevel)
-                    print("Fan",args.fanLevel)
+                    print("Fan", args.fanLevel)
 
                 if(args.verticalSwing):
                     client.pod_change_ac_state(uid, ac_state, "swing", args.verticalSwing)
-                    print("Vertical Swing",args.verticalSwing)  
+                    print("Vertical Swing", args.verticalSwing)
 
                 if(args.horizontalSwing):
                     client.pod_change_ac_state(uid, ac_state, "horizontalSwing", args.horizontalSwing)
-                    print("Horizontal Swing",args.horizontalSwing) 
+                    print("Horizontal Swing", args.horizontalSwing)
 
                 if(args.mode):
                     client.pod_change_ac_state(uid, ac_state, "mode", args.mode)
-                    print("Mode",args.mode)
+                    print("Mode", args.mode)
 
                 if(args.targetTemp):
                     client.pod_change_ac_state(uid, ac_state, "targetTemperature", args.targetTemp)
-                    print("Target Temp",args.targetTemp)
+                    print("Target Temp", args.targetTemp)
 
                 if(args.tempUnit):
                     client.pod_change_ac_state(uid, ac_state, "temperatureUnit", args.tempUnit)
-                    print("Temp Unit",args.tempUnit)
+                    print("Temp Unit", args.tempUnit)
 
         except requests.exceptions.RequestException as exc:
             print ("Request failed with message %s" % exc)
