@@ -2,7 +2,6 @@
 
 import argparse
 import configparser
-import daemon
 import json
 import logging
 import math
@@ -16,7 +15,9 @@ from datetime import datetime
 from dateutil import tz
 from systemd.journal import JournalHandler
 
+_hasPlus = False
 _SERVER = 'https://home.sensibo.com/api/v2'
+
 _sqlquery1 = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing, changes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 _sqlquery2 = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
 _sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
@@ -24,8 +25,6 @@ _sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelsli
 _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
 _sqlselect3 = 'SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s'
-
-_hasPlus = False
 
 class SensiboClientAPI(object):
     def __init__(self, api_key):
@@ -149,19 +148,19 @@ if __name__ == "__main__":
     filegid = os.stat(args.config).st_gid
 
     if(fileuid != 0 or filegid != 0):
-        log.info("The config file isn't owned by root, can't continue.")
+        log.error("The config file isn't owned by root, can't continue.")
         exit(1)
 
     if(os.stat(args.config).st_mode != 33152):
-        log.info("The config file isn't just rw as root, can't continue")
+        log.error("The config file isn't just rw as root, can't continue")
         exit(1)
 
     if(apikey == 'apikey' or apikey == '<apikey from sensibo.com>'):
-        log.info('APIKEY is not set in config file.')
+        log.error('APIKEY is not set in config file.')
         exit(1)
 
     if(password == 'password' or password == '<password for local db>'):
-        log.info("DB Password is not set in the config file, can't continue")
+        log.error("DB Password is not set in the config file, can't continue")
         exit(1)
 
     if(uid == 0 or gid == 0):
@@ -170,7 +169,6 @@ if __name__ == "__main__":
         os.setgid(gid)
         os.setuid(uid)
 
-    updatetime = random.randint(10, 20)
     fromfmt1 = '%Y-%m-%dT%H:%M:%S.%fZ'
     fromfmt2 = '%Y-%m-%dT%H:%M:%SZ'
     fmt = '%Y-%m-%d %H:%M:%S'
@@ -285,7 +283,7 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for podUID in uidList:
             if(_hasPlus):
-                past24 = client.pod_get_past_24hours(podUID, 1)
+                past24 = client.pod_get_past_24hours(podUID, 30)
             else:
                 past24 = client.pod_get_past_24hours(podUID, 1)
             if(past24 == None):
