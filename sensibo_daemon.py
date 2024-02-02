@@ -8,6 +8,7 @@ import logging
 import math
 import MySQLdb
 import os
+import random
 import requests
 import shutil
 import time
@@ -169,7 +170,7 @@ if __name__ == "__main__":
         os.setgid(gid)
         os.setuid(uid)
 
-    updatetime = 90
+    updatetime = random.randint(10, 20)
     fromfmt1 = '%Y-%m-%dT%H:%M:%S.%fZ'
     fromfmt2 = '%Y-%m-%dT%H:%M:%SZ'
     fmt = '%Y-%m-%d %H:%M:%S'
@@ -369,7 +370,7 @@ if __name__ == "__main__":
 
                 if(secondsAgo == -1):
                     #log.info("secondsAgo = %d" % measurements['time']['secondsAgo'])
-                    secondsAgo = 100 - measurements['time']['secondsAgo']
+                    secondsAgo = 90 - measurements['time']['secondsAgo']
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
@@ -458,9 +459,13 @@ if __name__ == "__main__":
 
             if(secondsAgo <= 0):
                 secondsAgo = 90
+            if(secondsAgo > 90):
+                secondsAgo = 90
 
-            log.info("Sleeping for %d seconds..." % secondsAgo)
-            time.sleep(secondsAgo)
+            timeToWait = secondsAgo + random.randint(10, 20)
+
+            log.info("Sleeping for %d seconds..." % timeToWait)
+            time.sleep(timeToWait)
         except Exception as e:
             log.error("There was a problem, error was %s" % e)
             log.error(full_stack())
