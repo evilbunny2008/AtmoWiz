@@ -128,21 +128,37 @@ if __name__ == "__main__":
     log.setLevel(logging.INFO)
     log.info("Daemon started....")
 
+    if(os.getuid() != 0 or os.getgid() != 0):
+        log.error("This program is designed to be started as root.")
+        exit(1)
+
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
                         help='Path to config file, /etc/sensibo.conf is the default')
     args = parser.parse_args()
 
-    configParser = configparser.ConfigParser()
+    if(not os.path.exists(args.config) or not os.path.isfile(args.config)):
+        log.error("Config file %s doesn't exist." % args.config)
+        exit(1)
+
+    if(not os.access(args.config, os.R_OK)):
+        log.error("Config file %s isn't readable." % args.config)
+        exit(1)
+
+    configParser = configparser.ConfigParser(allow_no_value = True)
     configParser.read(args.config)
-    apikey = configParser.get('sensibo', 'apikey', fallback='apikey')
-    hostname = configParser.get('mariadb', 'hostname', fallback='localhost')
-    database = configParser.get('mariadb', 'database', fallback='sensibo')
-    username = configParser.get('mariadb', 'username', fallback='sensibo')
-    password = configParser.get('mariadb', 'password', fallback='password')
-    uid = configParser.getint('system', 'uid', fallback=0)
-    gid = configParser.getint('system', 'gid', fallback=0)
-    country = configParser.getint('system', 'country', fallback='au')
+    apikey = configParser.get('sensibo', 'apikey', fallback = 'apikey')
+    days = configParser.getint('sensibo', 'days', fallback = 1)
+    hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
+    database = configParser.get('mariadb', 'database', fallback = 'sensibo')
+    username = configParser.get('mariadb', 'username', fallback = 'sensibo')
+    password = configParser.get('mariadb', 'password', fallback = 'password')
+    uid = configParser.getint('system', 'uid', fallback = 0)
+    gid = configParser.getint('system', 'gid', fallback = 0)
+    country = configParser.get('system', 'country', fallback = 'au')
+
+    if(days <= 0):
+        days = 1
 
     fileuid = os.stat(args.config).st_uid
     filegid = os.stat(args.config).st_gid
@@ -279,13 +295,14 @@ if __name__ == "__main__":
 
         mydb.close()
 
+        if(not _hasPlus and days > 1):
+            days = 1
+
         mydb = MySQLdb.connect(hostname, username, password, database)
         cursor = mydb.cursor()
         for podUID in uidList:
-            if(_hasPlus):
-                past24 = client.pod_get_past_24hours(podUID, 30)
-            else:
-                past24 = client.pod_get_past_24hours(podUID, 1)
+            past24 = client.pod_get_past_24hours(podUID, days)
+
             if(past24 == None):
                 continue
 
