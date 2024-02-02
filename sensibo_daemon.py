@@ -17,7 +17,7 @@ from dateutil import tz
 from systemd.journal import JournalHandler
 
 _SERVER = 'https://home.sensibo.com/api/v2'
-_sqlquery1 = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+_sqlquery1 = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing, changes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 _sqlquery2 = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
 _sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
@@ -26,6 +26,7 @@ _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
 _sqlselect3 = 'SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s'
 
 _logging = "print"
+_hasPlus = False
 
 class SensiboClientAPI(object):
     def __init__(self, api_key):
@@ -57,13 +58,13 @@ class SensiboClientAPI(object):
         return result
 
     def pod_get_remote_capabilities(self, podUid, nb = 1):
-        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,remoteCapabilities")
+        result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,remoteCapabilities,features")
         if(result == None):
             return None
         return result['result']
 
     def pod_status(self, podUid, lastlimit = 5):
-        result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser,resultingAcState")
+        result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser,resultingAcState,changedProperties")
         if(result == None):
             return None
 
@@ -193,7 +194,7 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
-            print (_sqlselect2 % values)
+            # print (_sqlselect2 % values)
             cursor.execute(_sqlselect2, values)
             row = cursor.fetchone()
             if(row):
@@ -216,6 +217,9 @@ if __name__ == "__main__":
                 continue
 
             device = remoteCapabilities[0]['device']['remoteCapabilities']
+            features = remoteCapabilities[0]['device']['features']
+            if('plus' in features and 'showPlus' in features):
+                _hasPlus = True
 
             corf = "C"
             if(device['modes']['cool']['temperatures']['F']['isNative'] == True):
@@ -255,6 +259,13 @@ if __name__ == "__main__":
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
+                    changes = last['changedProperties']
+                    print (changes)
+                    query = "UPDATE commands SET changes=%s WHERE whentime=%s AND uid=%s AND changes=''"
+                    values = (str(changes), sdate, podUID)
+                    print (query % values)
+                    cursor.execute(query, values)
+                    mydb.commit()
                     continue
 
                 if(last['causedByUser'] == None):
@@ -262,12 +273,13 @@ if __name__ == "__main__":
                     last['causedByUser']['firstName'] = 'Remote'
 
                 acState = last['resultingAcState']
+                changes = last['changedProperties']
 
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                           last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
                           acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
-                          acState['horizontalSwing'])
-                #print (_sqlquery1 % values)
+                          acState['horizontalSwing'], str(changes))
+                print (_sqlquery1 % values)
                 cursor.execute(_sqlquery1, values)
                 mydb.commit()
 
@@ -290,7 +302,7 @@ if __name__ == "__main__":
                 values = (sdate, podUID)
 
                 try:
-                    print (_sqlselect3 % values)
+                    # print (_sqlselect3 % values)
                     cursor.execute(_sqlselect3, values)
                     row = cursor.fetchone()
                     if(row):
@@ -326,7 +338,10 @@ if __name__ == "__main__":
         mydb = MySQLdb.connect(hostname, username, password, database)
         cursor = mydb.cursor()
         for podUID in uidList:
-            past24 = client.pod_get_past_24hours(podUID, 1)
+            if(_hasPlus):
+                past24 = client.pod_get_past_24hours(podUID, 30)
+            else:
+                past24 = client.pod_get_past_24hours(podUID, 1)
             if(past24 == None):
                 continue
 
@@ -480,19 +495,13 @@ if __name__ == "__main__":
                             last['causedByUser'] = {}
                             last['causedByUser']['firstName'] = 'Remote'
 
-                        try:
-                            acState = last['resultingAcState']
-                        except Exception as e:
-                            logfile.write("e == " + str(e) + "\n")
-                            logfile.flush()
-                            acState = last['acState']
-                            acState['swing'] = ''
-                            acState['horizontalSwing'] = ''
+                        acState = last['resultingAcState']
+                        changes = last['changedProperties']
 
                         values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
                                   last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
                                   acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
-                                  acState['horizontalSwing'])
+                                  acState['horizontalSwing'], str(changes))
                         log.info(_sqlquery1 % values)
                         cursor.execute(_sqlquery1, values)
                         mydb.commit()

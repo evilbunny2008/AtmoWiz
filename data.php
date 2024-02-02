@@ -168,10 +168,12 @@
 
 		$date = $row["wtdate"];
 		$who = $row['who'];
+		$who2 = getWho($row["reason"]);
+
 		if($who == '')
-			$who = getWho($row["reason"]);
-		else if($row['who'] != $row["reason"])
-			$who = $who." (".getWho($row["reason"]).")";
+			$who = $who2;
+		else if($who != $who2)
+			$who = $who." (".$who2.")";
 
 		if($date != $lastdate)
 		{
