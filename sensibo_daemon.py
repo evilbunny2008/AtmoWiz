@@ -90,9 +90,10 @@ def calcAT(temp, humid, country):
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         # UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1)
         vp = (humid / 100.0) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
-        print ("vp = %f" % vp)
+        logfile.write("vp = %f\n" % vp)
         at = round(temp + (0.33 * vp) - 4.0, 1)
-        print ("at = %f" % at)
+        logfile.write("at = %f\n" % at)
+        logfile.flush()
         return at
     else:
         if(temp <= 80 and temp >= 50):
@@ -107,9 +108,13 @@ def calcAT(temp, humid, country):
             if(temp >= 80 and temp <= 87 and humid >= 85):
                 HI += ((humid - 85) / 10) * ((87 - temp) / 5)
 
+            logfile.write("HI = %d\n" % HI)
+            logfile.flush()
             return HI
         else:
             WC = 35.74 + 0.6215 * temp
+            logfile.write("WC = %d\n" % WC)
+            logfile.flush()
             return WC
 
 def full_stack():
@@ -127,6 +132,7 @@ def full_stack():
     return stackstr
 
 if __name__ == "__main__":
+    logfile = open('/tmp/sensibo.log', 'a')
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
                         help='Path to config file, /etc/sensibo.conf is the default')
@@ -313,7 +319,7 @@ if __name__ == "__main__":
                 except MySQLdb._exceptions.OperationalError as e:
                     print ("There was a problem, error was %s" % e)
                     print (full_stack())
-                    pass
+                    exi(1)
         mydb.close()
 
 
@@ -383,7 +389,6 @@ if __name__ == "__main__":
             print ('Setting %s uid to %d and gid to %d' % (mydir, uid, gid))
             shutil.chown(mydir, uid, gid)
 
-    logfile = open('/tmp/sensibo.log', 'a')
     context = daemon.DaemonContext(stdout = logfile, stderr = logfile,
               pidfile=pidfile.TimeoutPIDLockFile(args.pidfile), uid=uid, gid=gid)
 
