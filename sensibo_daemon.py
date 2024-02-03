@@ -269,13 +269,6 @@ if __name__ == "__main__":
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
-                    changes = last['changedProperties']
-                    #log.info(changes)
-                    query = "UPDATE commands SET changes=%s WHERE whentime=%s AND uid=%s AND changes=''"
-                    values = (str(changes), sdate, podUID)
-                    #log.info(query % values)
-                    cursor.execute(query, values)
-                    mydb.commit()
                     continue
 
                 if(last['causedByUser'] == None):
