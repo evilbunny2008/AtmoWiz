@@ -75,24 +75,34 @@
 	}
 
 	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,DATE_FORMAT(whentime, '%H:%i') as wttime,".
+			"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt,".
 			"temperature,humidity,feelslike,rssi,airconon FROM sensibo ".
 			"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
 			"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + 86400000 ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
-		if($row['airconon'] != $airconon && !empty($airconon))
+		$query = "SELECT * FROM commands WHERE DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') = '${row['wtdt']}' AND uid='$uid'";
+		$dres = mysqli_query($link, $query);
+		if(mysqli_num_rows($dres) > 0)
 		{
-			$airconon = $row['airconon'];
+			$ac = "";
+			while($drow = mysqli_fetch_assoc($dres))
+			{
+				if(stripos($drow['changes'], "'on'"))
+					if($drow['airconon'] == 1)
+						$ac = "on";
+					else
+						$ac = "off";
 
-			$ac = "off";
-			if($airconon == 1)
-				$ac = "on";
+				if($ac == "on")
+					$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'green');
+				else if($ac == "off")
+					$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'tomato');
+			}
 
-			if($ac == "on")
-				$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'green');
-			else
-				$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'tomato');
+			if($ac == "")
+				$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
 		} else {
 			$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
 			$airconon = $row['airconon'];
@@ -114,7 +124,6 @@
 			$startTS = $row['whentime'];
 	}
 
-	$lastdate = '';
 	$commands = '';
 
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
@@ -154,15 +163,12 @@
 	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
 	$commands .= "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
 
+	$lastdate = '';
+
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
-		$onoff = true;
-		$query = "SELECT * FROM commands WHERE uid='$uid' AND whentime < '".$row['whentime']."' ORDER BY whentime DESC LIMIT 1";
-		$dres = mysqli_query($link, $query);
-		$drow = mysqli_fetch_assoc($dres);
-
 		$date = $row["wtdate"];
 		$who = $row['who'];
 		$who2 = getWho($row["reason"]);
@@ -179,39 +185,39 @@
 			$lastdate = $date;
 		}
 
-		if(isset($drow["targetTemperature"]) && $row["targetTemperature"] != $drow["targetTemperature"])
+		if(stripos($row['changes'], "'targetTemperature'"))
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set temperature to ".$row["targetTemperature"]."</li>\n";
 		}
 
-		if(isset($drow["targetTemperature"]) && $row["mode"] != $drow["mode"])
+		if(stripos($row['changes'], "'mode'"))
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set mode to ".$row["mode"]."</li>\n";
 		}
 
-		if(isset($drow["targetTemperature"]) && $row["fanLevel"] != $drow["fanLevel"])
+		if(stripos($row['changes'], "'fanLevel'"))
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set fan to ".$row["fanLevel"]."</li>\n";
 		}
 
-		if(isset($drow["targetTemperature"]) && $row["swing"] != $drow["swing"])
+		if(stripos($row['changes'], "'swing'"))
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["swing"]."</li>\n";
 		}
 
-		if(isset($drow["targetTemperature"]) && $row["horizontalSwing"] != $drow["horizontalSwing"])
+		if(stripos($row['changes'], "'horizontalSwing'"))
 		{
 			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["horizontalSwing"]."</li>\n";
 		}
 
-		if($onoff)
+		if(stripos($row['changes'], "'on'"))
 		{
-			if($row["airconon"])
+			if($row["airconon"] == 1)
 				$commands .= "<li><b>".$row["wttime"]."</b> -- $who set AC on</li>\n";
 			else
 				$commands .= "<li><b>".$row["wttime"]."</b> -- $who set AC off</li>\n";
