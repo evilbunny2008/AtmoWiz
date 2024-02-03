@@ -28,17 +28,14 @@
 	function getWho($reason)
 	{
 		if($reason == "ExternalIrCommand")
-			$who = "Remote";
+			return "Remote";
 		else if($reason == "UserRequest")
-			$who = "App";
+			return "App";
 		else if($reason == "UserAPI")
-			$who = "API";
+			return "API";
 		else if($reason == "Trigger")
-			$who = "Climate React";
-		else
-			$who = "Unknown";
-
-		return $who;
+			return "Climate React";
+		return "Unknown";
 	}
 
 	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] != -1)
@@ -61,7 +58,7 @@
 	$currtemp = 0.0;
 	$currtime = "00:00";
 
-	if(isset($_REQUEST['uid']) && $_REQUEST['uid'] != '')
+	if(isset($_REQUEST['uid']) && !empty($_REQUEST['uid']))
 		$uid = mysqli_real_escape_string($link, $_REQUEST['uid']);
 
 	$query = "SELECT uid FROM devices";
@@ -71,7 +68,7 @@
 	$res = mysqli_query($link, $query);
 	$uid = mysqli_fetch_assoc($res)['uid'];
 
-	if(!isset($uid) || $uid == '')
+	if(!isset($uid) || empty($uid))
 	{
 		$error = "Unable to get a UID, please check your database/configs and try again";
 		reportError($error);
@@ -84,7 +81,7 @@
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
-		if($row['airconon'] != $airconon && $airconon != '')
+		if($row['airconon'] != $airconon && !empty($airconon))
 		{
 			$airconon = $row['airconon'];
 

@@ -659,9 +659,25 @@ async function populateSelect()
 	}
 }
 
-function changeAC(value)
+async function changeAC(value)
 {
 	uid = value;
+	var url = 'getDefaultMode.php?time=' + new Date().getTime() + '&uid=' + uid;
+
+	const response = await fetch(url);
+	const ret = await response.json();
+
+	if(ret['status'] == 200)
+	{
+		for(let i = 0; i < document.getElementById("mode").options.length; i++)
+		{
+			if(document.getElementById("mode").options[i].value == ret['content'])
+			{
+				document.getElementById("mode").options[i].selected = 'selected';
+			}
+		}
+	}
+
 	startDataLoop(true);
 }
 
