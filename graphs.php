@@ -18,14 +18,14 @@
 		exit;
 	}
 
-	function changeState($podUID, $what, $newValue)
+	function changeState($podUID, $changes)
 	{
 		global $apikey;
 
-		$url = "https://home.sensibo.com/api/v2/pods/$podUID/acStates/$what?apiKey=".$apikey;
-		$body = json_encode(array('newValue' => $newValue));
+		$url = "https://home.sensibo.com/api/v2/pods/$podUID/acStates?apiKey=".$apikey;
+		$body = json_encode(array('acState' => $changes));
 
-		$opts = array('http' => array('method'=>"PATCH", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 5));
+		$opts = array('http' => array('method' => "POST", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 5));
 		$context = stream_context_create($opts);
 		$ret = @file_get_contents($url, false, $context);
 
@@ -33,7 +33,7 @@
 		if($statusheader == "200")
 			return 200;
 		else
-			return json_encode(array('headers' => $http_response_header, 'ret' => $ret));
+			return json_encode(array('headers' => $http_response_header, 'ret' => $ret, 'url' => $url, 'body' => $body));
 	}
 
 	$query = "SELECT * FROM commands ORDER BY whentime DESC LIMIT 1";
@@ -44,17 +44,14 @@
 	{
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID']);
 
+		$changes = array();
+
 		if(isset($_REQUEST['mode']))
 		{
 			if($row['mode'] != $_REQUEST['mode'])
 			{
-				$ret = changeState($row['uid'], 'mode', $_REQUEST['mode']);
-				if($ret != 200)
-				{
-					echo $ret;
-					die;
-				}
 				$row['mode'] = mysqli_real_escape_string($link, $_REQUEST['mode']);
+				$changes['mode'] = $row['mode'];
 			}
 		}
 
@@ -62,13 +59,8 @@
 		{
 			if($row['targetTemperature'] != $_REQUEST['targetTemperature'])
 			{
-				$ret = changeState($row['uid'], 'targetTemperature', intval($_REQUEST['targetTemperature']));
-				if($ret != 200)
-				{
-					echo $ret;
-					die;
-				}
 				$row['targetTemperature'] = intval($_REQUEST['targetTemperature']);
+				$changes['targetTemperature'] = $row['targetTemperature'];
 			}
 		}
 
@@ -76,13 +68,8 @@
 		{
 			if($row['fanLevel'] != $_REQUEST['fanLevel'])
 			{
-				$ret = changeState($row['uid'], 'fanLevel', $_REQUEST['fanLevel']);
-				if($ret != 200)
-				{
-					echo $ret;
-					die;
-				}
 				$row['fanLevel'] = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
+				$changes['fanLevel'] = $row['fanLevel'];
 			}
 		}
 
@@ -90,13 +77,8 @@
 		{
 			if($row['swing'] != $_REQUEST['swing'])
 			{
-				$ret = changeState($row['uid'], 'swing', $_REQUEST['swing']);
-				if($ret != 200)
-				{
-					echo $ret;
-					die;
-				}
 				$row['swing'] = mysqli_real_escape_string($link, $_REQUEST['swing']);
+				$changes['swing'] = $row['swing'];
 			}
 		}
 
@@ -104,13 +86,18 @@
 		{
 			if($row['horizontalSwing'] != $_REQUEST['horizontalSwing'])
 			{
-				$ret = changeState($row['uid'], 'horizontalSwing', $_REQUEST['horizontalSwing']);
-				if($ret != 200)
-				{
-					echo $ret;
-					die;
-				}
 				$row['horizontalSwing'] = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+				$changes['horizontalSwing'] = $row['horizontalSwing'];
+			}
+		}
+
+		if($changes != array())
+		{
+			$ret = changeState($row['uid'], $changes);
+			if($ret != 200)
+			{
+				echo $ret;
+				die;
 			}
 		}
 	}

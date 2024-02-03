@@ -206,13 +206,13 @@
 		if(stripos($row['changes'], "'swing'"))
 		{
 			$onoff = false;
-			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["swing"]."</li>\n";
+			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set vertical swing to ".$row["swing"]."</li>\n";
 		}
 
 		if(stripos($row['changes'], "'horizontalSwing'"))
 		{
 			$onoff = false;
-			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set swing to ".$row["horizontalSwing"]."</li>\n";
+			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set horizontonalswing to ".$row["horizontalSwing"]."</li>\n";
 		}
 
 		if(stripos($row['changes'], "'on'"))
