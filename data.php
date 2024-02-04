@@ -1,5 +1,6 @@
 <?php
 	$error = null;
+	$startTS = -1;
 
 	require_once('mariadb.php');
 
@@ -40,8 +41,6 @@
 
 	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] != -1)
 		$startTS = doubleval($_REQUEST['startTS']);
-	else
-		$startTS = time() * 1000 - 86400000;
 
 	if($error != null)
 		reportError($error);
@@ -115,13 +114,18 @@
 		$dataPoints2[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['humidity']));
 		$dataPoints3[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['feelslike']));
 		$dataPoints4[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['rssi']));
+	}
 
+	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as startTS, * FROM sensibo WHERE uid='$uid' ORDER BY whentime DESC";
+	$res = mysqli_query($link, $query));
+	if(mysqli_num_rows($res) > 0)
+	{
+		$row = mysqli_fetch_assoc($res);
 		$currtemp = $row['temperature'];
 		$currhumid = $row['humidity'];
 		$currtime = $row['wttime'];
-
 		if($startTS == -1)
-			$startTS = $row['whentime'];
+			$startTS = $row['startTS'];
 	}
 
 	$commands = '';

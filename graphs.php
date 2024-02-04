@@ -1,6 +1,8 @@
 <?php
 	$error = null;
 	$startTS = time() * 1000 - 86400000;
+	$row = array('uid' => '');
+
 
 	require_once('mariadb.php');
 
@@ -356,7 +358,7 @@ span.psw {
 <script src="canvasjs.min.js"></script>
 <script>
 
-var uid = "";
+var uid = <?=$row['uid']?>;
 var currtime = "";
 var startTS = <?=$startTS?>;
 document.getElementById("startTS").value = startTS;

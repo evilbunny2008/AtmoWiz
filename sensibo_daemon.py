@@ -27,7 +27,7 @@ _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
 _sqlselect3 = 'SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s'
 
-_INVOCATION_ID = os.environ.get('INVOCATION_ID')
+_INVOCATION_ID = os.environ.get('INVOCATION_ID', False)
 
 class SensiboClientAPI(object):
     def __init__(self, api_key):
@@ -126,7 +126,7 @@ def full_stack():
 
 def doLog(logType, line, doStackTrace = False):
     if(logType == 'info'):
-        if(_INVOCATION_ID != 1):
+        if(not _INVOCATION_ID):
             print (line)
 
         log.info(line)
@@ -134,7 +134,7 @@ def doLog(logType, line, doStackTrace = False):
             print (full_stack())
             log.info(full_stack())
     else:
-        if(_INVOCATION_ID != 1):
+        if(not _INVOCATION_ID):
             print (line)
 
         log.error(line)
@@ -147,6 +147,10 @@ if __name__ == "__main__":
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
     log.setLevel(logging.INFO)
     doLog("info", "Daemon started....")
+    if(not _INVOCATION_ID):
+        doLog("info", "Not started by SystemD")
+    else:
+        doLog("info", "Started by SystemD")
 
     if(os.getuid() != 0 or os.getgid() != 0):
         doLog("error", "This program is designed to be started as root.", True)
