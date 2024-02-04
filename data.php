@@ -116,7 +116,7 @@
 		$dataPoints4[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['rssi']));
 	}
 
-	$query = "SELECT *, UNIX_TIMESTAMP(whentime) * 1000 as startTS FROM sensibo WHERE uid='$uid' ORDER BY whentime DESC";
+	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime, UNIX_TIMESTAMP(whentime) * 1000 as startTS FROM sensibo WHERE uid='$uid' ORDER BY whentime DESC";
 	$res = mysqli_query($link, $query);
 	if(mysqli_num_rows($res) > 0)
 	{

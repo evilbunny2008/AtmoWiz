@@ -358,7 +358,7 @@ span.psw {
 <script src="canvasjs.min.js"></script>
 <script>
 
-var uid = <?=$row['uid']?>;
+var uid = "<?=$row['uid']?>";
 var currtime = "";
 var startTS = <?=$startTS?>;
 document.getElementById("startTS").value = startTS;
