@@ -13,6 +13,10 @@ The PHP scripts are used to display the data as a line graphs and can turn your 
 
 ![Screen Shot](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss.png)
 
+# Issues and Feature Requests
+
+Issues and feature requests can be filed [here]([issues](https://github.com/evilbunny2008/sensibo-python-sdk/issues))
+
 # Credits
 
 * [favicon.svg came from svgrepo.com](https://www.svgrepo.com/svg/268208/cooling-cooler)
