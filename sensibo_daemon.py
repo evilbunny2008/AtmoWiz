@@ -27,6 +27,8 @@ _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
 _sqlselect3 = 'SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s'
 
+_INVOCATION_ID = os.environ.get('INVOCATION_ID')
+
 class SensiboClientAPI(object):
     def __init__(self, api_key):
         self._api_key = api_key
@@ -38,7 +40,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            log.error("Request failed, full error messages hidden to protect the API key")
+            doLog("error", "Request failed, full error messages hidden to protect the API key")
             return None
 
     def devices(self):
@@ -67,8 +69,7 @@ class SensiboClientAPI(object):
         try:
             return result['result']
         except Exception as e:
-            log.error(result)
-            log.error(full_stack())
+            doLog("error", result, True)
             return None
 
     def pod_get_past_24hours(self, podUid, lastlimit = 1):
@@ -85,9 +86,9 @@ def calcAT(temp, humid, country, feelslike):
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         # UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1)
         vp = (humid / 100.0) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
-        log.info("vp = %f" % vp)
+        doLog("info", "vp = %f" % vp)
         at = round(temp + (0.33 * vp) - 4.0, 1)
-        log.info("at = %f" % at)
+        doLog("info", "at = %f" % at)
         return at
     else:
         if(temp <= 80 and temp >= 50):
@@ -102,11 +103,11 @@ def calcAT(temp, humid, country, feelslike):
             if(temp >= 80 and temp <= 87 and humid >= 85):
                 HI += ((humid - 85) / 10) * ((87 - temp) / 5)
 
-            log.info("HI = %d" % HI)
+            doLog("info", "HI = %d" % HI)
             return HI
         else:
             WC = 35.74 + 0.6215 * temp
-            log.info("WC = %d" % WC)
+            doLog("info", "WC = %d" % WC)
             return WC
 
 def full_stack():
@@ -123,16 +124,32 @@ def full_stack():
 
     return stackstr
 
+def doLog(logType, line, doStackTrace = False):
+    if(logType == 'info'):
+        if(_INVOCATION_ID != 1):
+            print (line)
+
+        log.info(line)
+        if(doStackTrace):
+            print (full_stack())
+            log.info(full_stack())
+    else:
+        if(_INVOCATION_ID != 1):
+            print (line)
+
+        log.error(line)
+        if(doStackTrace):
+            print (full_stack())
+            log.error(full_stack())
+
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
     log.setLevel(logging.INFO)
-    print ("Daemon started....")
-    log.info("Daemon started....")
+    doLog("info", "Daemon started....")
 
     if(os.getuid() != 0 or os.getgid() != 0):
-        print ("This program is designed to be started as root.")
-        log.error("This program is designed to be started as root.")
+        doLog("error", "This program is designed to be started as root.", True)
         exit(1)
 
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
@@ -141,13 +158,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if(not os.path.exists(args.config) or not os.path.isfile(args.config)):
-        print ("Config file %s doesn't exist." % args.config)
-        log.error("Config file %s doesn't exist." % args.config)
+        doLog("error", "Config file %s doesn't exist." % args.config)
         exit(1)
 
     if(not os.access(args.config, os.R_OK)):
-        print ("Config file %s isn't readable." % args.config)
-        log.error("Config file %s isn't readable." % args.config)
+        doLog("error", "Config file %s isn't readable." % args.config)
         exit(1)
 
     configParser = configparser.ConfigParser(allow_no_value = True)
@@ -169,28 +184,23 @@ if __name__ == "__main__":
     filegid = os.stat(args.config).st_gid
 
     if(fileuid != 0 or filegid != 0):
-        print ("The config file isn't owned by root, can't continue.")
-        log.error("The config file isn't owned by root, can't continue.")
+        doLog("error", "The config file isn't owned by root, can't continue.")
         exit(1)
 
     if(os.stat(args.config).st_mode != 33152):
-        print ("The config file isn't just rw as root, can't continue")
-        log.error("The config file isn't just rw as root, can't continue")
+        doLog("error", "The config file isn't just rw as root, can't continue")
         exit(1)
 
     if(apikey == 'apikey' or apikey == '<apikey from sensibo.com>'):
-        print ('APIKEY is not set in config file.')
-        log.error('APIKEY is not set in config file.')
+        doLog("error", 'APIKEY is not set in config file.')
         exit(1)
 
     if(password == 'password' or password == '<password for local db>'):
-        print ("DB Password is not set in the config file, can't continue")
-        log.error("DB Password is not set in the config file, can't continue")
+        doLog("error", "DB Password is not set in the config file, can't continue")
         exit(1)
 
     if(uid == 0 or gid == 0):
-        print ("UID or GID is set to superuser, this is not recommended.")
-        log.info("UID or GID is set to superuser, this is not recommended.")
+        doLog("info", "UID or GID is set to superuser, this is not recommended.")
     else:
         os.setgid(gid)
         os.setuid(uid)
@@ -204,30 +214,20 @@ if __name__ == "__main__":
     client = SensiboClientAPI(apikey)
     devices = client.devices()
     if(devices == None):
-        print ("Unable to get a list of devices, check your internet connection and apikey and try again.")
-        log.error("Unable to get a list of devices, check your internet connection and apikey and try again.")
+        doLog("error", "Unable to get a list of devices, check your internet connection and apikey and try again.")
         exit(1)
 
     try:
         mydb = MySQLdb.connect(hostname, username, password, database)
         mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
-        print ("There was a problem, error was %s" % e)
-        print (full_stack())
-        log.error("There was a problem, error was %s" % e)
-        log.error(full_stack())
+        doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
     except MySQLdb._exceptions.OperationalError as e:
-        print ("There was a problem, error was %s" % e)
-        print (full_stack())
-        log.error("There was a problem, error was %s" % e)
-        log.error(full_stack())
+        doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
     except MySQLdb._exceptions.IntegrityError as e:
-        print ("There was a problem, error was %s" % e)
-        print (full_stack())
-        log.error("There was a problem, error was %s" % e)
-        log.error(full_stack())
+        doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
     uidList = devices.values()
@@ -237,13 +237,13 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
-            # log.info(_sqlselect2 % values)
+            # doLog("info", _sqlselect2 % values)
             cursor.execute(_sqlselect2, values)
             row = cursor.fetchone()
             if(row):
                 continue
 
-            log.info(_sqlquery2 % values)
+            doLog("info", _sqlquery2 % values)
             cursor.execute(_sqlquery2, values)
             mydb.commit()
 
@@ -268,15 +268,15 @@ if __name__ == "__main__":
 
             query = "INSERT INTO meta (uid, mode, keyval, value) VALUES (%s, %s, %s, %s)"
 
-            for mode in ['cool', 'heat', 'dry', 'auto', 'fan']:
+            for mode in device['modes']:
                 if(mode != "fan"):
                     for temp in device['modes'][mode]['temperatures'][_corf]['values']:
-                        # log.info(query % (podUID, mode, 'temperatures', temp))
+                        # doLog("info", query % (podUID, mode, 'temperatures', temp))
                         cursor.execute(query, (podUID, mode, 'temperatures', temp))
 
                 for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
                     for modes in device['modes'][mode][keyval]:
-                        # log.info(query % (podUID, mode, keyval, modes))
+                        # doLog("info", query % (podUID, mode, keyval, modes))
                         cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
@@ -296,7 +296,7 @@ if __name__ == "__main__":
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
-                #log.info(_sqlselect1 % values)
+                #doLog("info", _sqlselect1 % values)
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
@@ -313,7 +313,7 @@ if __name__ == "__main__":
                           last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
                           acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
                           acState['horizontalSwing'], str(changes))
-                log.info(_sqlquery1 % values)
+                doLog("info", _sqlquery1 % values)
                 cursor.execute(_sqlquery1, values)
                 mydb.commit()
 
@@ -364,40 +364,37 @@ if __name__ == "__main__":
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
-                #log.info(_sqlselect3 % values)
+                #doLog("info", _sqlselect3 % values)
                 cursor.execute(_sqlselect3, values)
                 row = cursor.fetchone()
                 if(row):
                     continue
 
-                log.info("rc = %d, i = %d" % (rc, i))
-                log.info(past24['temperature'][i])
-                log.info(past24['humidity'][i])
+                doLog("info", "rc = %d, i = %d" % (rc, i))
+                doLog("info", past24['temperature'][i])
+                doLog("info", past24['humidity'][i])
 
                 at = calcAT(temp, humid, country, feelslike)
                 values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing)
-                log.info(_sqlquery3 % values)
+                doLog("info", _sqlquery3 % values)
                 cursor.execute(_sqlquery3, values)
                 mydb.commit()
 
         mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
-        log.error("There was a problem, error was %s" % e)
-        log.error(full_stack())
+        doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
     except MySQLdb._exceptions.OperationalError as e:
-        log.error("There was a problem, error was %s" % e)
-        log.error(full_stack())
+        doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
     except MySQLdb._exceptions.IntegrityError as e:
-        log.error("There was a problem, error was %s" % e)
-        log.error(full_stack())
+        doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
     while True:
         try:
             mydb = MySQLdb.connect(hostname, username, password, database)
-            log.info("Connection to mariadb accepted")
+            doLog("info", "Connection to mariadb accepted")
             secondsAgo = -1;
 
             for podUID in uidList:
@@ -411,7 +408,7 @@ if __name__ == "__main__":
                 sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
 
                 if(secondsAgo == -1):
-                    #log.info("secondsAgo = %d" % measurements['time']['secondsAgo'])
+                    #doLog("info", "secondsAgo = %d" % measurements['time']['secondsAgo'])
                     secondsAgo = 90 - measurements['time']['secondsAgo']
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
@@ -420,11 +417,11 @@ if __name__ == "__main__":
 
                 try:
                     cursor = mydb.cursor()
-                    #log.info(_sqlselect3 % values)
+                    #doLog("info", _sqlselect3 % values)
                     cursor.execute(_sqlselect3, values)
                     row = cursor.fetchone()
                     if(row):
-                        #log.info("Skipping insert due to row already existing.")
+                        #doLog("info", "Skipping insert due to row already existing.")
                         continue
 
                     at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
@@ -433,20 +430,17 @@ if __name__ == "__main__":
                               at, measurements['rssi'], ac_state['on'],
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                               ac_state['swing'], ac_state['horizontalSwing'])
-                    log.info(_sqlquery3 % values)
+                    doLog("info", _sqlquery3 % values)
                     cursor.execute(_sqlquery3, values)
                     mydb.commit()
                 except MySQLdb._exceptions.ProgrammingError as e:
-                    log.error("There was a problem, error was %s" % e)
-                    log.error(full_stack())
+                    doLog("error", "There was a problem, error was %s" % e, True)
                     pass
                 except MySQLdb._exceptions.IntegrityError as e:
-                    log.error("There was a problem, error was %s" % e)
-                    log.error(full_stack())
+                    doLog("error", "There was a problem, error was %s" % e, True)
                     pass
                 except MySQLdb._exceptions.OperationalError as e:
-                    log.error("There was a problem, error was %s" % e)
-                    log.error(full_stack())
+                    doLog("error", "There was a problem, error was %s" % e, True)
                     pass
 
                 last5 = client.pod_status(podUID, 5)
@@ -464,7 +458,7 @@ if __name__ == "__main__":
                         localzone = utc.astimezone(to_zone)
                         sdate = localzone.strftime(fmt)
                         values = (sdate, podUID)
-                        #log.info(_sqlselect1 % values)
+                        #doLog("info", _sqlselect1 % values)
                         cursor.execute(_sqlselect1, values)
                         row = cursor.fetchone()
                         if(row):
@@ -481,20 +475,17 @@ if __name__ == "__main__":
                                   last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
                                   acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
                                   acState['horizontalSwing'], str(changes))
-                        log.info(_sqlquery1 % values)
+                        doLog("info", _sqlquery1 % values)
                         cursor.execute(_sqlquery1, values)
                         mydb.commit()
                     except MySQLdb._exceptions.ProgrammingError as e:
-                        log.error("There was a problem, error was %s" % e)
-                        log.error(full_stack())
+                        doLog("error", "There was a problem, error was %s" % e, True)
                         pass
                     except MySQLdb._exceptions.IntegrityError as e:
-                        log.error("There was a problem, error was %s" % e)
-                        log.error(full_stack())
+                        doLog("error", "There was a problem, error was %s" % e, True)
                         pass
                     except MySQLdb._exceptions.OperationalError as e:
-                        log.error("There was a problem, error was %s" % e)
-                        log.error(full_stack())
+                        doLog("error", "There was a problem, error was %s" % e, True)
                         pass
 
             mydb.close()
@@ -506,9 +497,8 @@ if __name__ == "__main__":
 
             timeToWait = secondsAgo + random.randint(10, 20)
 
-            log.info("Sleeping for %d seconds..." % timeToWait)
+            doLog("info", "Sleeping for %d seconds..." % timeToWait)
             time.sleep(timeToWait)
         except Exception as e:
-            log.error("There was a problem, error was %s" % e)
-            log.error(full_stack())
+            doLog("error", "There was a problem, error was %s" % e, True)
             exit(1)
