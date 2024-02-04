@@ -127,6 +127,7 @@ if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
     log.setLevel(logging.INFO)
+    print ("Daemon started....")
     log.info("Daemon started....")
 
     if(os.getuid() != 0 or os.getgid() != 0):
