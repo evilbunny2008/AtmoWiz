@@ -104,11 +104,6 @@
 				$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
 		} else {
 			$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
-			$airconon = $row['airconon'];
-
-			$ac = "off";
-			if($airconon == 1)
-				$ac = "on";
 		}
 
 		$dataPoints2[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['humidity']));
@@ -116,6 +111,7 @@
 		$dataPoints4[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['rssi']));
 	}
 
+	$ac = "off";
 	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime, UNIX_TIMESTAMP(whentime) * 1000 as startTS FROM sensibo WHERE uid='$uid' ORDER BY whentime DESC";
 	$res = mysqli_query($link, $query);
 	if(mysqli_num_rows($res) > 0)
@@ -124,8 +120,18 @@
 		$currtemp = $row['temperature'];
 		$currhumid = $row['humidity'];
 		$currtime = $row['wttime'];
+
 		if($startTS == -1)
 			$startTS = $row['startTS'];
+
+		if($row['airconon'] == 1)
+			$ac = "on";
+	} else {
+		$currtemp = 0.0;
+		$currhumid = 0;
+		$currtime = "00:00";
+		if($startTS == -1)
+			$startTS = time() * 1000;
 	}
 
 	$commands = '';
