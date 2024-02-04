@@ -131,7 +131,6 @@ body {
 
 nav {
   float: left;
-  height: 904px;
   width: 350px;
   background: #ccc;
   padding: 20px;
@@ -292,16 +291,16 @@ span.psw {
 </head>
 <body>
 <section>
-  <nav style='overflow-x:hidden;overflow-y:scroll;height:'>
+  <nav style='overflow-x:hidden;overflow-y:scroll;height:calc(100vh - 32px);'>
     <ul id='commands'>
     </ul>
   </nav>
   <article style="width:calc(100% - 350px);">
     <div class="child" style='right:53%;'><img onClick="prevDay(); return false;" style='height:50px;' src='left.png' /></div>
-    <div id="chartContainer" style="height: 288px; width: 100%;"></div>
-    <div style="height:576px; width:100%; background:#fff;">
-      <div id="rssiContainer" style="height: 288px; width: calc(100% - 50px);"></div>
-      <div id="costContainer" style="height: 288px; width: calc(100% - 50px);"></div>
+    <div id="chartContainer" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
+    <div style="height:calc(100vh / 3 * 2 - 52px); width:100%; background:#fff;">
+      <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
+      <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
     </div>
     <div class="child" style='right:27%;'><img onClick="nextDay(); return false;" style='height:50px;' src='right.png' /></div>
   </article>

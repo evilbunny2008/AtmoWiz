@@ -153,6 +153,67 @@ def doLog(logType, line, doStackTrace = False):
             print (full_stack())
             log.error(full_stack())
 
+def calcCost():
+    try:
+        mydb = MySQLdb.connect(hostname, username, password, database)
+        cursor = mydb.cursor()
+        cursor2 = mydb.cursor()
+
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='cool'"
+        cursor.execute(query)
+        for (whentime, uid, dow, hod) in cursor:
+            if(dow == 1 or dow == 7):
+                cost = cool / EER * offpeak * 90.0 / 3600.0
+            else:
+                cost = cool / EER * offpeak * 90.0 / 3600.0
+                if(hod >= 7 and hod < 9):
+                    cost = cool / EER * peak * 90.0 / 3600.0
+                if(hod >= 9 and hod < 17):
+                    cost = cool / EER * shoulder * 90.0 / 3600.0
+                if(hod >= 17 and hod < 20):
+                    cost = cool / EER * peak * 90.0 / 3600.0
+                if(hod >= 20 and hod < 22):
+                    cost = cool / EER * shoulder * 90.0 / 3600.0
+
+            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, whentime, uid)
+            doLog("info", query % values)
+            cursor2.execute(query, values)
+
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
+        cursor.execute(query)
+        for (whentime, uid, dow, hod) in cursor:
+            if(dow == 1 or dow == 7):
+                cost = heat / COP * offpeak * 90.0 / 3600.0
+            else:
+                cost = heat / COP * offpeak * 90.0 / 3600.0
+                if(hod >= 7 and hod < 9):
+                    cost = heat / COP * peak * 90.0 / 3600.0
+                if(hod >= 9 and hod < 17):
+                    cost = heat / COP * shoulder * 90.0 / 3600.0
+                if(hod >= 17 and hod < 20):
+                    cost = heat / COP * peak * 90.0 / 3600.0
+                if(hod >= 20 and hod < 22):
+                    cost = heat / COP * shoulder * 90.0 / 3600.0
+
+            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, whentime, uid)
+            doLog("info", query % values)
+            cursor2.execute(query, values)
+
+        mydb.commit()
+        mydb.close()
+    except MySQLdb._exceptions.ProgrammingError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+    except MySQLdb._exceptions.OperationalError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+    except MySQLdb._exceptions.IntegrityError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+
+
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
@@ -191,6 +252,14 @@ if __name__ == "__main__":
     uid = configParser.getint('system', 'uid', fallback = 0)
     gid = configParser.getint('system', 'gid', fallback = 0)
     country = configParser.get('system', 'country', fallback = 'au')
+
+    peak = configParser.getfloat('cost', 'peak', fallback = 0.50)
+    shoulder = configParser.getfloat('cost', 'shoulder', fallback = 0.50)
+    offpeak = configParser.getfloat('cost', 'offpeak', fallback = 0.50)
+    EER = configParser.getfloat('cost', 'EER', fallback = 3.0)
+    COP = configParser.getfloat('cost', 'COP', fallback = 3.0)
+    cool = configParser.getfloat('cost', 'cool', fallback = 3.0)
+    heat = configParser.getfloat('cost', 'heat', fallback = 3.0)
 
     if(days <= 0):
         days = 1
@@ -410,6 +479,8 @@ if __name__ == "__main__":
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
+    calcCost()
+
     while True:
         try:
             mydb = MySQLdb.connect(hostname, username, password, database)
@@ -466,6 +537,8 @@ if __name__ == "__main__":
                 except MySQLdb._exceptions.OperationalError as e:
                     doLog("error", "There was a problem, error was %s" % e, True)
                     pass
+
+            calcCost()
 
             for podUID in uidList:
                 last5 = client.pod_status(podUID, 5)
