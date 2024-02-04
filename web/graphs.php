@@ -131,7 +131,7 @@ body {
 
 nav {
   float: left;
-  height: 780px;
+  height: 904px;
   width: 350px;
   background: #ccc;
   padding: 20px;
@@ -179,7 +179,7 @@ section::after {
 .child {
   position: absolute;
   z-index: 1;
-  top: 370px;
+  top: 5px;
 }
 
 body {font-family: Arial, Helvetica, sans-serif;}
@@ -297,12 +297,13 @@ span.psw {
     </ul>
   </nav>
   <article style="width:calc(100% - 350px);">
-    <div class="child"><img onClick="prevDay(); return false;" style='height:50px;' src='left.png' /></div>
-    <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-    <div style="height:370px; width:100%; background:#fff;">
-      <div id="rssiContainer" style="height: 370px; width: calc(100% - 50px);"></div>
+    <div class="child" style='right:53%;'><img onClick="prevDay(); return false;" style='height:50px;' src='left.png' /></div>
+    <div id="chartContainer" style="height: 288px; width: 100%;"></div>
+    <div style="height:576px; width:100%; background:#fff;">
+      <div id="rssiContainer" style="height: 288px; width: calc(100% - 50px);"></div>
+      <div id="costContainer" style="height: 288px; width: calc(100% - 50px);"></div>
     </div>
-    <div class="child" style='right:20px;'><img onClick="nextDay(); return false;" style='height:50px;' src='right.png' /></div>
+    <div class="child" style='right:27%;'><img onClick="nextDay(); return false;" style='height:50px;' src='right.png' /></div>
   </article>
 </section>
 <div style='height: 32px;width: 100%'></div>
@@ -374,6 +375,7 @@ window.onclick = function(event)
 var chart = new CanvasJS.Chart("chartContainer",
 {
 	animationEnabled: true,
+	exportEnabled: true,
 	zoomEnabled: true,
 	title:
 	{
@@ -460,6 +462,7 @@ var chart = new CanvasJS.Chart("chartContainer",
 var chart2 = new CanvasJS.Chart("rssiContainer",
 {
 	animationEnabled: true,
+	exportEnabled: true,
 	zoomEnabled: true,
 	title:
 	{
@@ -506,6 +509,64 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 		{
 			type: "line",
 			name: "Signal Strength [dBm]",
+			xValueType: "dateTime",
+			markerSize: 0,
+			showInLegend: true,
+       		}
+	]
+});
+
+var chart3 = new CanvasJS.Chart("costContainer",
+{
+	animationEnabled: true,
+	exportEnabled: true,
+	zoomEnabled: true,
+	title:
+	{
+		text: "Cost per hour"
+	},
+	toolTip:
+	{
+		contentFormatter: function(e)
+		{
+			var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+			for(var i = 0; i < e.entries.length; i++)
+			{
+				var entry = e.entries[i];
+				content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": $" +  entry.dataPoint.y + "</div>";
+			}
+			return content;
+		},
+		shared: true,
+	},
+	axisX:
+	{
+		title: "Time",
+		interval:2,
+		intervalType: "hour",
+		valueFormatString: "D MMM, hTT",
+		labelAngle: -20,
+	},
+	axisY:
+	{
+		title: "Cost per Hour [$]",
+		includeZero: true,
+		titleFontColor: "#4F81BC",
+		lineColor: "#4F81BC",
+		labelFontColor: "#4F81BC",
+		tickColor: "#4F81BC"
+	},
+	legend:
+	{
+		cursor: "pointer",
+		dockInsidePlotArea: true,
+		itemclick: toggleDataSeries
+	},
+	data:
+	[
+		{
+			type: "column",
+			name: "Cost per Hour [$]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -598,6 +659,9 @@ async function startDataLoop(force)
 
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
 		chart2.render();
+
+		chart3.options.data[0].dataPoints = content['dataPoints5'];
+		chart3.render();
 
 		populateSelect();
 	} catch (e) {

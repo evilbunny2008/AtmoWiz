@@ -41,6 +41,8 @@
 
 	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] != -1)
 		$startTS = doubleval($_REQUEST['startTS']);
+	else
+		$startTS = time() * 1000;
 
 	if($error != null)
 		reportError($error);
@@ -134,6 +136,16 @@
 			$startTS = time() * 1000;
 	}
 
+	$sts = round($startTS / 1000.0);
+	for($i = 0; $i < 24; $i++)
+	{
+		$date = date("Y-m-d H:%", $sts + $i * 3600);
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime, sum(cost) as cph FROM sensibo WHERE uid='$uid' AND whentime LIKE '$date'";
+		$res = mysqli_query($link, $query);
+		$row = mysqli_fetch_assoc($res);
+		$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => round(floatval($row['cph']) * 100) / 100);
+	}
+
 	$commands = '';
 
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
@@ -219,5 +231,6 @@
 		}
 	}
 
-	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS);
+	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'dataPoints5' => $dataPoints5,
+					'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS);
 	echo json_encode(array('status' => 200, 'content' => $data));
