@@ -15,7 +15,7 @@ The PHP scripts are used to display the data as a line graphs and can turn your 
 
 # Issues and Feature Requests
 
-Issues and feature requests can be filed [here]([issues](https://github.com/evilbunny2008/sensibo-python-sdk/issues))
+Issues and feature requests can be filed [here](https://github.com/evilbunny2008/sensibo-python-sdk/issues)
 
 # Credits
 
