@@ -15,6 +15,7 @@ from datetime import datetime
 from dateutil import tz
 from systemd.journal import JournalHandler
 
+_corf = "C"
 _hasPlus = False
 _SERVER = 'https://home.sensibo.com/api/v2'
 
@@ -129,6 +130,7 @@ if __name__ == "__main__":
     log.info("Daemon started....")
 
     if(os.getuid() != 0 or os.getgid() != 0):
+        print ("This program is designed to be started as root.")
         log.error("This program is designed to be started as root.")
         exit(1)
 
@@ -138,10 +140,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if(not os.path.exists(args.config) or not os.path.isfile(args.config)):
+        print ("Config file %s doesn't exist." % args.config)
         log.error("Config file %s doesn't exist." % args.config)
         exit(1)
 
     if(not os.access(args.config, os.R_OK)):
+        print ("Config file %s isn't readable." % args.config)
         log.error("Config file %s isn't readable." % args.config)
         exit(1)
 
@@ -164,22 +168,27 @@ if __name__ == "__main__":
     filegid = os.stat(args.config).st_gid
 
     if(fileuid != 0 or filegid != 0):
+        print ("The config file isn't owned by root, can't continue.")
         log.error("The config file isn't owned by root, can't continue.")
         exit(1)
 
     if(os.stat(args.config).st_mode != 33152):
+        print ("The config file isn't just rw as root, can't continue")
         log.error("The config file isn't just rw as root, can't continue")
         exit(1)
 
     if(apikey == 'apikey' or apikey == '<apikey from sensibo.com>'):
+        print ('APIKEY is not set in config file.')
         log.error('APIKEY is not set in config file.')
         exit(1)
 
     if(password == 'password' or password == '<password for local db>'):
+        print ("DB Password is not set in the config file, can't continue")
         log.error("DB Password is not set in the config file, can't continue")
         exit(1)
 
     if(uid == 0 or gid == 0):
+        print ("UID or GID is set to superuser, this is not recommended.")
         log.info("UID or GID is set to superuser, this is not recommended.")
     else:
         os.setgid(gid)
@@ -194,7 +203,30 @@ if __name__ == "__main__":
     client = SensiboClientAPI(apikey)
     devices = client.devices()
     if(devices == None):
+        print ("Unable to get a list of devices, check your internet connection and apikey and try again.")
         log.error("Unable to get a list of devices, check your internet connection and apikey and try again.")
+        exit(1)
+
+    try:
+        mydb = MySQLdb.connect(hostname, username, password, database)
+        mydb.close()
+    except MySQLdb._exceptions.ProgrammingError as e:
+        print ("There was a problem, error was %s" % e)
+        print (full_stack())
+        log.error("There was a problem, error was %s" % e)
+        log.error(full_stack())
+        exit(1)
+    except MySQLdb._exceptions.OperationalError as e:
+        print ("There was a problem, error was %s" % e)
+        print (full_stack())
+        log.error("There was a problem, error was %s" % e)
+        log.error(full_stack())
+        exit(1)
+    except MySQLdb._exceptions.IntegrityError as e:
+        print ("There was a problem, error was %s" % e)
+        print (full_stack())
+        log.error("There was a problem, error was %s" % e)
+        log.error(full_stack())
         exit(1)
 
     uidList = devices.values()
@@ -226,20 +258,18 @@ if __name__ == "__main__":
             if(remoteCapabilities == None):
                 continue
 
+            _corf = remoteCapabilities[0]['device']['temperatureUnit']
+
             device = remoteCapabilities[0]['device']['remoteCapabilities']
             features = remoteCapabilities[0]['device']['features']
             if('plus' in features and 'showPlus' in features):
                 _hasPlus = True
 
-            corf = "C"
-            if(device['modes']['cool']['temperatures']['F']['isNative'] == True):
-                corf = "F"
-
             query = "INSERT INTO meta (uid, mode, keyval, value) VALUES (%s, %s, %s, %s)"
 
             for mode in ['cool', 'heat', 'dry', 'auto', 'fan']:
                 if(mode != "fan"):
-                    for temp in device['modes'][mode]['temperatures'][corf]['values']:
+                    for temp in device['modes'][mode]['temperatures'][_corf]['values']:
                         # log.info(query % (podUID, mode, 'temperatures', temp))
                         cursor.execute(query, (podUID, mode, 'temperatures', temp))
 
@@ -303,9 +333,9 @@ if __name__ == "__main__":
             if(pod_measurement40 == None):
                 continue
 
-            rc = 0
+            rc = -1
             for i in range(len(past24['temperature']) - 1, 0, -1):
-                # print("rc = %d, i = %d" % (rc, i))
+                rc += 1
                 temp = past24['temperature'][i]['value']
                 humid = past24['humidity'][i]['value']
 
@@ -339,16 +369,19 @@ if __name__ == "__main__":
                 if(row):
                     continue
 
+                log.info("rc = %d, i = %d" % (rc, i))
+                log.info(past24['temperature'][i])
+                log.info(past24['humidity'][i])
+
                 at = calcAT(temp, humid, country, feelslike)
                 values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing)
                 log.info(_sqlquery3 % values)
                 cursor.execute(_sqlquery3, values)
                 mydb.commit()
-                rc += 1
 
         mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
-        log.error("here was a problem, error was %s" % e)
+        log.error("There was a problem, error was %s" % e)
         log.error(full_stack())
         exit(1)
     except MySQLdb._exceptions.OperationalError as e:
