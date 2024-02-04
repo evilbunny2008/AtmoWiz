@@ -363,7 +363,7 @@ if __name__ == "__main__":
                     swing = 'fixedTop'
                     horizontalSwing = 'fixedCenter'
 
-                sstring = datetime.strptime(past24['temperature'][i]['time'], '%Y-%m-%dT%H:%M:%SZ')
+                sstring = datetime.strptime(past24['temperature'][i]['time'], fromfmt2)
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
@@ -452,12 +452,8 @@ if __name__ == "__main__":
                     continue
 
                 for last in last5:
-                    if(last['reason'] == 'UserRequest'):
-                        continue
-
                     try:
-
-                        sstring = datetime.strptime(last['time']['time'], '%Y-%m-%dT%H:%M:%SZ')
+                        sstring = datetime.strptime(last['time']['time'], fromfmt2)
                         utc = sstring.replace(tzinfo=from_zone)
                         localzone = utc.astimezone(to_zone)
                         sdate = localzone.strftime(fmt)
