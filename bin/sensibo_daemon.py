@@ -426,7 +426,7 @@ if __name__ == "__main__":
                 measurements = pod_measurement['device']['measurements']
 
                 if(not validateValues(measurements['temperature'], measurements['humidity'])):
-                    doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (temp, humid))
+                    doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (measurements['temperature'], measurements['humidity']))
                     continue
 
                 sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
