@@ -681,7 +681,7 @@ function nextDay()
 {
 	startTS += 86400000;
 	document.getElementById("startTS").value = startTS;
-	startDataLoop();
+	startDataLoop(true);
 }
 
 function logout()
