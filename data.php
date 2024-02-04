@@ -173,9 +173,9 @@
 	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
 	$commands .= "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
 
-	$lastdate = '';
+	$date = $lastdate = '';
 
-	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' ORDER BY whentime DESC";
+	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' AND changes!='' ORDER BY whentime DESC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
@@ -196,34 +196,19 @@
 		}
 
 		if(stripos($row['changes'], "'targetTemperature'"))
-		{
-			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set temperature to ".$row["targetTemperature"]."</li>\n";
-		}
 
 		if(stripos($row['changes'], "'mode'"))
-		{
-			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set mode to ".$row["mode"]."</li>\n";
-		}
 
 		if(stripos($row['changes'], "'fanLevel'"))
-		{
-			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set fan to ".$row["fanLevel"]."</li>\n";
-		}
 
 		if(stripos($row['changes'], "'swing'"))
-		{
-			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set vertical swing to ".$row["swing"]."</li>\n";
-		}
 
 		if(stripos($row['changes'], "'horizontalSwing'"))
-		{
-			$onoff = false;
 			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set horizontonalswing to ".$row["horizontalSwing"]."</li>\n";
-		}
 
 		if(stripos($row['changes'], "'on'"))
 		{
