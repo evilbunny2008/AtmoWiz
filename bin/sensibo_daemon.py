@@ -110,6 +110,17 @@ def calcAT(temp, humid, country, feelslike):
             doLog("info", "WC = %d" % WC)
             return WC
 
+def validateValues(temp, humid):
+    if(humid < 1 or humid > 99):
+        return False
+
+    if(_corf == "C" and (temp > 55 or temp < -55)):
+        return False
+    elif(_corf == "F" and (temp > 131 or temp < -67)):
+        return False
+
+    return True
+
 def full_stack():
     import traceback, sys
     exc = sys.exc_info()[0]
@@ -344,6 +355,10 @@ if __name__ == "__main__":
                 temp = past24['temperature'][i]['value']
                 humid = past24['humidity'][i]['value']
 
+                if(not validateValues(temp, humid)):
+                    doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (temp, humid))
+                    continue
+
                 if(rc < len(pod_measurement40)):
                     feelslike = pod_measurement40[rc]['device']['measurements']['feelsLike']
                     rssi = pod_measurement40[rc]['device']['measurements']['rssi']
@@ -409,6 +424,11 @@ if __name__ == "__main__":
                 pod_measurement = pod_measurement[0]
                 ac_state = pod_measurement['device']['acState']
                 measurements = pod_measurement['device']['measurements']
+
+                if(not validateValues(measurements['temperature'], measurements['humidity'])):
+                    doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (temp, humid))
+                    continue
+
                 sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
 
                 if(secondsAgo == -1):
@@ -447,6 +467,7 @@ if __name__ == "__main__":
                     doLog("error", "There was a problem, error was %s" % e, True)
                     pass
 
+            for podUID in uidList:
                 last5 = client.pod_status(podUID, 5)
                 if(last5 == None):
                     continue
