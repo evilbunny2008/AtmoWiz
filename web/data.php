@@ -87,9 +87,9 @@
 		$dres = mysqli_query($link, $query);
 		if(mysqli_num_rows($dres) > 0)
 		{
-			$ac = "";
 			while($drow = mysqli_fetch_assoc($dres))
 			{
+				$ac = "";
 				if(stripos($drow['changes'], "'on'"))
 					if($drow['airconon'] == 1)
 						$ac = "on";
@@ -100,17 +100,16 @@
 					$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'green');
 				else if($ac == "off")
 					$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'tomato');
+				else
+					$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
 			}
-
-			if($ac == "")
-				$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
 		} else {
 			$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
 		}
 
-		$dataPoints2[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['humidity']));
-		$dataPoints3[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['feelslike']));
-		$dataPoints4[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['rssi']));
+		$dataPoints2[] = array('x' => doubleval($row['whentime']), 'y' => intval($row['humidity']));
+		$dataPoints3[] = array('x' => doubleval($row['whentime']), 'y' => round(floatval($row['feelslike']) * 10.0) / 10.0);
+		$dataPoints4[] = array('x' => doubleval($row['whentime']), 'y' => intval($row['rssi']));
 	}
 
 	$ac = "off";
@@ -137,7 +136,7 @@
 	}
 
 	$sts = round($startTS / 1000.0);
-	for($i = 0; $i < 24; $i++)
+	for($i = 1; $i <= 24; $i++)
 	{
 		$date = date("Y-m-d H:%", $sts + $i * 3600);
 		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime, sum(cost) as cph FROM sensibo WHERE uid='$uid' AND whentime LIKE '$date'";
