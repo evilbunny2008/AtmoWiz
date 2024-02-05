@@ -302,7 +302,7 @@ span.psw {
       <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
       <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
     </div>
-    <div class="child" style='right:27%;'><img onClick="nextDay(); return false;" style='height:50px;' src='right.png' /></div>
+    <div class="child" style='right:26%;'><img onClick="nextDay(); return false;" style='height:50px;' src='right.png' /></div>
   </article>
 </section>
 <div style='height: 32px;width: 100%'></div>
@@ -532,7 +532,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];
-				content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": $" +  entry.dataPoint.y + "</div>";
+				content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  CanvasJS.formatNumber(entry.dataPoint.y, "$#,##0.00") + "</div>";
 			}
 			return content;
 		},
@@ -553,7 +553,11 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		titleFontColor: "#4F81BC",
 		lineColor: "#4F81BC",
 		labelFontColor: "#4F81BC",
-		tickColor: "#4F81BC"
+		tickColor: "#4F81BC",
+		labelFormatter: function (e)
+		{
+			return CanvasJS.formatNumber(e.value, "$#,##0.00");
+		},
 	},
 	legend:
 	{

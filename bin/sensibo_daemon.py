@@ -313,15 +313,15 @@ if __name__ == "__main__":
     password = configParser.get('mariadb', 'password', fallback = 'password')
     uid = configParser.getint('system', 'uid', fallback = 0)
     gid = configParser.getint('system', 'gid', fallback = 0)
-    country = configParser.get('system', 'country', fallback = 'au')
+    country = configParser.get('system', 'country', fallback = 'None')
 
     peak = configParser.getfloat('cost', 'peak', fallback = 0.50)
     shoulder = configParser.getfloat('cost', 'shoulder', fallback = 0.50)
     offpeak = configParser.getfloat('cost', 'offpeak', fallback = 0.50)
     EER = configParser.getfloat('cost', 'EER', fallback = 3.0)
     COP = configParser.getfloat('cost', 'COP', fallback = 3.0)
-    cool = configParser.getfloat('cost', 'cool', fallback = 3.0)
-    heat = configParser.getfloat('cost', 'heat', fallback = 3.0)
+    cool = configParser.getfloat('cost', 'cool', fallback = 5.0)
+    heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
 
     if(days <= 0):
         days = 1
