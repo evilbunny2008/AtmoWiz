@@ -10,7 +10,9 @@ import os
 import random
 import requests
 import shutil
+import sys
 import time
+import traceback
 from datetime import datetime
 from dateutil import tz
 from systemd.journal import JournalHandler
@@ -82,19 +84,35 @@ def calcAT(temp, humid, country, feelslike):
     if(feelslike != None and country == 'None'):
         return feelslike
 
-    if(country == 'au' or feelslike == None):
+    if(country == 'au'):
+        doLog("info", "Using BoM Apparent Temp")
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         # UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1)
+        if(_corf == 'F'):
+            temp = (temp - 32) * 5 / 9
+            doLog("info", "temp = %f" % temp)
+
         vp = (humid / 100.0) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
         doLog("info", "vp = %f" % vp)
         at = round(temp + (0.33 * vp) - 4.0, 1)
         doLog("info", "at = %f" % at)
         return at
     else:
+        # North American Heat Index -- https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
+        doLog("info", "Using NA HI")
+        if(_corf == 'C'):
+            temp =  (temp * 9 / 5) + 32
+            doLog("info", "temp = %f" % temp)
+
+
         if(temp <= 80 and temp >= 50):
             HI = 0.5 * (temp + 61.0 + ((temp - 68.0) * 1.2) + (humid * 0.094))
+            if(_corf == 'C'):
+                HI = (HI - 32) * 5 / 9
+
+            doLog("info", "HI = %f" % HI)
+            return HI
         elif(temp > 50):
-            # North American Heat Index -- https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
             HI = -42.379 + 2.04901523 * temp + 10.14333127 * humid - .22475541 * temp * humid - .00683783 * temp * temp - .05481717 * humid * humid + .00122874 * temp * temp * humid + .00085282 * temp * humid * humid - .00000199 * temp * temp * humid * humid
 
             if(temp > 80 and humid < 13):
@@ -103,11 +121,20 @@ def calcAT(temp, humid, country, feelslike):
             if(temp >= 80 and temp <= 87 and humid >= 85):
                 HI += ((humid - 85) / 10) * ((87 - temp) / 5)
 
-            doLog("info", "HI = %d" % HI)
+            if(_corf == 'C'):
+                HI = (HI - 32) * 5 / 9
+
+            doLog("info", "HI = %f" % HI)
             return HI
         else:
+            if(_corf == 'C'):
+                temp = (temp - 32) * 5 / 9
+
             WC = 35.74 + 0.6215 * temp
-            doLog("info", "WC = %d" % WC)
+            if(_corf == 'C'):
+                WC = (WC - 32) * 5 / 9
+
+            doLog("info", "WC = %f" % WC)
             return WC
 
 def validateValues(temp, humid):
@@ -122,7 +149,6 @@ def validateValues(temp, humid):
     return True
 
 def full_stack():
-    import traceback, sys
     exc = sys.exc_info()[0]
     stack = traceback.extract_stack()[:-1]
     if exc is not None:
@@ -213,6 +239,40 @@ def calcCost():
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
+def calcFL():
+    try:
+        mydb = MySQLdb.connect(hostname, username, password, database)
+        cursor = mydb.cursor()
+
+        if(_corf == 'C' and country == 'au'):
+            query = "UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1) WHERE feelslike=-1"
+            cursor.execute(query)
+            mydb.commit()
+            return
+        else:
+            query = "SELECT whentime, uid, temperature, humidity FROM sensibo WHERE feelslike=-1"
+            doLog("info", query)
+            cursor.execute(query)
+            cursor2 = mydb.cursor()
+            for (whentime, uid, temp, humid) in cursor:
+                at = calcAT(temp, humid, country, None)
+                query = "UPDATE sensibo SET feelslike=%s WHERE whentime=%s AND uid=%s AND feelslike=-1"
+                values = (at, whentime, uid)
+                doLog("info", query % values)
+                cursor2.execute(query, values)
+
+            mydb.commit()
+            return
+
+    except MySQLdb._exceptions.ProgrammingError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+    except MySQLdb._exceptions.OperationalError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+    except MySQLdb._exceptions.IntegrityError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
 
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
@@ -231,6 +291,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
                         help='Path to config file, /etc/sensibo.conf is the default')
+    parser.add_argument('--reCalcCost', action='store_true', help='Recalc the cost of running the aircon after updating power prices')
+    parser.add_argument('--reCalcFL', action='store_true', help='Recalc the feels like temperature')
     args = parser.parse_args()
 
     if(not os.path.exists(args.config) or not os.path.isfile(args.config)):
@@ -313,6 +375,50 @@ if __name__ == "__main__":
     except MySQLdb._exceptions.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
+
+    if(args.reCalcCost):
+        try:
+            mydb = MySQLdb.connect(hostname, username, password, database)
+            cursor = mydb.cursor()
+            query = "UPDATE sensibo SET cost=0.0"
+            doLog("info", query)
+            cursor.execute(query)
+            mydb.commit()
+            mydb.close()
+            calcCost()
+            doLog("info", "Cost has been recalculated.")
+            exit(0)
+        except MySQLdb._exceptions.ProgrammingError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            exit(1)
+        except MySQLdb._exceptions.OperationalError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            exit(1)
+        except MySQLdb._exceptions.IntegrityError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            exit(1)
+
+    if(args.reCalcFL):
+        try:
+            mydb = MySQLdb.connect(hostname, username, password, database)
+            cursor = mydb.cursor()
+            query = "UPDATE sensibo SET feelslike=-1"
+            doLog("info", query)
+            cursor.execute(query)
+            mydb.commit()
+            mydb.close()
+            calcFL()
+            doLog("info", "Feels like has been recalculated.")
+            exit(0)
+        except MySQLdb._exceptions.ProgrammingError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            exit(1)
+        except MySQLdb._exceptions.OperationalError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            exit(1)
+        except MySQLdb._exceptions.IntegrityError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            exit(1)
 
     uidList = devices.values()
 

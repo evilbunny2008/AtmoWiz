@@ -565,7 +565,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	[
 		{
 			type: "column",
-			name: "Cost per Hour [$]",
+			name: "Cost [$]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
