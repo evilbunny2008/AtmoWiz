@@ -1,7 +1,5 @@
 <?php
 	$error = null;
-	$startTS = -1;
-
 	require_once('mariadb.php');
 
 	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
@@ -40,13 +38,6 @@
 		return "Unknown";
 	}
 
-	$period = 86400000;
-
-	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] != -1)
-		$startTS = doubleval($_REQUEST['startTS']);
-	else
-		$startTS = time() * 1000 - $period;
-
 	if($error != null)
 		reportError($error);
 
@@ -54,6 +45,7 @@
 	$dataPoints2 = array();
 	$dataPoints3 = array();
 	$dataPoints4 = array();
+	$dataPoints5 = array();
 
 	$airconon = '';
 	$uid = '';
@@ -76,6 +68,18 @@
 	{
 		$error = "Unable to get a UID, please check your database/configs and try again";
 		reportError($error);
+	}
+
+	$period = 86400000;
+
+	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] > 0)
+	{
+		$startTS = doubleval($_REQUEST['startTS']);
+	} else {
+		$query = "SELECT *, UNIX_TIMESTAMP(whentime) * 1000 as whentimes FROM sensibo WHERE uid='$uid' ORDER BY whentime DESC LIMIT 1";
+		$res = mysqli_query($link, $query);
+		$row = mysqli_fetch_assoc($res);
+		$startTS = $row['whentimes'] - $period;
 	}
 
 	$query = "SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
@@ -141,8 +145,12 @@
 		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime, sum(cost) as cph FROM sensibo ".
 					"WHERE uid='$uid' AND whentime LIKE '$date' LIMIT 1";
 		$res = mysqli_query($link, $query);
-		$row = mysqli_fetch_assoc($res);
-		$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => round(floatval($row['cph']) * 100) / 100);
+		if(mysqli_num_rows($res) > 0)
+		{
+			$row = mysqli_fetch_assoc($res);
+			if(doubleval($row['whentime']) > 0)
+				$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => round(floatval($row['cph']) * 100) / 100);
+		}
 	}
 
 	$commands = '';

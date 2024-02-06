@@ -1,7 +1,7 @@
 <?php
 	$error = null;
 	$period = 86400000;
-	$startTS = time() * 1000 - $period;;
+	$startTS = time() * 1000 - $period;
 	$row = array('uid' => '');
 
 
@@ -106,9 +106,7 @@
 	}
 
 	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
-	{
 		$startTS = doubleval($_REQUEST['startTS']);
-	}
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -320,7 +318,7 @@ span.psw {
       <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
     </div>
     <div class="container">
-	<input id="startTS" type="hidden" name="startTS" value="<?=$startTS?>" />
+	<input id="startTS" type="hidden" name="startTS" />
 	<input id="podUID" type="hidden" name="podUID" value="<?=$row['uid']?>" />
 	<label for="mode"><b>Mode:</b></label>
 	<select id='mode' name="mode" onChange='populateSelect(this.value); return false;'>
@@ -623,7 +621,7 @@ async function DataLoop()
 	now = new Date().getTime();
 	if(startTS >= now - 87300000 && startTS <= now - 85500000)
 	        startTS = now - period;
-	document.getElementById("startTS").value = startTS;
+
 	startDataLoop(false);
 }
 
@@ -694,7 +692,7 @@ async function popSelect(dropdown, content, current)
 async function doPop(mode, val, type)
 {
 	var url = 'modes.php?time=' + new Date().getTime() + '&uid=' + uid + '&mode=' + mode + '&keyval=' + val;
-
+console.log(url);
 	const response = await fetch(url);
 	const ret = await response.json();
 
@@ -739,29 +737,6 @@ async function changeAC(value)
 		}
 	}
 
-	startDataLoop(true);
-}
-
-async function changeTP(value)
-{
-	timePeriod = value;
-
-	if(value == 'day')
-		period = 86400000;
-
-	if(value == 'week')
-		period = 604800000;
-
-	if(value == 'month')
-		period = 2592000000;
-
-	if(value == 'year')
-		period = 31536000000;
-
-	if(value == 'all')
-		period = -1;
-
-	startTS = new Date().getTime() - period;
 	startDataLoop(true);
 }
 
