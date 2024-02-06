@@ -232,6 +232,8 @@ def calcCost(mydb):
         pass
     except MySQLdb._exceptions.OperationalError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
+        if(e == "(2006, 'MySQL server has gone away')"):
+            mydb = MySQLdb.connect(hostname, username, password, database)
         pass
     except MySQLdb._exceptions.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
@@ -266,6 +268,8 @@ def calcFL(mydb):
         pass
     except MySQLdb._exceptions.OperationalError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
+        if(e == "(2006, 'MySQL server has gone away')"):
+            mydb = MySQLdb.connect(hostname, username, password, database)
         pass
     except MySQLdb._exceptions.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
@@ -375,6 +379,8 @@ def getLastCommands(mydb, nb = 5):
                 pass
             except MySQLdb._exceptions.OperationalError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
+                if(e == "(2006, 'MySQL server has gone away')"):
+                    mydb = MySQLdb.connect(hostname, username, password, database)
                 pass
 
 
@@ -641,6 +647,8 @@ if __name__ == "__main__":
                     pass
                 except MySQLdb._exceptions.OperationalError as e:
                     doLog("error", "There was a problem, error was %s" % e, True)
+                    if(e == "(2006, 'MySQL server has gone away')"):
+                        mydb = MySQLdb.connect(hostname, username, password, database)
                     pass
 
             calcCost(mydb)

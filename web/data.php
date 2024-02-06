@@ -149,7 +149,8 @@
 		if(mysqli_num_rows($res) > 0)
 		{
 			$row = mysqli_fetch_assoc($res);
-			$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['cph']));
+			if(doubleval($row['whentime']) > 0)
+				$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['cph']));
 		}
 	}
 
