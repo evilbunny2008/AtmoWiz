@@ -74,8 +74,8 @@ class SensiboClientAPI(object):
             doLog("error", result, True)
             return None
 
-    def pod_get_past_24hours(self, podUid, lastlimit = 1):
-        result = self._get("/pods/%s/historicalMeasurements" % podUid, days = lastlimit, fields="status,reason,time,acState,causedByUser")
+    def pod_get_past(self, podUid, days = 1):
+        result = self._get("/pods/%s/historicalMeasurements" % podUid, days = days, fields="status,reason,time,acState,causedByUser")
         if(result == None):
             return None
         return result['result']
@@ -271,11 +271,11 @@ def calcFL(mydb):
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
-def doHistoricalMeasurements(mydb):
+def doHistoricalMeasurements(mydb, days = 1):
     cursor = mydb.cursor()
 
     for podUID in uidList:
-        past24 = client.pod_get_past_24hours(podUID, days)
+        past24 = client.pod_get_past(podUID, days)
 
         if(past24 == None):
             continue
@@ -573,7 +573,7 @@ if __name__ == "__main__":
         if(not _hasPlus and days > 1):
             days = 1
 
-        doHistoricalMeasurements(mydb)
+        doHistoricalMeasurements(mydb, days)
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
@@ -589,7 +589,8 @@ if __name__ == "__main__":
     while True:
         try:
             doLog("info", "Connection to mariadb accepted")
-            secondsAgo = -1;
+            secondsAgo = -1
+            loops = 0
 
             for podUID in uidList:
                 pod_measurement = client.pod_all_stats(podUID, 1)
@@ -645,6 +646,12 @@ if __name__ == "__main__":
             calcCost(mydb)
 
             getLastCommands(mydb, 5)
+
+            loops += 1
+
+            if(loops >= 15):
+                loops = 0
+                doHistoricalMeasurements(mydb, 1)
 
             if(secondsAgo <= 0):
                 secondsAgo = 90

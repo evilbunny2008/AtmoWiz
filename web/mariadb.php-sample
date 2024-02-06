@@ -8,6 +8,12 @@
 	$rousername = "user";
 	$ropassword = "user";
 
+	$tempColour = "#9BBB58";
+	$humidColour = "#C0504E";
+	$FLColour = "#4F81BC";
+	$wifiColour = "#4F81BC";
+	$costColour = "#4F81BC";
+
 	session_start();
 
 	mysqli_report(MYSQLI_REPORT_OFF);
