@@ -143,21 +143,15 @@
 	for($i = 1; $i <= $hours; $i++)
 	{
 		$date = date("Y-m-d H:%", $sts + $i * 3600);
-		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime, sum(cost) as cph FROM sensibo ".
+		$query = "SELECT DATE_FORMAT(whentime, '%Y-%m-%d %H:00:00') as wt,FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, ROUND(sum(cost), 2) as cph FROM sensibo ".
 					"WHERE uid='$uid' AND whentime LIKE '$date' LIMIT 1";
-//echo $query."<br/>\n";
 		$res = mysqli_query($link, $query);
 		if(mysqli_num_rows($res) > 0)
 		{
 			$row = mysqli_fetch_assoc($res);
-			if(doubleval($row['whentime']) > 0)
-			{
-				$whentime = round(doubleval($row['whentime']) / 1000 / 3600) * 1000 * 3600;;
-				$dataPoints5[] = array('x' => $whentime, 'y' => round(floatval($row['cph']) * 100) / 100);
-			}
+			$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['cph']));
 		}
 	}
-//die;
 
 	$commands = '';
 
