@@ -1,6 +1,7 @@
 <?php
 	$error = null;
-	$startTS = time() * 1000 - 86400000;
+	$period = 86400000;
+	$startTS = time() * 1000 - $period;;
 	$row = array('uid' => '');
 
 
@@ -358,6 +359,8 @@ span.psw {
 <script src="canvasjs.min.js"></script>
 <script>
 
+var timePeriod = "day";
+var period = 86400000;
 var uid = "<?=$row['uid']?>";
 var currtime = "";
 var startTS = <?=$startTS?>;
@@ -615,11 +618,11 @@ async function toggleAC()
 
 async function DataLoop()
 {
-	setTimeout('DataLoop()', 5000);
+	setTimeout('DataLoop()', 15000);
 
 	now = new Date().getTime();
 	if(startTS >= now - 87300000 && startTS <= now - 85500000)
-	        startTS = now - 86400000;
+	        startTS = now - period;
 	document.getElementById("startTS").value = startTS;
 	startDataLoop(false);
 }
@@ -632,6 +635,8 @@ async function startDataLoop(force)
 		if(uid != '')
 			url += "&uid=" + uid;
 		url += "&startTS=" + startTS;
+		url += "&period=" + period;
+console.log(url);
 
 		const response = await fetch(url);
 		const ret = await response.json();
@@ -737,16 +742,39 @@ async function changeAC(value)
 	startDataLoop(true);
 }
 
+async function changeTP(value)
+{
+	timePeriod = value;
+
+	if(value == 'day')
+		period = 86400000;
+
+	if(value == 'week')
+		period = 604800000;
+
+	if(value == 'month')
+		period = 2592000000;
+
+	if(value == 'year')
+		period = 31536000000;
+
+	if(value == 'all')
+		period = -1;
+
+	startTS = new Date().getTime() - period;
+	startDataLoop(true);
+}
+
 function prevDay()
 {
-	startTS -= 86400000;
+	startTS -= period;
 	document.getElementById("startTS").value = startTS;
 	startDataLoop(true);
 }
 
 function nextDay()
 {
-	startTS += 86400000;
+	startTS += period;
 	document.getElementById("startTS").value = startTS;
 	startDataLoop(true);
 }

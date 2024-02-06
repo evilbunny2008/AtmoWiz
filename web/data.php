@@ -21,7 +21,8 @@
 
 		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
 		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
-		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(), 'dataPoints4' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
+		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(),
+						'dataPoints4' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
 		echo json_encode(array('status' => 200, 'content' => $data));
 		exit;
 	}
@@ -39,10 +40,12 @@
 		return "Unknown";
 	}
 
+	$period = 86400000;
+
 	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] != -1)
 		$startTS = doubleval($_REQUEST['startTS']);
 	else
-		$startTS = time() * 1000;
+		$startTS = time() * 1000 - $period;
 
 	if($error != null)
 		reportError($error);
@@ -75,15 +78,15 @@
 		reportError($error);
 	}
 
-	$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime,DATE_FORMAT(whentime, '%H:%i') as wttime,".
+	$query = "SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
 			"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt,".
 			"temperature,humidity,feelslike,rssi,airconon FROM sensibo ".
 			"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
-			"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + 86400000 ORDER BY whentime ASC";
+			"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
-		$query = "SELECT * FROM commands WHERE DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') = '${row['wtdt']}' AND uid='$uid'";
+		$query = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') < 0 LIMIT 1";
 		$dres = mysqli_query($link, $query);
 		if(mysqli_num_rows($dres) > 0)
 		{
@@ -97,23 +100,23 @@
 						$ac = "off";
 
 				if($ac == "on")
-					$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'green');
+					$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
+							'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'green');
 				else if($ac == "off")
-					$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']), 'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20,'markerColor' => 'tomato');
-				else
-					$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
+					$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
+							'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'tomato');
 			}
-		} else {
-			$dataPoints1[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['temperature']));
-		}
+		} else
+			$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
 
-		$dataPoints2[] = array('x' => doubleval($row['whentime']), 'y' => intval($row['humidity']));
-		$dataPoints3[] = array('x' => doubleval($row['whentime']), 'y' => round(floatval($row['feelslike']) * 10.0) / 10.0);
-		$dataPoints4[] = array('x' => doubleval($row['whentime']), 'y' => intval($row['rssi']));
+		$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['humidity']));
+		$dataPoints3[] = array('x' => doubleval($row['whentimes']), 'y' => round(floatval($row['feelslike']) * 10.0) / 10.0);
+		$dataPoints4[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['rssi']));
 	}
 
 	$ac = "off";
-	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime, UNIX_TIMESTAMP(whentime) * 1000 as startTS FROM sensibo WHERE uid='$uid' ORDER BY whentime DESC";
+	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime, UNIX_TIMESTAMP(whentime) * 1000 as startTS FROM ".
+				"sensibo WHERE uid='$uid' ORDER BY whentime DESC LIMIT 1";
 	$res = mysqli_query($link, $query);
 	if(mysqli_num_rows($res) > 0)
 	{
@@ -122,24 +125,21 @@
 		$currhumid = $row['humidity'];
 		$currtime = $row['wttime'];
 
-		if($startTS == -1)
-			$startTS = $row['startTS'];
-
 		if($row['airconon'] == 1)
 			$ac = "on";
 	} else {
 		$currtemp = 0.0;
 		$currhumid = 0;
 		$currtime = "00:00";
-		if($startTS == -1)
-			$startTS = time() * 1000;
 	}
 
-	$sts = round($startTS / 1000.0);
-	for($i = 1; $i <= 24; $i++)
+	$sts = round($startTS / 1000);
+	$hours = $period / 1000 / 3600;
+	for($i = 1; $i <= $hours; $i++)
 	{
 		$date = date("Y-m-d H:%", $sts + $i * 3600);
-		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime, sum(cost) as cph FROM sensibo WHERE uid='$uid' AND whentime LIKE '$date'";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime, sum(cost) as cph FROM sensibo ".
+					"WHERE uid='$uid' AND whentime LIKE '$date' LIMIT 1";
 		$res = mysqli_query($link, $query);
 		$row = mysqli_fetch_assoc($res);
 		$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => round(floatval($row['cph']) * 100) / 100);
@@ -160,33 +160,61 @@
 		$commands .= "<img style='width:80px;' onClick='logout(); return false;' src='exit.png' />\n";
 
 		$commands .= "</li>\n";
-
-		$query = "SELECT uid,name FROM devices ORDER BY name";
-		$res = mysqli_query($link, $query);
-		if(mysqli_num_rows($res) > 1)
-		{
-			$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
-			$commands .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
-
-			while($row = mysqli_fetch_assoc($res))
-			{
-				$commands .= "<option value='".$row['uid']."'";
-				if($uid == $row['uid'])
-					$commands .= " selected";
-				$commands .= ">".$row['name']."</option>\n";
-			}
-			$commands .= "</select></li>\n";
-		}
-
-		$commands .= "<li>&nbsp;</li>\n";
+	} else {
+		$commands .= "<li style='text-align:center'>";
+		$commands .= "<img style='width:80px;' onClick='logout(); return false;' src='exit.png' />\n";
+		$commands .= "</li>\n";
 	}
+
+	$query = "SELECT uid,name FROM devices ORDER BY name";
+	$res = mysqli_query($link, $query);
+	if(mysqli_num_rows($res) > 1)
+	{
+		$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
+		$commands .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
+
+		while($row = mysqli_fetch_assoc($res))
+		{
+			$commands .= "<option value='".$row['uid']."'";
+			if($uid == $row['uid'])
+				$commands .= " selected";
+			$commands .= ">".$row['name']."</option>\n";
+		}
+		$commands .= "</select></li>\n";
+	}
+
+/*
+	$commands .= "<li><label for='timePeriod'>Time Period:</label>\n";
+	$commands .= "<select name='devices' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
+	$commands .= "<option value='day'";
+	if($period == 86400000)
+		$commands .= " selected";
+	$commands .= ">Day -- $period</option>";
+	$commands .= "<option value='week'";
+	if($period == 604800000)
+		$commands .= " selected";
+	$commands .= ">Week -- $period</option>";
+	$commands .= "<option value='month'";
+	if($period == 2592000000)
+		$commands .= " selected";
+	$commands .= ">Month -- $period</option>";
+	$commands .= "<option value='year'";
+	if($period == 31536000000)
+		$commands .= " selected";
+	$commands .= ">Year -- $period</option>";
+	$commands .= "</select></li>\n";
+*/
+
+
+	$commands .= "<li>&nbsp;</li>\n";
 
 	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
 	$commands .= "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
 
 	$date = $lastdate = '';
 
-	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM commands WHERE uid='$uid' AND changes!='' AND changes!='[]' ORDER BY whentime DESC";
+	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM ".
+				"commands WHERE uid='$uid' AND changes!='' AND changes!='[]' ORDER BY whentime DESC";
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
@@ -230,6 +258,7 @@
 		}
 	}
 
-	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4, 'dataPoints5' => $dataPoints5,
-					'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS);
+	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3,
+					'dataPoints4' => $dataPoints4, 'dataPoints5' => $dataPoints5, 'commands' => $commands,
+					'currtime' => $currtime, 'startTS' => $startTS);
 	echo json_encode(array('status' => 200, 'content' => $data));
