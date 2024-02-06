@@ -179,15 +179,14 @@ def doLog(logType, line, doStackTrace = False):
             print (full_stack())
             log.error(full_stack())
 
-def calcCost():
+def calcCost(mydb):
     try:
-        mydb = MySQLdb.connect(hostname, username, password, database)
-        cursor = mydb.cursor()
+        cursor1 = mydb.cursor()
         cursor2 = mydb.cursor()
 
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='cool'"
-        cursor.execute(query)
-        for (whentime, uid, dow, hod) in cursor:
+        cursor1.execute(query)
+        for (whentime, uid, dow, hod) in cursor1:
             if(dow == 1 or dow == 7):
                 cost = cool / EER * offpeak * 90.0 / 3600.0
             else:
@@ -207,8 +206,8 @@ def calcCost():
             cursor2.execute(query, values)
 
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
-        cursor.execute(query)
-        for (whentime, uid, dow, hod) in cursor:
+        cursor1.execute(query)
+        for (whentime, uid, dow, hod) in cursor1:
             if(dow == 1 or dow == 7):
                 cost = heat / COP * offpeak * 90.0 / 3600.0
             else:
@@ -228,7 +227,6 @@ def calcCost():
             cursor2.execute(query, values)
 
         mydb.commit()
-        mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
@@ -239,20 +237,19 @@ def calcCost():
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
-def calcFL():
+def calcFL(mydb):
     try:
-        mydb = MySQLdb.connect(hostname, username, password, database)
-        cursor = mydb.cursor()
+        cursor1 = mydb.cursor()
 
         if(_corf == 'C' and country == 'au'):
             query = "UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1) WHERE feelslike=-1"
-            cursor.execute(query)
+            cursor1.execute(query)
             mydb.commit()
             return
         else:
             query = "SELECT whentime, uid, temperature, humidity FROM sensibo WHERE feelslike=-1"
             doLog("info", query)
-            cursor.execute(query)
+            cursor1.execute(query)
             cursor2 = mydb.cursor()
             for (whentime, uid, temp, humid) in cursor:
                 at = calcAT(temp, humid, country, None)
@@ -273,6 +270,69 @@ def calcFL():
     except MySQLdb._exceptions.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
+
+def doHistoricalMeasurements(mydb):
+    cursor = mydb.cursor()
+
+    for podUID in uidList:
+        past24 = client.pod_get_past_24hours(podUID, days)
+
+        if(past24 == None):
+            continue
+
+        pod_measurement40 = client.pod_all_stats(podUID, 40)
+        if(pod_measurement40 == None):
+            continue
+
+        rc = -1
+        for i in range(len(past24['temperature']) - 1, 0, -1):
+            rc += 1
+            temp = past24['temperature'][i]['value']
+            humid = past24['humidity'][i]['value']
+
+            if(not validateValues(temp, humid)):
+                doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (temp, humid))
+                continue
+
+            if(rc < len(pod_measurement40)):
+                feelslike = pod_measurement40[rc]['device']['measurements']['feelsLike']
+                rssi = pod_measurement40[rc]['device']['measurements']['rssi']
+                airconon = pod_measurement40[rc]['device']['acState']['on']
+                mode = pod_measurement40[rc]['device']['acState']['mode']
+                targetTemperature = pod_measurement40[rc]['device']['acState']['targetTemperature']
+                fanLevel = pod_measurement40[rc]['device']['acState']['fanLevel']
+                swing = pod_measurement40[rc]['device']['acState']['swing']
+                horizontalSwing = pod_measurement40[rc]['device']['acState']['horizontalSwing']
+            else:
+                feelslike = None
+                rssi = 0
+                airconon = 0
+                mode = 'cool'
+                targetTemperature = 0
+                fanLevel = 'medium'
+                swing = 'fixedTop'
+                horizontalSwing = 'fixedCenter'
+
+            sstring = datetime.strptime(past24['temperature'][i]['time'], fromfmt2)
+            utc = sstring.replace(tzinfo=from_zone)
+            localzone = utc.astimezone(to_zone)
+            sdate = localzone.strftime(fmt)
+            values = (sdate, podUID)
+            #doLog("info", _sqlselect3 % values)
+            cursor.execute(_sqlselect3, values)
+            row = cursor.fetchone()
+            if(row):
+                continue
+
+            doLog("info", "rc = %d, i = %d" % (rc, i))
+            doLog("info", past24['temperature'][i])
+            doLog("info", past24['humidity'][i])
+
+            at = calcAT(temp, humid, country, feelslike)
+            values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing)
+            doLog("info", _sqlquery3 % values)
+            cursor.execute(_sqlquery3, values)
+            mydb.commit()
 
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
@@ -365,7 +425,6 @@ if __name__ == "__main__":
 
     try:
         mydb = MySQLdb.connect(hostname, username, password, database)
-        mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
@@ -378,14 +437,13 @@ if __name__ == "__main__":
 
     if(args.reCalcCost):
         try:
-            mydb = MySQLdb.connect(hostname, username, password, database)
             cursor = mydb.cursor()
             query = "UPDATE sensibo SET cost=0.0"
             doLog("info", query)
             cursor.execute(query)
             mydb.commit()
+            calcCost(mydb)
             mydb.close()
-            calcCost()
             doLog("info", "Cost has been recalculated.")
             exit(0)
         except MySQLdb._exceptions.ProgrammingError as e:
@@ -400,7 +458,6 @@ if __name__ == "__main__":
 
     if(args.reCalcFL):
         try:
-            mydb = MySQLdb.connect(hostname, username, password, database)
             cursor = mydb.cursor()
             query = "UPDATE sensibo SET feelslike=-1"
             doLog("info", query)
@@ -423,7 +480,6 @@ if __name__ == "__main__":
     uidList = devices.values()
 
     try:
-        mydb = MySQLdb.connect(hostname, username, password, database)
         cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
@@ -435,12 +491,9 @@ if __name__ == "__main__":
 
             doLog("info", _sqlquery2 % values)
             cursor.execute(_sqlquery2, values)
-            mydb.commit()
 
-        mydb.close()
+        mydb.commit()
 
-        mydb = MySQLdb.connect(hostname, username, password, database)
-        cursor = mydb.cursor()
         cursor.execute("TRUNCATE meta")
         mydb.commit()
 
@@ -470,10 +523,7 @@ if __name__ == "__main__":
                         cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
-        mydb.close()
 
-        mydb = MySQLdb.connect(hostname, username, password, database)
-        cursor = mydb.cursor()
         for podUID in uidList:
             last40 = client.pod_status(podUID, 40)
 
@@ -514,66 +564,7 @@ if __name__ == "__main__":
 
         mydb = MySQLdb.connect(hostname, username, password, database)
         cursor = mydb.cursor()
-        for podUID in uidList:
-            past24 = client.pod_get_past_24hours(podUID, days)
-
-            if(past24 == None):
-                continue
-
-            pod_measurement40 = client.pod_all_stats(podUID, 40)
-            if(pod_measurement40 == None):
-                continue
-
-            rc = -1
-            for i in range(len(past24['temperature']) - 1, 0, -1):
-                rc += 1
-                temp = past24['temperature'][i]['value']
-                humid = past24['humidity'][i]['value']
-
-                if(not validateValues(temp, humid)):
-                    doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (temp, humid))
-                    continue
-
-                if(rc < len(pod_measurement40)):
-                    feelslike = pod_measurement40[rc]['device']['measurements']['feelsLike']
-                    rssi = pod_measurement40[rc]['device']['measurements']['rssi']
-                    airconon = pod_measurement40[rc]['device']['acState']['on']
-                    mode = pod_measurement40[rc]['device']['acState']['mode']
-                    targetTemperature = pod_measurement40[rc]['device']['acState']['targetTemperature']
-                    fanLevel = pod_measurement40[rc]['device']['acState']['fanLevel']
-                    swing = pod_measurement40[rc]['device']['acState']['swing']
-                    horizontalSwing = pod_measurement40[rc]['device']['acState']['horizontalSwing']
-                else:
-                    feelslike = None
-                    rssi = 0
-                    airconon = 0
-                    mode = 'cool'
-                    targetTemperature = 0
-                    fanLevel = 'medium'
-                    swing = 'fixedTop'
-                    horizontalSwing = 'fixedCenter'
-
-                sstring = datetime.strptime(past24['temperature'][i]['time'], fromfmt2)
-                utc = sstring.replace(tzinfo=from_zone)
-                localzone = utc.astimezone(to_zone)
-                sdate = localzone.strftime(fmt)
-                values = (sdate, podUID)
-                #doLog("info", _sqlselect3 % values)
-                cursor.execute(_sqlselect3, values)
-                row = cursor.fetchone()
-                if(row):
-                    continue
-
-                doLog("info", "rc = %d, i = %d" % (rc, i))
-                doLog("info", past24['temperature'][i])
-                doLog("info", past24['humidity'][i])
-
-                at = calcAT(temp, humid, country, feelslike)
-                values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing)
-                doLog("info", _sqlquery3 % values)
-                cursor.execute(_sqlquery3, values)
-                mydb.commit()
-
+        doHistoricalMeasurements(mydb)
         mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
@@ -585,11 +576,11 @@ if __name__ == "__main__":
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
-    calcCost()
+    mydb = MySQLdb.connect(hostname, username, password, database)
+    calcCost(mydb)
 
     while True:
         try:
-            mydb = MySQLdb.connect(hostname, username, password, database)
             doLog("info", "Connection to mariadb accepted")
             secondsAgo = -1;
 
@@ -644,7 +635,7 @@ if __name__ == "__main__":
                     doLog("error", "There was a problem, error was %s" % e, True)
                     pass
 
-            calcCost()
+            calcCost(mydb)
 
             for podUID in uidList:
                 last5 = client.pod_status(podUID, 5)
@@ -687,8 +678,6 @@ if __name__ == "__main__":
                     except MySQLdb._exceptions.OperationalError as e:
                         doLog("error", "There was a problem, error was %s" % e, True)
                         pass
-
-            mydb.close()
 
             if(secondsAgo <= 0):
                 secondsAgo = 90
