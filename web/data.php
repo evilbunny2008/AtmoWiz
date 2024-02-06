@@ -71,7 +71,10 @@
 		reportError($error);
 	}
 
-	$period = 86400000;
+	if(isset($_REQUEST['period']) && $_REQUEST['period'] > 0)
+		$period = doubleval($_REQUEST['period']);
+	else
+		$period = 86400000;
 
 	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] > 0)
 	{
@@ -83,34 +86,67 @@
 		$startTS = $row['whentimes'] - $period;
 	}
 
-	$query = "SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
-			"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt,".
-			"temperature,humidity,feelslike,rssi,airconon FROM sensibo ".
-			"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
-			"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
+	$query = "";
+
+	if($period == 86400000)
+	{
+		$query = "SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, ".
+				"temperature, humidity, feelslike, rssi, airconon FROM sensibo ".
+				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
+	}
+
+	if($period == 604800000)
+	{
+		$query = "SELECT * FROM ( SELECT @row := @row +1 AS rownum, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
+				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon FROM ( SELECT @row :=0) r, sensibo ".
+				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC".
+				") ranked WHERE rownum % 10 = 0";
+	}
+
+	if($period == 2592000000)
+	{
+		$query = "SELECT * FROM ( SELECT @row := @row +1 AS rownum, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
+				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon FROM ( SELECT @row :=0) r, sensibo ".
+				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC".
+				") ranked WHERE rownum % 30 = 0";
+	}
+
+	if($period == 31536000000)
+	{
+		$query = "SELECT * FROM ( SELECT @row := @row +1 AS rownum, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
+				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon FROM ( SELECT @row :=0) r, sensibo ".
+				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC".
+				") ranked WHERE rownum % 960 = 0";
+	}
+
+//echo $query; die;
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
 	{
-		$query = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') < 0 LIMIT 1";
-		$dres = mysqli_query($link, $query);
-		if(mysqli_num_rows($dres) > 0)
+		if($period == 86400000)
 		{
-			while($drow = mysqli_fetch_assoc($dres))
+			$query = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') < 0 LIMIT 1";
+			$dres = mysqli_query($link, $query);
+			if(mysqli_num_rows($dres) > 0)
 			{
-				$ac = "";
-				if(stripos($drow['changes'], "'on'"))
-					if($drow['airconon'] == 1)
-						$ac = "on";
-					else
-						$ac = "off";
+				while($drow = mysqli_fetch_assoc($dres))
+				{
+					$ac = "";
+					if(stripos($drow['changes'], "'on'"))
+						if($drow['airconon'] == 1)
+							$ac = "on";
+						else
+							$ac = "off";
 
-				if($ac == "on")
-					$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
-							'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'green');
-				else if($ac == "off")
-					$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
-							'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'tomato');
-			}
+					if($ac == "on")
+						$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
+								'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'green');
+					else if($ac == "off")
+						$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
+								'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'tomato');
+				}
+			} else
+				$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
 		} else
 			$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
 
@@ -192,28 +228,25 @@
 		$commands .= "</select></li>\n";
 	}
 
-/*
 	$commands .= "<li><label for='timePeriod'>Time Period:</label>\n";
 	$commands .= "<select name='devices' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
 	$commands .= "<option value='day'";
 	if($period == 86400000)
 		$commands .= " selected";
-	$commands .= ">Day -- $period</option>";
+	$commands .= ">Day</option>";
 	$commands .= "<option value='week'";
 	if($period == 604800000)
 		$commands .= " selected";
-	$commands .= ">Week -- $period</option>";
+	$commands .= ">Week</option>";
 	$commands .= "<option value='month'";
 	if($period == 2592000000)
 		$commands .= " selected";
-	$commands .= ">Month -- $period</option>";
+	$commands .= ">Month</option>";
 	$commands .= "<option value='year'";
 	if($period == 31536000000)
 		$commands .= " selected";
-	$commands .= ">Year -- $period</option>";
+	$commands .= ">Year</option>";
 	$commands .= "</select></li>\n";
-*/
-
 
 	$commands .= "<li>&nbsp;</li>\n";
 

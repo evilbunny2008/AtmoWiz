@@ -232,8 +232,6 @@ def calcCost(mydb):
         pass
     except MySQLdb._exceptions.OperationalError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
-        if(e == "(2006, 'MySQL server has gone away')"):
-            mydb = MySQLdb.connect(hostname, username, password, database)
         pass
     except MySQLdb._exceptions.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
@@ -268,8 +266,6 @@ def calcFL(mydb):
         pass
     except MySQLdb._exceptions.OperationalError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
-        if(e == "(2006, 'MySQL server has gone away')"):
-            mydb = MySQLdb.connect(hostname, username, password, database)
         pass
     except MySQLdb._exceptions.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
@@ -279,9 +275,9 @@ def doHistoricalMeasurements(mydb, days = 1):
     cursor = mydb.cursor()
 
     for podUID in uidList:
-        past24 = client.pod_get_past(podUID, days)
+        historicalMeasurements = client.pod_get_past(podUID, days)
 
-        if(past24 == None):
+        if(historicalMeasurements == None):
             continue
 
         pod_measurement40 = client.pod_all_stats(podUID, 40)
@@ -289,10 +285,10 @@ def doHistoricalMeasurements(mydb, days = 1):
             continue
 
         rc = -1
-        for i in range(len(past24['temperature']) - 1, 0, -1):
+        for i in range(len(historicalMeasurements['temperature']) - 1, 0, -1):
             rc += 1
-            temp = past24['temperature'][i]['value']
-            humid = past24['humidity'][i]['value']
+            temp = historicalMeasurements['temperature'][i]['value']
+            humid = historicalMeasurements['humidity'][i]['value']
 
             if(not validateValues(temp, humid)):
                 doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (temp, humid))
@@ -317,7 +313,7 @@ def doHistoricalMeasurements(mydb, days = 1):
                 swing = 'fixedTop'
                 horizontalSwing = 'fixedCenter'
 
-            sstring = datetime.strptime(past24['temperature'][i]['time'], fromfmt2)
+            sstring = datetime.strptime(historicalMeasurements['temperature'][i]['time'], fromfmt2)
             utc = sstring.replace(tzinfo=from_zone)
             localzone = utc.astimezone(to_zone)
             sdate = localzone.strftime(fmt)
@@ -329,8 +325,8 @@ def doHistoricalMeasurements(mydb, days = 1):
                 continue
 
             doLog("info", "rc = %d, i = %d" % (rc, i))
-            doLog("info", past24['temperature'][i])
-            doLog("info", past24['humidity'][i])
+            doLog("info", historicalMeasurements['temperature'][i])
+            doLog("info", historicalMeasurements['humidity'][i])
 
             at = calcAT(temp, humid, country, feelslike)
             values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing)
@@ -379,8 +375,6 @@ def getLastCommands(mydb, nb = 5):
                 pass
             except MySQLdb._exceptions.OperationalError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
-                if(e == "(2006, 'MySQL server has gone away')"):
-                    mydb = MySQLdb.connect(hostname, username, password, database)
                 pass
 
 
@@ -594,6 +588,7 @@ if __name__ == "__main__":
 
     while True:
         try:
+            mydb = MySQLdb.connect(hostname, username, password, database)
             doLog("info", "Connection to mariadb accepted")
             secondsAgo = -1
             loops = 0
@@ -647,8 +642,6 @@ if __name__ == "__main__":
                     pass
                 except MySQLdb._exceptions.OperationalError as e:
                     doLog("error", "There was a problem, error was %s" % e, True)
-                    if(e == "(2006, 'MySQL server has gone away')"):
-                        mydb = MySQLdb.connect(hostname, username, password, database)
                     pass
 
             calcCost(mydb)
@@ -668,6 +661,7 @@ if __name__ == "__main__":
 
             timeToWait = secondsAgo + random.randint(10, 20)
 
+            mydb.close()
             doLog("info", "Sleeping for %d seconds..." % timeToWait)
             time.sleep(timeToWait)
         except Exception as e:

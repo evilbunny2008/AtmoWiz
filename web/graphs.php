@@ -372,7 +372,7 @@ window.onclick = function(event)
 		modal.style.display = "none";
 }
 
-var chart = new CanvasJS.Chart("chartContainer",
+var chart1 = new CanvasJS.Chart("chartContainer",
 {
 	animationEnabled: true,
 	exportEnabled: true,
@@ -591,7 +591,7 @@ function toggleDataSeries(e)
 		e.dataSeries.visible = true;
 	}
 
-	chart.render();
+	chart1.render();
 }
 
 async function toggleAC()
@@ -662,10 +662,38 @@ console.log(url);
 		uid = content['uid'];
 		document.getElementById("podUID").value = content['uid'];
 
-		chart.options.data[0].dataPoints = content['dataPoints3'];
-		chart.options.data[1].dataPoints = content['dataPoints2'];
-		chart.options.data[2].dataPoints = content['dataPoints1'];
-		chart.render();
+		if(period == 86400000)
+		{
+			chart1.options.axisX.intervalType = 'hour';
+			chart2.options.axisX.intervalType = 'hour';
+			chart3.options.axisX.intervalType = 'hour';
+		}
+
+		if(period == 604800000)
+		{
+			chart1.options.axisX.intervalType = 'day';
+			chart2.options.axisX.intervalType = 'day';
+			chart3.options.axisX.intervalType = 'day';
+		}
+
+		if(period == 2592000000)
+		{
+			chart1.options.axisX.intervalType = 'week';
+			chart2.options.axisX.intervalType = 'week';
+			chart3.options.axisX.intervalType = 'week';
+		}
+
+		if(period == 31536000000)
+		{
+			chart1.options.axisX.intervalType = 'month';
+			chart2.options.axisX.intervalType = 'month';
+			chart3.options.axisX.intervalType = 'month';
+		}
+
+		chart1.options.data[0].dataPoints = content['dataPoints3'];
+		chart1.options.data[1].dataPoints = content['dataPoints2'];
+		chart1.options.data[2].dataPoints = content['dataPoints1'];
+		chart1.render();
 
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
 		chart2.render();
@@ -741,6 +769,26 @@ async function changeAC(value)
 		}
 	}
 
+	startDataLoop(true);
+}
+
+async function changeTP(value)
+{
+	timePeriod = value;
+
+	if(value == 'day')
+		period = 86400000;
+
+	if(value == 'week')
+		period = 604800000;
+
+	if(value == 'month')
+		period = 2592000000;
+
+	if(value == 'year')
+		period = 31536000000;
+
+	startTS = new Date().getTime() - period;
 	startDataLoop(true);
 }
 
