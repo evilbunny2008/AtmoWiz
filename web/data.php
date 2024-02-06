@@ -1,3 +1,4 @@
+
 <?php
 	$error = null;
 	require_once('mariadb.php');
@@ -144,14 +145,19 @@
 		$date = date("Y-m-d H:%", $sts + $i * 3600);
 		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentime, sum(cost) as cph FROM sensibo ".
 					"WHERE uid='$uid' AND whentime LIKE '$date' LIMIT 1";
+//echo $query."<br/>\n";
 		$res = mysqli_query($link, $query);
 		if(mysqli_num_rows($res) > 0)
 		{
 			$row = mysqli_fetch_assoc($res);
 			if(doubleval($row['whentime']) > 0)
-				$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => round(floatval($row['cph']) * 100) / 100);
+			{
+				$whentime = round(doubleval($row['whentime']) / 1000 / 3600) * 1000 * 3600;;
+				$dataPoints5[] = array('x' => $whentime, 'y' => round(floatval($row['cph']) * 100) / 100);
+			}
 		}
 	}
+//die;
 
 	$commands = '';
 
