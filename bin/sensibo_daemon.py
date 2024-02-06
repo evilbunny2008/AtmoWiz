@@ -334,6 +334,50 @@ def doHistoricalMeasurements(mydb):
             cursor.execute(_sqlquery3, values)
             mydb.commit()
 
+def getLastCommands(mydb, nb = 5):
+    for podUID in uidList:
+        lastCommands = client.pod_status(podUID, nb)
+        if(lastCommands == None):
+            continue
+
+        for last in lastCommands:
+            try:
+                sstring = datetime.strptime(last['time']['time'], fromfmt2)
+                utc = sstring.replace(tzinfo=from_zone)
+                localzone = utc.astimezone(to_zone)
+                sdate = localzone.strftime(fmt)
+                values = (sdate, podUID)
+                #doLog("info", _sqlselect1 % values)
+                cursor.execute(_sqlselect1, values)
+                row = cursor.fetchone()
+                if(row):
+                    continue
+
+                if(last['causedByUser'] == None):
+                    last['causedByUser'] = {}
+                    last['causedByUser']['firstName'] = 'Remote'
+
+                acState = last['resultingAcState']
+                changes = last['changedProperties']
+
+                values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
+                          last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
+                          acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
+                          acState['horizontalSwing'], str(changes))
+                doLog("info", _sqlquery1 % values)
+                cursor.execute(_sqlquery1, values)
+                mydb.commit()
+            except MySQLdb._exceptions.ProgrammingError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                pass
+            except MySQLdb._exceptions.IntegrityError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                pass
+            except MySQLdb._exceptions.OperationalError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                pass
+
+
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
@@ -524,48 +568,12 @@ if __name__ == "__main__":
 
         mydb.commit()
 
-        for podUID in uidList:
-            last40 = client.pod_status(podUID, 40)
-
-            if(last40 == None):
-                continue
-
-            for last in last40:
-                sstring = datetime.strptime(last['time']['time'], fromfmt2)
-                utc = sstring.replace(tzinfo=from_zone)
-                localzone = utc.astimezone(to_zone)
-                sdate = localzone.strftime(fmt)
-                values = (sdate, podUID)
-                #doLog("info", _sqlselect1 % values)
-                cursor.execute(_sqlselect1, values)
-                row = cursor.fetchone()
-                if(row):
-                    continue
-
-                if(last['causedByUser'] == None):
-                    last['causedByUser'] = {}
-                    last['causedByUser']['firstName'] = 'Remote'
-
-                acState = last['resultingAcState']
-                changes = last['changedProperties']
-
-                values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
-                          last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
-                          acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
-                          acState['horizontalSwing'], str(changes))
-                doLog("info", _sqlquery1 % values)
-                cursor.execute(_sqlquery1, values)
-                mydb.commit()
-
-        mydb.close()
+        getLastCommands(mydb, 40)
 
         if(not _hasPlus and days > 1):
             days = 1
 
-        mydb = MySQLdb.connect(hostname, username, password, database)
-        cursor = mydb.cursor()
         doHistoricalMeasurements(mydb)
-        mydb.close()
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
@@ -576,7 +584,6 @@ if __name__ == "__main__":
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
-    mydb = MySQLdb.connect(hostname, username, password, database)
     calcCost(mydb)
 
     while True:
@@ -637,47 +644,7 @@ if __name__ == "__main__":
 
             calcCost(mydb)
 
-            for podUID in uidList:
-                last5 = client.pod_status(podUID, 5)
-                if(last5 == None):
-                    continue
-
-                for last in last5:
-                    try:
-                        sstring = datetime.strptime(last['time']['time'], fromfmt2)
-                        utc = sstring.replace(tzinfo=from_zone)
-                        localzone = utc.astimezone(to_zone)
-                        sdate = localzone.strftime(fmt)
-                        values = (sdate, podUID)
-                        #doLog("info", _sqlselect1 % values)
-                        cursor.execute(_sqlselect1, values)
-                        row = cursor.fetchone()
-                        if(row):
-                            continue
-
-                        if(last['causedByUser'] == None):
-                            last['causedByUser'] = {}
-                            last['causedByUser']['firstName'] = 'Remote'
-
-                        acState = last['resultingAcState']
-                        changes = last['changedProperties']
-
-                        values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
-                                  last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
-                                  acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
-                                  acState['horizontalSwing'], str(changes))
-                        doLog("info", _sqlquery1 % values)
-                        cursor.execute(_sqlquery1, values)
-                        mydb.commit()
-                    except MySQLdb._exceptions.ProgrammingError as e:
-                        doLog("error", "There was a problem, error was %s" % e, True)
-                        pass
-                    except MySQLdb._exceptions.IntegrityError as e:
-                        doLog("error", "There was a problem, error was %s" % e, True)
-                        pass
-                    except MySQLdb._exceptions.OperationalError as e:
-                        doLog("error", "There was a problem, error was %s" % e, True)
-                        pass
+            getLastCommands(mydb, 5)
 
             if(secondsAgo <= 0):
                 secondsAgo = 90
