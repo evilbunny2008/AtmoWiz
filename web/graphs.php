@@ -437,15 +437,15 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	data:
 	[
 		{
-			titleFontColor: "<?=$FLColour?>",
-			lineColor: "<?=$FLColour?>",
-			labelFontColor: "<?=$FLColour?>",
-			tickColor: "<?=$FLColour?>",
 			type: "line",
 			name: "Feels Like [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
+			titleFontColor: "<?=$FLColour?>",
+			lineColor: "<?=$FLColour?>",
+			labelFontColor: "<?=$FLColour?>",
+			tickColor: "<?=$FLColour?>",
 		},{
 			type: "line",
 			axisYType: "secondary",
@@ -453,14 +453,20 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
+			titleFontColor: "<?=$humidColour?>",
 			lineColor: "<?=$humidColour?>",
+			labelFontColor: "<?=$humidColour?>",
+			tickColor: "<?=$humidColour?>",
 		},{
 			type: "line",
 			name: "Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
+			titleFontColor: "<?=$tempColour?>",
 			lineColor: "<?=$tempColour?>",
+			labelFontColor: "<?=$tempColour?>",
+			tickColor: "<?=$tempColour?>",
 		}
 	]
 });
