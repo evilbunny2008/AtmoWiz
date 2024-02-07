@@ -237,12 +237,13 @@ def calcCost(mydb):
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
-def calcFL(mydb):
+def calcFL(mydb, country):
     try:
         cursor1 = mydb.cursor()
 
         if(_corf == 'C' and country == 'au'):
             query = "UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1) WHERE feelslike=-1"
+            doLog("info", query)
             cursor1.execute(query)
             mydb.commit()
             return
@@ -251,7 +252,7 @@ def calcFL(mydb):
             doLog("info", query)
             cursor1.execute(query)
             cursor2 = mydb.cursor()
-            for (whentime, uid, temp, humid) in cursor:
+            for (whentime, uid, temp, humid) in cursor1:
                 at = calcAT(temp, humid, country, None)
                 query = "UPDATE sensibo SET feelslike=%s WHERE whentime=%s AND uid=%s AND feelslike=-1"
                 values = (at, whentime, uid)
@@ -366,7 +367,6 @@ def getLastCommands(mydb, nb = 5):
                           acState['horizontalSwing'], str(changes))
                 doLog("info", _sqlquery1 % values)
                 cursor.execute(_sqlquery1, values)
-                mydb.commit()
             except MySQLdb._exceptions.ProgrammingError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 pass
@@ -377,6 +377,7 @@ def getLastCommands(mydb, nb = 5):
                 doLog("error", "There was a problem, error was %s" % e, True)
                 pass
 
+    mydb.commit()
 
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
@@ -507,8 +508,8 @@ if __name__ == "__main__":
             doLog("info", query)
             cursor.execute(query)
             mydb.commit()
+            calcFL(mydb, country)
             mydb.close()
-            calcFL()
             doLog("info", "Feels like has been recalculated.")
             exit(0)
         except MySQLdb._exceptions.ProgrammingError as e:
@@ -585,6 +586,7 @@ if __name__ == "__main__":
         exit(1)
 
     calcCost(mydb)
+    mydb.close()
 
     while True:
         try:

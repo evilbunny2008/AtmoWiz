@@ -43,6 +43,9 @@
 	$res = mysqli_query($link, $query);
 	$row = mysqli_fetch_assoc($res);
 
+	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
+		$startTS = doubleval($_REQUEST['startTS']);
+
 	if(isset($_REQUEST['podUID']) && !empty($_REQUEST['podUID']))
 	{
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID']);
@@ -104,9 +107,6 @@
 			}
 		}
 	}
-
-	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
-		$startTS = doubleval($_REQUEST['startTS']);
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -453,12 +453,14 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
+			lineColor: "<?=$humidColour?>",
 		},{
 			type: "line",
 			name: "Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
+			lineColor: "<?=$tempColour?>",
 		}
 	]
 });
@@ -574,6 +576,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	[
 		{
 			type: "column",
+			color: "<?=$costColour?>",
 			name: "Cost [$]",
 			xValueType: "dateTime",
 			markerSize: 0,
