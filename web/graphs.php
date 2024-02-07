@@ -43,9 +43,6 @@
 	$res = mysqli_query($link, $query);
 	$row = mysqli_fetch_assoc($res);
 
-	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
-		$startTS = doubleval($_REQUEST['startTS']);
-
 	if(isset($_REQUEST['podUID']) && !empty($_REQUEST['podUID']))
 	{
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID']);
@@ -107,6 +104,9 @@
 			}
 		}
 	}
+
+	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
+		$startTS = doubleval($_REQUEST['startTS']);
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -372,7 +372,7 @@ window.onclick = function(event)
 		modal.style.display = "none";
 }
 
-var chart1 = new CanvasJS.Chart("chartContainer",
+var chart = new CanvasJS.Chart("chartContainer",
 {
 	animationEnabled: true,
 	exportEnabled: true,
@@ -391,11 +391,11 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 				var entry = e.entries[i];
 
 				if(entry.dataSeries.name == "Temperature [°C]")
-					content += "<div style='color:<?=$tempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+					content += "<div style='color:#9BBB58'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Humidity [%]")
-					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
+					content += "<div style='color:#C0504E'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
 				else if(entry.dataSeries.name == "Feels Like [°C]")
-					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+					content += "<div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
@@ -415,18 +415,18 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	axisY:
 	{
 		title: "Temperature [°C]",
-		titleFontColor: "<?=$tempColour?>",
-		lineColor: "<?=$tempColour?>",
-		labelFontColor: "<?=$tempColour?>",
-		tickColor: "<?=$tempColour?>",
+		titleFontColor: "#9BBB58",
+		lineColor: "#9BBB58",
+		labelFontColor: "#9BBB58",
+		tickColor: "#9BBB58"
 	},
 	axisY2:
 	{
 		title: "Humidity [%]",
-		titleFontColor: "<?=$humidColour?>",
-		lineColor: "<?=$humidColour?>",
-		labelFontColor: "<?=$humidColour?>",
-		tickColor: "<?=$humidColour?>",
+		titleFontColor: "#C0504E",
+		lineColor: "#C0504E",
+		labelFontColor: "#C0504E",
+		tickColor: "#C0504E"
 	},
 	legend:
 	{
@@ -437,10 +437,6 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	data:
 	[
 		{
-			titleFontColor: "<?=$FLColour?>",
-			lineColor: "<?=$FLColour?>",
-			labelFontColor: "<?=$FLColour?>",
-			tickColor: "<?=$FLColour?>",
 			type: "line",
 			name: "Feels Like [°C]",
 			xValueType: "dateTime",
@@ -453,14 +449,12 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			lineColor: "<?=$humidColour?>",
 		},{
 			type: "line",
 			name: "Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			lineColor: "<?=$tempColour?>",
 		}
 	]
 });
@@ -482,7 +476,7 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];
-				content += "</br><div style='color:<?=$wifiColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + " dBm</div>";
+				content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + " dBm</div>";
 			}
 			return content;
 		},
@@ -499,10 +493,10 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 	axisY:
 	{
 		title: "Signal Strength [dBm]",
-		titleFontColor: "<?=$wifiColour?>",
-		lineColor: "<?=$wifiColour?>",
-		labelFontColor: "<?=$wifiColour?>",
-		tickColor: "<?=$wifiColour?>",
+		titleFontColor: "#4F81BC",
+		lineColor: "#4F81BC",
+		labelFontColor: "#4F81BC",
+		tickColor: "#4F81BC"
 	},
 	legend:
 	{
@@ -539,7 +533,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];
-				content += "</br><div style='color:<?=$costColour?>'>" + entry.dataSeries.name + ": " +  CanvasJS.formatNumber(entry.dataPoint.y, "$#,##0.00") + "</div>";
+				content += "</br><div style='color:#4F81BC'>" + entry.dataSeries.name + ": " +  CanvasJS.formatNumber(entry.dataPoint.y, "$#,##0.00") + "</div>";
 			}
 			return content;
 		},
@@ -557,10 +551,10 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	{
 		title: "Cost per Hour [$]",
 		includeZero: true,
-		titleFontColor: "<?=$costColour?>",
-		lineColor: "<?=$costColour?>",
-		labelFontColor: "<?=$costColour?>",
-		tickColor: "<?=$costColour?>",
+		titleFontColor: "#4F81BC",
+		lineColor: "#4F81BC",
+		labelFontColor: "#4F81BC",
+		tickColor: "#4F81BC",
 		labelFormatter: function (e)
 		{
 			return CanvasJS.formatNumber(e.value, "$#,##0.00");
@@ -576,7 +570,6 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	[
 		{
 			type: "column",
-			color: "<?=$costColour?>",
 			name: "Cost [$]",
 			xValueType: "dateTime",
 			markerSize: 0,
@@ -594,7 +587,7 @@ function toggleDataSeries(e)
 		e.dataSeries.visible = true;
 	}
 
-	chart1.render();
+	chart.render();
 }
 
 async function toggleAC()
@@ -665,38 +658,10 @@ console.log(url);
 		uid = content['uid'];
 		document.getElementById("podUID").value = content['uid'];
 
-		if(period == 86400000)
-		{
-			chart1.options.axisX.intervalType = 'hour';
-			chart2.options.axisX.intervalType = 'hour';
-			chart3.options.axisX.intervalType = 'hour';
-		}
-
-		if(period == 604800000)
-		{
-			chart1.options.axisX.intervalType = 'day';
-			chart2.options.axisX.intervalType = 'day';
-			chart3.options.axisX.intervalType = 'day';
-		}
-
-		if(period == 2592000000)
-		{
-			chart1.options.axisX.intervalType = 'week';
-			chart2.options.axisX.intervalType = 'week';
-			chart3.options.axisX.intervalType = 'week';
-		}
-
-		if(period == 31536000000)
-		{
-			chart1.options.axisX.intervalType = 'month';
-			chart2.options.axisX.intervalType = 'month';
-			chart3.options.axisX.intervalType = 'month';
-		}
-
-		chart1.options.data[0].dataPoints = content['dataPoints3'];
-		chart1.options.data[1].dataPoints = content['dataPoints2'];
-		chart1.options.data[2].dataPoints = content['dataPoints1'];
-		chart1.render();
+		chart.options.data[0].dataPoints = content['dataPoints3'];
+		chart.options.data[1].dataPoints = content['dataPoints2'];
+		chart.options.data[2].dataPoints = content['dataPoints1'];
+		chart.render();
 
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
 		chart2.render();
@@ -772,26 +737,6 @@ async function changeAC(value)
 		}
 	}
 
-	startDataLoop(true);
-}
-
-async function changeTP(value)
-{
-	timePeriod = value;
-
-	if(value == 'day')
-		period = 86400000;
-
-	if(value == 'week')
-		period = 604800000;
-
-	if(value == 'month')
-		period = 2592000000;
-
-	if(value == 'year')
-		period = 31536000000;
-
-	startTS = new Date().getTime() - period;
 	startDataLoop(true);
 }
 
