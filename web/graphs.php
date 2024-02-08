@@ -46,9 +46,9 @@
 	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
 		$startTS = doubleval($_REQUEST['startTS']);
 
-	if(isset($_REQUEST['podUID']) && !empty($_REQUEST['podUID']))
+	if(isset($_REQUEST['podUID1']) && !empty($_REQUEST['podUID1']) && $_SESSION['rw'])
 	{
-		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID']);
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID1']);
 
 		$changes = array();
 
@@ -106,6 +106,26 @@
 				die;
 			}
 		}
+	}
+
+	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && $_SESSION['rw'])
+	{
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
+		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
+		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
+		$onValue = mysqli_real_escape_string($link, $_REQUEST['onValue']);
+		$offValue = mysqli_real_escape_string($link, $_REQUEST['offValue']);
+		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
+		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
+		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
+		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+		$enabled = 0;
+		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
+			$enabled = 1;
+
+		$query = "INSERT INTO settings (uid, created, mode, targetType, onValue, offValue, targetTemperature, fanLevel, swing, horizontalSwing, enabled) VALUES ".
+			 "('${row['uid']}', NOW(), '$mode', '$targetType', '$onValue', '$offValue', '$targetTemperature', '$fanLevel', '$swing', '$horizontalSwing', $enabled)";
+		mysqli_query($link, $query);
 	}
 ?>
 <!DOCTYPE HTML>
@@ -182,7 +202,16 @@ section::after {
 
 body {font-family: Arial, Helvetica, sans-serif;}
 
-#mode, #targetTemperature, #fanLevel, #swing, #horizontalSwing {
+#mode1, #targetTemperature1, #fanLevel1, #swing1, #horizontalSwing1 {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+#mode2, #targetTemperature2, #fanLevel2, #swing2, #horizontalSwing2, #targetType2, #onValue, #offValue {
   width: 100%;
   padding: 12px 20px;
   margin: 8px 0;
@@ -262,6 +291,29 @@ span.psw {
   cursor: pointer;
 }
 
+#divLeft, #divRight {
+  width: 50%;
+}
+
+#divLeft {
+  float: left;
+  padding: 20px;
+}
+
+#divRight {
+  float: right;
+  padding: 20px;
+}
+
+.wrapper {
+  display: flex;
+  padding-top: 30px;
+}
+
+.wrapper > div {
+  flex: 1;
+}
+
 .animate {
   -webkit-animation: animatezoom 0.6s;
   animation: animatezoom 0.6s
@@ -318,10 +370,10 @@ span.psw {
       <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
     </div>
     <div class="container">
-	<input id="startTS" type="hidden" name="startTS" />
-	<input id="podUID" type="hidden" name="podUID" value="<?=$row['uid']?>" />
-	<label for="mode"><b>Mode:</b></label>
-	<select id='mode' name="mode" onChange='populateSelect(this.value); return false;'>
+	<input id="startTS1" type="hidden" name="startTS" />
+	<input id="podUID1" type="hidden" name="podUID1" value="<?=$row['uid']?>" />
+	<label for="mode1"><b>Mode:</b></label>
+	<select id='mode1' name="mode" onChange='populateSelect(this.value); return false;'>
 <?php
 	$dquery = "SELECT mode FROM meta GROUP BY mode";
 	$dres = mysqli_query($link, $dquery);
@@ -335,22 +387,130 @@ span.psw {
 	}
 ?>
 	</select>
-	<label for='targetTemperature'><b>Target Temperature:</b></label>
-	<select id='targetTemperature' name='targetTemperature'>
+	<label for='targetTemperature1'><b>Target Temperature:</b></label>
+	<select id='targetTemperature1' name='targetTemperature'>
 	</select>
-	<label for="fanLevel"><b>Fan Level:</b></label>
-	<select id='fanLevel' name="fanLevel">
+	<label for="fanLevel1"><b>Fan Level:</b></label>
+	<select id='fanLevel1' name="fanLevel">
 	</select>
-	<label for="swing"><b>Swing:</b></label>
-	<select id="swing" name="swing">
+	<label for="swing1"><b>Swing:</b></label>
+	<select id="swing1" name="swing">
 	</select>
-	<label for="horizontalSwing"><b>Horizontal Swing:</b></label>
-	<select id="horizontalSwing" name="horizontalSwing">
+	<label for="horizontalSwing1"><b>Horizontal Swing:</b></label>
+	<select id="horizontalSwing1" name="horizontalSwing">
 	</select>
 	<button type="submit">Update</button>
     </div>
-    <div class="container" style="background-color:#f1f1f1">
-      <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+  </form>
+</div>
+<div id="id02" class="modal">
+  <form class="modal-content animate" action="graphs.php" method="post">
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
+    </div>
+    <div class="container">
+	<input id="startTS2" type="hidden" name="startTS" />
+	<input id="podUID2" type="hidden" name="podUID2" value="<?=$row['uid']?>" />
+	<div class="wrapper">
+	<div id="leftDiv">
+		<label for="mode2"><b>Mode:</b></label>
+		<select id='mode2' name="mode" onChange='populateSettings(this.value); return false;'>
+<?php
+	$defmode = "";
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'mode'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+		if($defmode == "")
+			$defmode = $v;
+	}
+?>
+		</select>
+		<label for='targetType2'><b>Target Type:</b></label>
+		<select id='targetType2' name='targetType'>
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'targetType'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+		</select>
+		<label for="onValue"><b>On Value</b></label>
+		<input type="text" id="onValue" name="onValue" value="28" />
+
+		<label for="offValue"><b>Off Value</b></label>
+		<input type="text" id="offValue" name="offValue" value="26.1" />
+	</div>
+	<div id="rightDiv">
+		<label for='targetTemperature2'><b>Target Temperature:</b></label>
+		<select id='targetTemperature2' name='targetTemperature'>
+<?php
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='temperatures'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+		</select>
+		<label for="fanLevel2"><b>Fan Level:</b></label>
+		<select id='fanLevel2' name="fanLevel">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'fanLevel'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+		</select>
+		<label for="swing2"><b>Swing:</b></label>
+		<select id="swing2" name="swing">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'swing'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+		</select>
+		<label for="horizontalSwing2"><b>Horizontal Swing:</b></label>
+		<select id="horizontalSwing2" name="horizontalSwing">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'horizontalSwing'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+		</select>
+	</div>
+	</div>
+	<label for="enabled"><b>Enabled</b></label>
+	<input type="checkbox" id="enabled" name="enabled" value="1" checked />
+
+	<button type="submit">Add</button>
     </div>
   </form>
 </div>
@@ -361,16 +521,15 @@ var timePeriod = "day";
 var period = 86400000;
 var uid = "<?=$row['uid']?>";
 var currtime = "";
+document.getElementById("podUID1").value = uid;
+document.getElementById("podUID2").value = uid;
+
 var startTS = <?=$startTS?>;
-document.getElementById("startTS").value = startTS;
+document.getElementById("startTS1").value = startTS;
+document.getElementById("startTS2").value = startTS;
 
-var modal = document.getElementById('id01');
-
-window.onclick = function(event)
-{
-	if(event.target == modal)
-		modal.style.display = "none";
-}
+var modal1 = document.getElementById('id01');
+var modal2 = document.getElementById('id02');
 
 var chart1 = new CanvasJS.Chart("chartContainer",
 {
@@ -608,26 +767,6 @@ function syncCharts(charts, syncToolTip, syncCrosshair, syncAxisXRange)
 		}
 	}
 
-	if(!this.onCrosshairUpdated)
-	{
-		this.onCrosshairUpdated = function(e)
-		{
-			for(var j = 0; j < charts.length; j++)
-				if(charts[j] != e.chart)
-					charts[j].axisX[0].crosshair.showAt(e.value);
-		}
-	}
-
-	if(!this.onCrosshairHidden)
-	{
-		this.onCrosshairHidden =  function(e)
-		{
-			for(var j = 0; j < charts.length; j++)
-				if(charts[j] != e.chart)
-					charts[j].axisX[0].crosshair.hide();
-		}
-	}
-
 	if(!this.onRangeChanged)
 	{
 		this.onRangeChanged = function(e)
@@ -654,18 +793,10 @@ function syncCharts(charts, syncToolTip, syncCrosshair, syncAxisXRange)
 		{
 			if(!charts[i].options.toolTip)
 				charts[i].options.toolTip = {};
+
 			charts[i].options.toolTip.updated = this.onToolTipUpdated;
 			charts[i].options.toolTip.hidden = this.onToolTipHidden;
 		}
-
-		if(syncCrosshair)
-		{
-			if(!charts[i].options.axisX)
-				charts[i].options.axisX = { crosshair: { enabled: true }};
-
-//			charts[i].options.axisX.crosshair.updated = this.onCrosshairUpdated;
-//			charts[i].options.axisX.crosshair.hidden = this.onCrosshairHidden;
-                }
 
 		if(syncAxisXRange)
 		{
@@ -717,7 +848,11 @@ async function DataLoop()
 
 	now = new Date().getTime();
 	if(startTS >= now - 87300000 && startTS <= now - 85500000)
+	{
 	        startTS = now - period;
+		document.getElementById("startTS1").value = startTS;
+		document.getElementById("startTS2").value = startTS;
+	}
 
 	startDataLoop(false);
 }
@@ -749,11 +884,13 @@ console.log(url);
 
 		currtime = content['currtime'];
 		startTS = content['startTS'];
-		document.getElementById("startTS").value = startTS;
+		document.getElementById("startTS1").value = startTS;
+		document.getElementById("startTS2").value = startTS;
 
 		document.getElementById("commands").innerHTML = content['commands'];
 		uid = content['uid'];
-		document.getElementById("podUID").value = content['uid'];
+		document.getElementById("podUID1").value = uid;
+		document.getElementById("podUID2").value = uid;
 
 		if(period == 86400000)
 		{
@@ -812,7 +949,7 @@ async function popSelect(dropdown, content, current)
 	}
 }
 
-async function doPop(mode, val, type)
+async function doPop(mode, val, contentType)
 {
 	var url = 'modes.php?time=' + new Date().getTime() + '&uid=' + uid + '&mode=' + mode + '&keyval=' + val;
 console.log(url);
@@ -820,7 +957,7 @@ console.log(url);
 	const ret = await response.json();
 
 	if(ret['status'] == 200)
-		popSelect(document.getElementById(type), ret['content'], ret[type]);
+		popSelect(document.getElementById(type+"1"), ret['content'], ret[contentType]);
 	else
 		console.log(ret);
 }
@@ -829,7 +966,7 @@ async function populateSelect()
 {
 	try
 	{
-		var e = document.getElementById("mode");
+		var e = document.getElementById("mode1");
 		var value = e.options[e.selectedIndex].value;
 
 		doPop(value, 'temperatures', 'targetTemperature');
@@ -851,12 +988,10 @@ async function changeAC(value)
 
 	if(ret['status'] == 200)
 	{
-		for(let i = 0; i < document.getElementById("mode").options.length; i++)
+		for(let i = 0; i < document.getElementById("mode1").options.length; i++)
 		{
-			if(document.getElementById("mode").options[i].value == ret['content'])
-			{
-				document.getElementById("mode").options[i].selected = 'selected';
-			}
+			if(document.getElementById("mode1").options[i].value == ret['content'])
+				document.getElementById("mode1").options[i].selected = 'selected';
 		}
 	}
 
@@ -880,20 +1015,24 @@ async function changeTP(value)
 		period = 31536000000;
 
 	startTS = new Date().getTime() - period;
+	document.getElementById("startTS1").value = startTS;
+	document.getElementById("startTS2").value = startTS;
 	startDataLoop(true);
 }
 
 function prevDay()
 {
 	startTS -= period;
-	document.getElementById("startTS").value = startTS;
+	document.getElementById("startTS1").value = startTS;
+	document.getElementById("startTS2").value = startTS;
 	startDataLoop(true);
 }
 
 function nextDay()
 {
 	startTS += period;
-	document.getElementById("startTS").value = startTS;
+	document.getElementById("startTS1").value = startTS;
+	document.getElementById("startTS2").value = startTS;
 	startDataLoop(true);
 }
 
@@ -904,10 +1043,22 @@ function logout()
 
 function settings()
 {
-	modal.style.display = "block";
+	modal1.style.display = "block";
+}
+
+function showSettings()
+{
+	modal2.style.display = "block";
 }
 
 DataLoop();
+
+<?php
+	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && $_SESSION['rw'])
+	{
+		echo "alert('Your climate settings were accepted.');\n";
+	}
+?>
 </script>
 </body>
 </html>
