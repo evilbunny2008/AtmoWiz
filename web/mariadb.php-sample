@@ -8,6 +8,8 @@
 	$rousername = "user";
 	$ropassword = "user";
 
+	// https://www.w3schools.com/colors/colors_names.asp
+
 	$tempColour = "#9BBB58";
 	$humidColour = "#C0504E";
 	$FLColour = "#4F81BC";
