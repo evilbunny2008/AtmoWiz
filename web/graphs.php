@@ -442,10 +442,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			titleFontColor: "<?=$FLColour?>",
-			lineColor: "<?=$FLColour?>",
-			labelFontColor: "<?=$FLColour?>",
-			tickColor: "<?=$FLColour?>",
+			color: "<?=$FLColour?>",
 		},{
 			type: "line",
 			axisYType: "secondary",
@@ -453,20 +450,14 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			titleFontColor: "<?=$humidColour?>",
-			lineColor: "<?=$humidColour?>",
-			labelFontColor: "<?=$humidColour?>",
-			tickColor: "<?=$humidColour?>",
+			color: "<?=$humidColour?>",
 		},{
 			type: "line",
 			name: "Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			titleFontColor: "<?=$tempColour?>",
-			lineColor: "<?=$tempColour?>",
-			labelFontColor: "<?=$tempColour?>",
-			tickColor: "<?=$tempColour?>",
+			color: "<?=$tempColour?>",
 		}
 	],
 });
@@ -523,6 +514,7 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 		xValueType: "dateTime",
 		markerSize: 0,
 		showInLegend: true,
+		color: "<?=$wifiColour?>",
        	}]
 });
 
@@ -579,11 +571,11 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	data:
 	[{
 		type: "column",
-		color: "<?=$costColour?>",
 		name: "Cost [$]",
 		xValueType: "dateTime",
 		markerSize: 0,
 		showInLegend: true,
+		color: "<?=$costColour?>",
        	}],
 });
 
@@ -670,7 +662,6 @@ console.log(url);
 		if(period == 86400000)
 		{
 			chart1.options.axisX.intervalType = 'hour';
-//			chart1.options.scales.x.time.unit = 'week';
 			chart2.options.axisX.intervalType = 'hour';
 			chart3.options.axisX.intervalType = 'hour';
 		}

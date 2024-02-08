@@ -114,7 +114,7 @@
 		$query = "SELECT * FROM ( SELECT @row := @row +1 AS rownum, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
 				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon FROM ( SELECT @row :=0) r, sensibo ".
 				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC".
-				") ranked WHERE rownum % 30 = 0";
+				") ranked WHERE rownum % 15 = 0";
 	}
 
 	if($period == 31536000000)
@@ -123,51 +123,27 @@
 		$res = mysqli_query($link, $query);
 		while($row = mysqli_fetch_assoc($res))
 		{
-			$query1 = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, ".
-					"airconon FROM sensibo WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%' LIMIT 1";
-
+			$query1 = "SELECT count(uid) as c FROM sensibo WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%'";
 			$res1 = mysqli_query($link, $query1);
-			$row1 = mysqli_fetch_assoc($res1);
-
-			if(doubleval($row1['whentimes']) > 0)
-			{
-				$dataPoints1[] = array('x' => doubleval($row1['whentimes']), 'y' => floatval($row1['temperature']));
-				$dataPoints2[] = array('x' => doubleval($row1['whentimes']), 'y' => intval($row1['humidity']));
-				$dataPoints3[] = array('x' => doubleval($row1['whentimes']), 'y' => round(floatval($row1['feelslike']) * 10.0) / 10.0);
-				$dataPoints4[] = array('x' => doubleval($row1['whentimes']), 'y' => intval($row1['rssi']));
-			}
-
+			$rc = mysqli_fetch_assoc($res1)['c'];
 			mysqli_free_result($res1);
-
-			$query2 = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, ".
-					"airconon FROM sensibo WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%' LIMIT 1 OFFSET 320";
-			$res2 = mysqli_query($link, $query2);
-			$row2 = mysqli_fetch_assoc($res2);
-
-			if(doubleval($row2['whentimes']) > 0)
+			for($i = 0; $i <= $rc; $i += 64)
 			{
-				$dataPoints1[] = array('x' => doubleval($row2['whentimes']), 'y' => floatval($row2['temperature']));
-				$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['humidity']));
-				$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => round(floatval($row2['feelslike']) * 10.0) / 10.0);
-				$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['rssi']));
+				$query1 = "SELECT row.whentimes, row.airconon, ROUND(AVG(row.temperature), 1) AS temperature, ROUND(AVG(row.humidity), 1) AS humidity, ROUND(AVG(row.feelslike), 1) AS feelslike, ".
+						" AVG(row.rssi) AS rssi FROM (SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes, airconon, temperature, humidity, feelslike, rssi FROM sensibo ".
+						"WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%' LIMIT $i, 64) row";
+				$res1 = mysqli_query($link, $query1);
+				$row1 = mysqli_fetch_assoc($res1);
+				mysqli_free_result($res1);
+
+				if(doubleval($row1['whentimes']) > 0)
+				{
+					$dataPoints1[] = array('x' => doubleval($row1['whentimes']), 'y' => floatval($row1['temperature']));
+					$dataPoints2[] = array('x' => doubleval($row1['whentimes']), 'y' => intval($row1['humidity']));
+					$dataPoints3[] = array('x' => doubleval($row1['whentimes']), 'y' => round(floatval($row1['feelslike']) * 10.0) / 10.0);
+					$dataPoints4[] = array('x' => doubleval($row1['whentimes']), 'y' => intval($row1['rssi']));
+				}
 			}
-
-			mysqli_free_result($res2);
-
-			$query3 = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, ".
-					"airconon FROM sensibo WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%' LIMIT 1 OFFSET 640";
-			$res3 = mysqli_query($link, $query3);
-			$row3 = mysqli_fetch_assoc($res3);
-
-			if(doubleval($row3['whentimes']) > 0)
-			{
-				$dataPoints1[] = array('x' => doubleval($row3['whentimes']), 'y' => floatval($row3['temperature']));
-				$dataPoints2[] = array('x' => doubleval($row3['whentimes']), 'y' => intval($row3['humidity']));
-				$dataPoints3[] = array('x' => doubleval($row3['whentimes']), 'y' => round(floatval($row3['feelslike']) * 10.0) / 10.0);
-				$dataPoints4[] = array('x' => doubleval($row3['whentimes']), 'y' => intval($row3['rssi']));
-			}
-
-			mysqli_free_result($res3);
 		}
 
 		mysqli_free_result($res);
