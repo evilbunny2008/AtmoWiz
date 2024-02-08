@@ -49,9 +49,24 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   `cost` float NOT NULL DEFAULT 0
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS `settings` (
+  `uid` varchar(20) NOT NULL,
+  `created` datetime NOT NULL DEFAULT current_timestamp(),
+  `mode` enum('heat','cool','dry') NOT NULL DEFAULT 'cool',
+  `targetType` enum('temperature','humidity','feelsLike') NOT NULL DEFAULT 'temperature',
+  `onValue` float NOT NULL DEFAULT 28,
+  `offValue` float NOT NULL DEFAULT 26.1,
+  `targetTemperature` float NOT NULL DEFAULT 26,
+  `fanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'auto',
+  `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
+  `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
+  `enabled` tinyint(1) NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+
 ALTER TABLE `commands` ADD PRIMARY KEY (`whentime`,`uid`) USING BTREE;
 ALTER TABLE `devices` ADD PRIMARY KEY (`uid`), ADD KEY `name` (`name`);
 ALTER TABLE `meta` ADD KEY `uid` (`uid`), ADD KEY `mode` (`mode`), ADD KEY `keyval` (`keyval`);
 ALTER TABLE `sensibo` ADD PRIMARY KEY (`whentime`,`uid`) USING BTREE;
+ALTER TABLE `settings` ADD PRIMARY KEY (`uid`,`created`);
 
 COMMIT;
