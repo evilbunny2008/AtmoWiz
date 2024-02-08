@@ -103,10 +103,9 @@
 
 	if($period == 604800000)
 	{
-		$query = "SELECT * FROM ( SELECT @row := @row +1 AS rownum, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
-				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon FROM ( SELECT @row :=0) r, sensibo ".
-				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC".
-				") ranked WHERE rownum % 10 = 0";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, ".
+				"temperature, humidity, feelslike, rssi, airconon FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
 	}
 
 	if($period == 2592000000)
@@ -119,7 +118,8 @@
 
 	if($period == 31536000000)
 	{
-		$query = "SELECT DATE_FORMAT(whentime, '%Y-%m-%d') as wtdate FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
+		$query = "SELECT DATE_FORMAT(whentime, '%Y-%m-%d') as wtdate FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ".
+				"GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
 		$res = mysqli_query($link, $query);
 		while($row = mysqli_fetch_assoc($res))
 		{
@@ -148,13 +148,29 @@
 
 		mysqli_free_result($res);
 
-		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
+		$rc = $wt = $cost = 0;
+		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 86400) * 86400000 as whentime, sum(cost) as cost FROM sensibo ".
+				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
 		$res = mysqli_query($link, $query);
 		while($row = mysqli_fetch_assoc($res))
 		{
-			if(doubleval($row['whentime']) > 0)
-				$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['cost']));
+			if(++$rc == 7)
+			{
+				if(doubleval($row['whentime']) > 0)
+					$dataPoints5[] = array('x' => $wt, 'y' => $cost);
+				$rc = $wt = $cost = 0;
+			} else {
+				if($wt == 0)
+				{
+					$wt = doubleval($row['whentime']);
+					$wt = mktime(0, 0, 0, date("m", $wt / 1000), date("d", $wt / 1000), date("Y", $wt / 1000)) * 1000;
+				}
+				$cost += floatval($row['cost']);
+			}
 		}
+
+		if($wt > 0)
+			$dataPoints5[] = array('x' => $wt, 'y' => $cost);
 
 		mysqli_free_result($res);
 	} else {
