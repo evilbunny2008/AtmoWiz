@@ -468,7 +468,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			labelFontColor: "<?=$tempColour?>",
 			tickColor: "<?=$tempColour?>",
 		}
-	]
+	],
 });
 
 var chart2 = new CanvasJS.Chart("rssiContainer",
@@ -517,15 +517,13 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 		itemclick: toggleDataSeries
 	},
 	data:
-	[
-		{
-			type: "line",
-			name: "Signal Strength [dBm]",
-			xValueType: "dateTime",
-			markerSize: 0,
-			showInLegend: true,
-       		}
-	]
+	[{
+		type: "line",
+		name: "Signal Strength [dBm]",
+		xValueType: "dateTime",
+		markerSize: 0,
+		showInLegend: true,
+       	}]
 });
 
 var chart3 = new CanvasJS.Chart("costContainer",
@@ -579,16 +577,14 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		itemclick: toggleDataSeries
 	},
 	data:
-	[
-		{
-			type: "column",
-			color: "<?=$costColour?>",
-			name: "Cost [$]",
-			xValueType: "dateTime",
-			markerSize: 0,
-			showInLegend: true,
-       		}
-	]
+	[{
+		type: "column",
+		color: "<?=$costColour?>",
+		name: "Cost [$]",
+		xValueType: "dateTime",
+		markerSize: 0,
+		showInLegend: true,
+       	}],
 });
 
 function toggleDataSeries(e)
@@ -674,6 +670,7 @@ console.log(url);
 		if(period == 86400000)
 		{
 			chart1.options.axisX.intervalType = 'hour';
+//			chart1.options.scales.x.time.unit = 'week';
 			chart2.options.axisX.intervalType = 'hour';
 			chart3.options.axisX.intervalType = 'hour';
 		}

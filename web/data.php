@@ -86,6 +86,12 @@
 		$startTS = $row['whentimes'] - $period;
 	}
 
+	$dataPoints1[] = array('x' => doubleval($startTS), 'y' => null);
+	$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
+	$dataPoints3[] = array('x' => doubleval($startTS), 'y' => null);
+	$dataPoints4[] = array('x' => doubleval($startTS), 'y' => null);
+	$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
+
 	$query = "";
 
 	if($period == 86400000)
