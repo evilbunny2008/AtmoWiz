@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
 CREATE TABLE IF NOT EXISTS `settings` (
   `uid` varchar(20) NOT NULL,
   `created` datetime NOT NULL DEFAULT current_timestamp(),
-  `mode` enum('heat','cool','dry') NOT NULL DEFAULT 'cool',
+  `mode` enum('cool','heat','dry') NOT NULL DEFAULT 'cool',
   `targetType` enum('temperature','humidity','feelsLike') NOT NULL DEFAULT 'temperature',
   `onValue` float NOT NULL DEFAULT 28,
   `offValue` float NOT NULL DEFAULT 26.1,
