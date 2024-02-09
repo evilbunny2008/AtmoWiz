@@ -63,10 +63,10 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `enabled` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB;
 
-ALTER TABLE `commands` ADD PRIMARY KEY (`whentime`,`uid`) USING BTREE;
-ALTER TABLE `devices` ADD PRIMARY KEY (`uid`), ADD KEY `name` (`name`);
-ALTER TABLE `meta` ADD KEY `uid` (`uid`), ADD KEY `mode` (`mode`), ADD KEY `keyval` (`keyval`);
-ALTER TABLE `sensibo` ADD PRIMARY KEY (`whentime`,`uid`) USING BTREE;
-ALTER TABLE `settings` ADD PRIMARY KEY (`uid`,`created`);
+ALTER TABLE `commands` ADD PRIMARY KEY IF NOT EXISTS (`whentime`,`uid`) USING BTREE;
+ALTER TABLE `devices` ADD PRIMARY KEY IF NOT EXISTS (`uid`), ADD KEY IF NOT EXISTS `name` (`name`);
+ALTER TABLE `meta` ADD KEY IF NOT EXISTS `uid` (`uid`), ADD KEY IF NOT EXISTS `mode` (`mode`), ADD KEY IF NOT EXISTS `keyval` (`keyval`);
+ALTER TABLE `sensibo` ADD PRIMARY KEY IF NOT EXISTS (`whentime`,`uid`) USING BTREE;
+ALTER TABLE `settings` ADD PRIMARY KEY IF NOT EXISTS (`uid`,`created`);
 
 COMMIT;
