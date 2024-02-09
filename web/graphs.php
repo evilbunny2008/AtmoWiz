@@ -169,43 +169,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.svg">
 <style>
-* {
+*
+{
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
+body
+{
   font-family: Arial, Helvetica, sans-serif;
   min-height: 750px;
   height: 750px;
 }
 
-nav {
+nav
+{
   float: left;
   width: 350px;
   background: #ccc;
   padding: 20px;
 }
 
-nav ul {
+nav ul
+{
   list-style-type: none;
   padding: 0;
 }
 
-article {
+article
+{
   float: left;
   padding: 20px;
   background-color: #f1f1f1;
 }
 
-section::after {
+section::after
+{
   content: "";
   display: table;
   clear: both;
 }
 
-#footer {
+#footer
+{
   margin-top:auto;
   width: 100%;
   background: #ccc;
@@ -216,26 +223,33 @@ section::after {
   z-index: 1;
 }
 
-#footer-content {
+#footer-content
+{
   text-align: center;
   height: 32px;
   padding: 8px;
   width: 100%;
 }
 
-#footer a, #commands a {
+#footer a, #commands a
+{
   color: #085f24;
 }
 
-.child {
+.child
+{
   position: absolute;
   z-index: 1;
   top: 5px;
 }
 
-body {font-family: Arial, Helvetica, sans-serif;}
+body
+{
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-#mode1, #targetTemperature1, #fanLevel1, #swing1, #horizontalSwing1 {
+#mode1, #targetTemperature1, #fanLevel1, #swing1, #horizontalSwing1
+{
   width: 100%;
   padding: 12px 20px;
   margin: 8px 0;
@@ -244,7 +258,8 @@ body {font-family: Arial, Helvetica, sans-serif;}
   box-sizing: border-box;
 }
 
-#mode2, #targetTemperature2, #fanLevel2, #swing2, #horizontalSwing2, #targetType2, #onValue, #offValue {
+#mode2, #targetTemperature2, #fanLevel2, #swing2, #horizontalSwing2, #targetType2, #onValue, #offValue
+{
   width: 100%;
   padding: 12px 20px;
   margin: 8px 0;
@@ -253,7 +268,8 @@ body {font-family: Arial, Helvetica, sans-serif;}
   box-sizing: border-box;
 }
 
-button {
+button
+{
   background-color: #04AA6D;
   color: white;
   padding: 14px 20px;
@@ -263,32 +279,31 @@ button {
   width: 100%;
 }
 
-button:hover {
+button:hover
+{
   opacity: 0.8;
 }
 
-.cancelbtn {
-  width: auto;
-  padding: 10px 18px;
-  background-color: #f44336;
-}
-
-.imgcontainer {
+.imgcontainer
+{
   text-align: center;
   margin: 24px 0 12px 0;
   position: relative;
 }
 
-.container {
+.container
+{
   padding: 16px;
 }
 
-span.psw {
+span.psw
+{
   float: right;
   padding-top: 16px;
 }
 
-.modal {
+.modal
+{
   display: none;
   position: fixed;
   z-index: 1;
@@ -302,18 +317,21 @@ span.psw {
   padding-top: 60px;
 }
 
-.modal-content {
+.modal-content
+{
   background-color: #fefefe;
   margin: 5% auto 15% auto;
   border: 1px solid #888;
   width: 20%;
 }
 
-#id03 .modal-content {
+#id03 .modal-content
+{
   width: 1300px;
 }
 
-.close {
+.close
+{
   position: absolute;
   right: 25px;
   top: 0;
@@ -323,21 +341,25 @@ span.psw {
 }
 
 .close:hover,
-.close:focus {
+.close:focus
+{
   color: red;
   cursor: pointer;
 }
 
-#divLeft, #divRight {
+#divLeft, #divRight
+{
   width: 50%;
 }
 
-#divLeft {
+#divLeft
+{
   float: left;
   padding: 20px;
 }
 
-#divRight {
+#divRight
+{
   float: right;
   padding: 20px;
 }
@@ -373,52 +395,33 @@ td
   text-align: center;
 }
 
-.tooltip
+.animate
 {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip .tooltiptext
-{
-  visibility: hidden;
-  width: 120px;
-  background-color: rgb(235, 182, 38);
-  color: #fff;
-  text-align: center;
-  padding: 5px 0;
-  border-radius: 6px;
-
-  position: absolute;
-  z-index: 1;
-}
-
-.tooltip:hover .tooltiptext
-{
-  visibility: visible;
-}
-
-.animate {
   -webkit-animation: animatezoom 0.6s;
   animation: animatezoom 0.6s
 }
 
-@-webkit-keyframes animatezoom {
+@-webkit-keyframes animatezoom
+{
   from {-webkit-transform: scale(0)}
   to {-webkit-transform: scale(1)}
 }
 
-@keyframes animatezoom {
+@keyframes animatezoom
+{
   from {transform: scale(0)}
   to {transform: scale(1)}
 }
 
-@media screen and (max-width: 300px) {
-  span.psw {
+@media screen and (max-width: 300px)
+{
+  span.psw
+  {
      display: block;
      float: none;
   }
-  .cancelbtn {
+  .cancelbtn
+  {
      width: 100%;
   }
 }
@@ -451,7 +454,7 @@ td
 <div id="id01" class="modal">
   <form class="modal-content animate" action="graphs.php" method="post">
     <div class="imgcontainer">
-      <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+      <span onclick="document.getElementById('id01').style.display='none'" class="close">&times;</span>
     </div>
     <div class="container">
 	<input id="startTS1" type="hidden" name="startTS" />
@@ -490,7 +493,7 @@ td
 <div id="id02" class="modal">
   <form class="modal-content animate" action="graphs.php" method="post">
     <div class="imgcontainer">
-      <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
+      <span onclick="document.getElementById('id02').style.display='none'" class="close">&times;</span>
     </div>
     <div class="container">
 	<input id="created2" type="hidden" name="created2" />
@@ -602,7 +605,7 @@ td
 <div id="id03" class="modal" style="text-align: center;">
   <form class="modal-content animate" action="graphs.php" method="post">
     <div class="imgcontainer">
-      <span onclick="document.getElementById('id03').style.display='none'" class="close" title="Close Modal">&times;</span>
+      <span onclick="document.getElementById('id03').style.display='none'" class="close">&times;</span>
     </div>
     <div class="container">
 	<h1>Climate Settings</h1>
@@ -627,7 +630,7 @@ td
 	while($drow = mysqli_fetch_assoc($res))
 	{
 		echo "<tr>";
-		echo "<td style='cursor: default;'>".$drow['created']."<span class='tooltiptext'>Click Me</span></td>";
+		echo "<td style='cursor: default;' title='".$drow['created']."'>".$drow['created']."</td>";
 		echo "<td>".$drow['mode']."</td>";
 		echo "<td>".$drow['targetType']."</td>";
 		echo "<td>".$drow['onValue']."</td>";
