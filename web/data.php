@@ -90,7 +90,11 @@
 	$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
 	$dataPoints3[] = array('x' => doubleval($startTS), 'y' => null);
 	$dataPoints4[] = array('x' => doubleval($startTS), 'y' => null);
-	$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
+
+	if($period == 86400000)
+		$dataPoints5[] = array('x' => doubleval($startTS) + 900000, 'y' => null);
+	else
+		$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
 
 	$query = "";
 
@@ -236,7 +240,8 @@
 
 	if($period == 2592000000)
 	{
-		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
+		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
 		$res = mysqli_query($link, $query);
 		while($row = mysqli_fetch_assoc($res))
 		{
@@ -246,7 +251,8 @@
 
 		mysqli_free_result($res);
 	} else if($period != 31536000000) {
-		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS + 3600000 AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC";
+		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 >= $startTS + 3600000 AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC";
 		$res = mysqli_query($link, $query);
 		while($row = mysqli_fetch_assoc($res))
 		{
@@ -256,6 +262,7 @@
 
 		mysqli_free_result($res);
 
+		$dataPoints5[] = array('x' => doubleval($startTS + $period + 300000), 'y' => floatval($row['cost']));
 	}
 
 	$commands = '';
