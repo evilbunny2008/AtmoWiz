@@ -263,20 +263,20 @@
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
 	{
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:70px;' onClick='showSettings(); return false;' src='wand.png' />\n";
-		$commands .= "<img style='width:70px;' onClick='settings(); return false;' src='settings.png' />\n";
+		$commands .= "<img style='width:50px;' onClick='showSettings(); return false;' src='wand.png' />\n";
+		$commands .= "<img style='width:50px;' onClick='settings(); return false;' src='settings.png' />\n";
 
 		if($ac == "on")
-			$commands .= "<img id='onoff' style='width:70px;' onClick='toggleAC(); return false;' src='on.png' />\n";
+			$commands .= "<img id='onoff' style='width:50px;' onClick='toggleAC(); return false;' src='on.png' />\n";
 		else
-			$commands .= "<img id='onoff' style='width:70px;' onClick='toggleAC(); return false;' src='off.png' />\n";
+			$commands .= "<img id='onoff' style='width:50px;' onClick='toggleAC(); return false;' src='off.png' />\n";
 
-		$commands .= "<img style='width:70px;' onClick='logout(); return false;' src='exit.png' />\n";
+		$commands .= "<img style='width:50px;' onClick='logout(); return false;' src='exit.png' />\n";
 
 		$commands .= "</li>\n";
 	} else {
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:70px;' onClick='logout(); return false;' src='exit.png' />\n";
+		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' />\n";
 		$commands .= "</li>\n";
 	}
 

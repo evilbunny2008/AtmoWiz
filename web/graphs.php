@@ -350,13 +350,13 @@ span.psw {
     </ul>
   </nav>
   <article style="width:calc(100% - 350px);">
-    <div class="child" style='right:53%;'><img onClick="prevDay(); return false;" style='height:50px;' src='left.png' /></div>
+    <div class="child" style='left:40%;'><img onClick="prevDay(); return false;" style='height:40px;' src='left.png' /></div>
     <div id="chartContainer" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
     <div style="height:calc(100vh / 3 * 2 - 52px); width:100%; background:#fff;">
       <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
       <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
     </div>
-    <div class="child" style='right:26%;'><img onClick="nextDay(); return false;" style='height:50px;' src='right.png' /></div>
+    <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='right.png' /></div>
   </article>
 </section>
 <div style='height: 32px;width: 100%'></div>
@@ -569,7 +569,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	axisX:
 	{
 		title: "Time",
-		interval:2,
+		interval: 1,
 		intervalType: "hour",
 		valueFormatString: "D MMM, hTT",
 		labelAngle: -20,
@@ -599,14 +599,14 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	data:
 	[
 		{
-			type: "line",
+			type: "spline",
 			name: "Feels Like [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
 			color: "<?=$FLColour?>",
 		},{
-			type: "line",
+			type: "spline",
 			axisYType: "secondary",
 			name: "Humidity [%]",
 			xValueType: "dateTime",
@@ -614,7 +614,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			showInLegend: true,
 			color: "<?=$humidColour?>",
 		},{
-			type: "line",
+			type: "spline",
 			name: "Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
@@ -650,7 +650,7 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 	axisX:
 	{
 		title: "Time",
-		interval:2,
+		interval: 1,
 		intervalType: "hour",
 		valueFormatString: "D MMM, hTT",
 		labelAngle: -20,
@@ -671,7 +671,7 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 	},
 	data:
 	[{
-		type: "line",
+		type: "spline",
 		name: "Signal Strength [dBm]",
 		xValueType: "dateTime",
 		markerSize: 0,
@@ -706,7 +706,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	axisX:
 	{
 		title: "Time",
-		interval:2,
+		interval: 1,
 		intervalType: "hour",
 		valueFormatString: "D MMM, hTT",
 		labelAngle: -20,
@@ -895,28 +895,28 @@ console.log(url);
 		document.getElementById("podUID1").value = uid;
 		document.getElementById("podUID2").value = uid;
 
-		if(period == 86400000)
+		if(timePeriod == "day")
 		{
 			chart1.options.axisX.intervalType = 'hour';
 			chart2.options.axisX.intervalType = 'hour';
 			chart3.options.axisX.intervalType = 'hour';
 		}
 
-		if(period == 604800000)
+		if(timePeriod == "week")
 		{
 			chart1.options.axisX.intervalType = 'day';
 			chart2.options.axisX.intervalType = 'day';
 			chart3.options.axisX.intervalType = 'day';
 		}
 
-		if(period == 2592000000)
+		if(timePeriod == "month")
 		{
 			chart1.options.axisX.intervalType = 'week';
 			chart2.options.axisX.intervalType = 'week';
 			chart3.options.axisX.intervalType = 'week';
 		}
 
-		if(period == 31536000000)
+		if(timePeriod == "year")
 		{
 			chart1.options.axisX.intervalType = 'month';
 			chart2.options.axisX.intervalType = 'month';
