@@ -111,7 +111,7 @@
 		}
 	}
 
-	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && $_SESSION['rw'])
+	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && (!isset($_REQUEST['created2']) || empty($_REQUEST['created2'])) && $_SESSION['rw'] && (!isset($_REQUEST['action']) || empty($_REQUEST['action'])))
 	{
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
@@ -128,6 +128,36 @@
 
 		$query = "INSERT INTO settings (uid, created, mode, targetType, onValue, offValue, targetTemperature, fanLevel, swing, horizontalSwing, enabled) VALUES ".
 			 "('${row['uid']}', NOW(), '$mode', '$targetType', '$onValue', '$offValue', '$targetTemperature', '$fanLevel', '$swing', '$horizontalSwing', $enabled)";
+		mysqli_query($link, $query);
+	}
+
+	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && isset($_REQUEST['created2']) && !empty($_REQUEST['created2']) && $_SESSION['rw'])
+	{
+		$created = mysqli_real_escape_string($link, $_REQUEST['created2']);
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
+		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
+		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
+		$onValue = mysqli_real_escape_string($link, $_REQUEST['onValue']);
+		$offValue = mysqli_real_escape_string($link, $_REQUEST['offValue']);
+		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
+		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
+		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
+		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+		$enabled = 0;
+		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
+			$enabled = 1;
+
+		$query = "UPDATE settings SET mode='$mode', targetType='$targetType', onValue='$onValue', offValue='$offValue', targetTemperature='$targetTemperature', fanLevel='$fanLevel', ".
+			 "swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='${row['uid']}' AND created='$created'";
+		mysqli_query($link, $query);
+	}
+
+	if(isset($_REQUEST['action']) && $_REQUEST['action'] == "delete" && isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']))
+	{
+		$created = mysqli_real_escape_string($link, $_REQUEST['created']);
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
+
+		$query = "DELETE FROM settings WHERE uid='${row['uid']}' AND created='$created'";
 		mysqli_query($link, $query);
 	}
 ?>
@@ -312,30 +342,60 @@ span.psw {
   padding: 20px;
 }
 
-.wrapper {
+.wrapper
+{
   display: flex;
   padding-top: 30px;
 }
 
-.wrapper > div {
+.wrapper > div
+{
   flex: 1;
 }
 
-table, th, td {
+table, th, td
+{
   border: 1px solid black;
   border-collapse: collapse;
 }
 
-table {
+table
+{
   width: 100%;
   table-layout: fixed;
 }
 
-td {
+td
+{
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
+}
+
+.tooltip
+{
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext
+{
+  visibility: hidden;
+  width: 120px;
+  background-color: rgb(235, 182, 38);
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext
+{
+  visibility: visible;
 }
 
 .animate {
@@ -433,8 +493,9 @@ td {
       <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
     </div>
     <div class="container">
+	<input id="created2" type="hidden" name="created2" />
 	<input id="startTS2" type="hidden" name="startTS" />
-	<input id="podUID2" type="hidden" name="podUID2" value="<?=$row['uid']?>" />
+	<input id="podUID2" type="hidden" name="podUID2" />
 	<div class="wrapper">
 	<div id="leftDiv">
 		<label for="mode2"><b>Mode:</b></label>
@@ -531,10 +592,10 @@ td {
 		</select>
 	</div>
 	</div>
-	<label for="enabled"><b>Enabled</b></label>
-	<input type="checkbox" id="enabled" name="enabled" value="1" checked />
+	<label for="enabled2"><b>Enabled</b></label>
+	<input type="checkbox" id="enabled2" name="enabled" value="1" checked />
 
-	<button type="submit">Add</button>
+	<button id="submitAddUpdate" type="submit">Add</button>
     </div>
   </form>
 </div>
@@ -566,7 +627,7 @@ td {
 	while($drow = mysqli_fetch_assoc($res))
 	{
 		echo "<tr>";
-		echo "<td>".$drow['created']."</td>";
+		echo "<td style='cursor: default;'>".$drow['created']."<span class='tooltiptext'>Click Me</span></td>";
 		echo "<td>".$drow['mode']."</td>";
 		echo "<td>".$drow['targetType']."</td>";
 		echo "<td>".$drow['onValue']."</td>";
@@ -581,7 +642,10 @@ td {
 		else
 			echo "False";
 		echo "</td>";
-		echo "<td onClick=\"editSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: default;color: #085f24;\">Edit</td>";
+
+		echo "<td onClick=\"editSetting('".$drow['created']."', '".$drow['uid']."', '".$drow['mode']."', '".$drow['targetType']."', '".$drow['onValue']."', '".$drow['offValue']."', '";
+		echo $drow['targetTemperature']."', '".$drow['fanLevel']."', '".$drow['swing']."', '".$drow['horizontalSwing']."', '".$drow['enabled'];
+		echo "'); return false;\" style=\"cursor: default;color: #085f24;\">Edit</td>";
 		echo "<td onClick=\"deleteSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: default;color: #085f24;\">Delete</td>";
 		echo "</tr>\n";
 	}
@@ -1136,18 +1200,86 @@ function showSettings()
 
 function newSetting()
 {
+	document.getElementById("created2").value = "";
+	document.getElementById("podUID2").value = uid;
+
+	document.getElementById("mode2").options[0].selected = 'selected';
+	document.getElementById("targetType2").options[0].selected = 'selected';
+
+	document.getElementById("onValue").value = "";
+	document.getElementById("offValue").value = "";
+
+	document.getElementById("targetTemperature2").options[0].selected = 'selected';
+	document.getElementById("fanLevel2").options[0].selected = 'selected';
+	document.getElementById("swing2").options[0].selected = 'selected';
+	document.getElementById("horizontalSwing2").options[0].selected = 'selected';
+
+	document.getElementById("enabled2").checked = true;
+	document.getElementById("submitAddUpdate").innerHTML = "Add Setting";
+
 	modal3.style.display = "none";
 	modal2.style.display = "block";
 }
 
-function editSetting(created, uid)
+function editSetting(created, uid, mode, targetType, onValue, offValue, targetTemperature, fanLevel, swing, horizontalSwing, enabled)
 {
-	alert(created + " -- " + uid);
+	document.getElementById("created2").value = created;
+	document.getElementById("podUID2").value = uid;
+
+	for(let i = 0; i < document.getElementById("mode2").options.length; i++)
+	{
+		if(document.getElementById("mode2").options[i].value == mode)
+			document.getElementById("mode2").options[i].selected = 'selected';
+	}
+
+	for(let i = 0; i < document.getElementById("targetType2").options.length; i++)
+	{
+		if(document.getElementById("targetType2").options[i].value == targetType)
+			document.getElementById("targetType2").options[i].selected = 'selected';
+	}
+
+	document.getElementById("onValue").value = onValue;
+	document.getElementById("offValue").value = offValue;
+
+	for(let i = 0; i < document.getElementById("targetTemperature2").options.length; i++)
+	{
+		if(document.getElementById("targetTemperature2").options[i].value == targetTemperature)
+			document.getElementById("targetTemperature2").options[i].selected = 'selected';
+	}
+
+	for(let i = 0; i < document.getElementById("fanLevel2").options.length; i++)
+	{
+		if(document.getElementById("fanLevel2").options[i].value == fanLevel)
+			document.getElementById("fanLevel2").options[i].selected = 'selected';
+	}
+
+	for(let i = 0; i < document.getElementById("swing2").options.length; i++)
+	{
+		if(document.getElementById("swing2").options[i].value == swing)
+			document.getElementById("swing2").options[i].selected = 'selected';
+	}
+
+	for(let i = 0; i < document.getElementById("horizontalSwing2").options.length; i++)
+	{
+		if(document.getElementById("horizontalSwing2").options[i].value == horizontalSwing)
+			document.getElementById("horizontalSwing2").options[i].selected = 'selected';
+	}
+
+	if(enabled == 1)
+		document.getElementById("enabled2").checked = true;
+	else
+		document.getElementById("enabled2").checked = false;
+
+	document.getElementById("submitAddUpdate").innerHTML = "Update";
+
+	modal3.style.display = "none";
+	modal2.style.display = "block";
 }
 
 function deleteSetting(created, uid)
 {
-	alert(created + " -- " + uid);
+	if(confirm("Are you sure you want to delete this setting?"))
+		window.location = 'graphs.php?action=delete&created=' + created + '&podUID2=' + uid;
 }
 
 DataLoop();
