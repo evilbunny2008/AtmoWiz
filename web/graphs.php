@@ -25,6 +25,9 @@
 	{
 		global $apikey;
 
+		if(!$_SESSION['rw'])
+			return json_encode(array('ret' => "You don't have permission."));
+
 		$url = "https://home.sensibo.com/api/v2/pods/$podUID/acStates?apiKey=".$apikey;
 		$body = json_encode(array('acState' => $changes));
 
@@ -957,7 +960,7 @@ console.log(url);
 	const ret = await response.json();
 
 	if(ret['status'] == 200)
-		popSelect(document.getElementById(type+"1"), ret['content'], ret[contentType]);
+		popSelect(document.getElementById(contentType+"1"), ret['content'], ret[contentType]);
 	else
 		console.log(ret);
 }

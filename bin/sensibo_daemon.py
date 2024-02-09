@@ -42,7 +42,27 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key")
+            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            return None
+
+    def _patch(self, path, data, ** params):
+        try:
+            params['apiKey'] = self._api_key
+            response = requests.patch(_SERVER + path, params = params, data = data)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as exc:
+            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            return None
+
+    def _post(self, path, headers, data, ** params):
+        try:
+            params['apiKey'] = self._api_key
+            response = requests.post(_SERVER + path, headers = headers, params = params, data = data)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as exc:
+            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
             return None
 
     def devices(self):
@@ -79,6 +99,11 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
         return result['result']
+
+    def pod_change_ac_state(self, podUid, on, targetTemperature, mode, fanLevel, swing, hswing):
+        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        self._post("/pods/%s/acStates" % podUid, headers,
+                json.dumps({"acState": {"on": on, "mode": mode, "targetTemperature": int(targetTemperature), "fanLevel": fanLevel, "swing": swing, "horizontalSwing": hswing}}))
 
 def calcAT(temp, humid, country, feelslike):
     if(feelslike != None and country == 'None'):
@@ -343,6 +368,7 @@ def getLastCommands(mydb, nb = 5):
 
         for last in lastCommands:
             try:
+                cursor = mydb.cursor()
                 sstring = datetime.strptime(last['time']['time'], fromfmt2)
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
@@ -378,6 +404,57 @@ def getLastCommands(mydb, nb = 5):
                 pass
 
     mydb.commit()
+
+def checkSettings(mydb):
+    for podUID in uidList:
+        try:
+            cursor = mydb.cursor()
+            # ('evR7kbvf', datetime.datetime(2024, 2, 9, 8, 37, 14), 'cool', 'temperature', 28.0, 26.1, 26.0, 'auto', 'fixedTop', 'fixedCenter', 1)
+            query = "SELECT mode, targetType, onValue, offValue, targetTemperature, fanLevel, swing, horizontalSwing FROM settings WHERE uid=%s AND enabled=1"
+            values = (podUID, )
+            #doLog("info", query % values)
+            cursor.execute(query, values)
+            result = cursor.fetchall()
+            for (mode, targetType, onValue, offValue, targetTemperature, fanLevel, swing, horizontalSwing) in result:
+                query = "SELECT airconon,temperature,humidity,feelsLike FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                values = (podUID, )
+                #doLog("info", query % values)
+                cursor.execute(query, values)
+                (airconon,temperature,humidity,feelsLike) = cursor.fetchone()
+
+                if(mode == 'cool' or mode == 'dry'):
+                    if(targetType == 'temperature' and airconon == 0 and temperature >= onValue):
+                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    if(targetType == 'temperature' and airconon == 1 and temperature <= offValue):
+                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    if(targetType == 'feelsLike' and airconon == 0 and feelsLike >= onValue):
+                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    if(targetType == 'feelsLike' and airconon == 1 and feelsLike <= offValue):
+                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    if(targetType == 'humidity' and airconon == 0 and humidity >= onValue):
+                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    if(targetType == 'humidity' and airconon == 1 and humidity <= offValue):
+                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+
+                if(mode == 'heat'):
+                    if(targetType == 'temperature' and airconon == 0 and temperature <= onValue):
+                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    if(targetType == 'temperature' and airconon == 1 and temperature >= offValue):
+                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    if(targetType == 'feelsLike' and airconon == 0 and feelsLike <= onValue):
+                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    if(targetType == 'feelsLike' and airconon == 1 and feelsLike >= offValue):
+                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+
+        except MySQLdb._exceptions.ProgrammingError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            pass
+        except MySQLdb._exceptions.IntegrityError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            pass
+        except MySQLdb._exceptions.OperationalError as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            pass
 
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
@@ -574,7 +651,7 @@ if __name__ == "__main__":
         if(not _hasPlus and days > 1):
             days = 1
 
-        doHistoricalMeasurements(mydb, days)
+#        doHistoricalMeasurements(mydb, days)
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
@@ -649,6 +726,7 @@ if __name__ == "__main__":
             calcCost(mydb)
 
             getLastCommands(mydb, 5)
+            checkSettings(mydb)
 
             loops += 1
 
