@@ -687,7 +687,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	zoomEnabled: true,
 	title:
 	{
-		text: "Cost per hour"
+		text: "Cost of Running"
 	},
 	toolTip:
 	{
@@ -713,7 +713,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	},
 	axisY:
 	{
-		title: "Cost per Hour [$]",
+		title: "Cost [$]",
 		includeZero: true,
 		titleFontColor: "<?=$costColour?>",
 		lineColor: "<?=$costColour?>",
@@ -730,6 +730,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		dockInsidePlotArea: true,
 		itemclick: toggleDataSeries
 	},
+	dataPointWidth: 50,
 	data:
 	[{
 		type: "column",
@@ -900,6 +901,7 @@ console.log(url);
 			chart1.options.axisX.intervalType = 'hour';
 			chart2.options.axisX.intervalType = 'hour';
 			chart3.options.axisX.intervalType = 'hour';
+			chart3.options.dataPointWidth = 50;
 		}
 
 		if(timePeriod == "week")
@@ -907,6 +909,7 @@ console.log(url);
 			chart1.options.axisX.intervalType = 'day';
 			chart2.options.axisX.intervalType = 'day';
 			chart3.options.axisX.intervalType = 'day';
+			chart3.options.dataPointWidth = 7;
 		}
 
 		if(timePeriod == "month")
@@ -914,6 +917,7 @@ console.log(url);
 			chart1.options.axisX.intervalType = 'week';
 			chart2.options.axisX.intervalType = 'week';
 			chart3.options.axisX.intervalType = 'week';
+			chart3.options.dataPointWidth = 40;
 		}
 
 		if(timePeriod == "year")
@@ -921,6 +925,7 @@ console.log(url);
 			chart1.options.axisX.intervalType = 'month';
 			chart2.options.axisX.intervalType = 'month';
 			chart3.options.axisX.intervalType = 'month';
+			chart3.options.dataPointWidth = 20;
 		}
 
 		chart1.options.data[0].dataPoints = content['dataPoints3'];
