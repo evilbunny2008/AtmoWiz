@@ -651,7 +651,7 @@ if __name__ == "__main__":
         if(not _hasPlus and days > 1):
             days = 1
 
-#        doHistoricalMeasurements(mydb, days)
+        doHistoricalMeasurements(mydb, days)
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
