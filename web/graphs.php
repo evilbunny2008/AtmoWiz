@@ -327,7 +327,7 @@ table, th, td {
 }
 
 table {
-  width: 1200px;
+  width: 100%;
   table-layout: fixed;
 }
 
@@ -468,10 +468,10 @@ td {
 	}
 ?>
 		</select>
-		<label for="onValue"><b>On Value</b></label>
+		<label for="onValue"><b>On Value:</b></label>
 		<input type="text" id="onValue" name="onValue" value="28" />
 
-		<label for="offValue"><b>Off Value</b></label>
+		<label for="offValue"><b>Off Value:</b></label>
 		<input type="text" id="offValue" name="offValue" value="26.1" />
 	</div>
 	<div id="rightDiv">
@@ -538,12 +538,13 @@ td {
     </div>
   </form>
 </div>
-<div id="id03" class="modal">
+<div id="id03" class="modal" style="text-align: center;">
   <form class="modal-content animate" action="graphs.php" method="post">
     <div class="imgcontainer">
       <span onclick="document.getElementById('id03').style.display='none'" class="close" title="Close Modal">&times;</span>
     </div>
     <div class="container">
+	<h1>Climate Settings</h1>
 	<table>
 	<tr>
 		<th>Created</th>
@@ -555,7 +556,7 @@ td {
 		<th>Fan Level</th>
 		<th>Swing</th>
 		<th>Horizontal Swing</th>
-		<th>Enable</th>
+		<th>Enabled</th>
 		<th>Edit</th>
 		<th>Delete</th>
 	</tr>
@@ -580,12 +581,13 @@ td {
 		else
 			echo "False";
 		echo "</td>";
-		echo "<td>Edit</td>";
-		echo "<td>Delete</td>";
+		echo "<td onClick=\"editSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: default;color: #085f24;\">Edit</td>";
+		echo "<td onClick=\"deleteSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: default;color: #085f24;\">Delete</td>";
 		echo "</tr>\n";
 	}
 ?>
-	</table>
+	</table><br/><br/>
+	<b onClick="newSetting(); return false;" style="cursor: default;color: #085f24;">Add Climate Setting</b>
     </div>
   </form>
 </div>
@@ -1130,6 +1132,22 @@ function settings()
 function showSettings()
 {
 	modal3.style.display = "block";
+}
+
+function newSetting()
+{
+	modal3.style.display = "none";
+	modal2.style.display = "block";
+}
+
+function editSetting(created, uid)
+{
+	alert(created + " -- " + uid);
+}
+
+function deleteSetting(created, uid)
+{
+	alert(created + " -- " + uid);
 }
 
 DataLoop();
