@@ -279,6 +279,10 @@ span.psw {
   width: 20%;
 }
 
+#id03 .modal-content {
+  width: 1300px;
+}
+
 .close {
   position: absolute;
   right: 25px;
@@ -315,6 +319,23 @@ span.psw {
 
 .wrapper > div {
   flex: 1;
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+table {
+  width: 1200px;
+  table-layout: fixed;
+}
+
+td {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .animate {
@@ -517,6 +538,57 @@ span.psw {
     </div>
   </form>
 </div>
+<div id="id03" class="modal">
+  <form class="modal-content animate" action="graphs.php" method="post">
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id03').style.display='none'" class="close" title="Close Modal">&times;</span>
+    </div>
+    <div class="container">
+	<table>
+	<tr>
+		<th>Created</th>
+		<th>Mode</th>
+		<th>Target Type</th>
+		<th>On Value</th>
+		<th>Off Value</th>
+		<th>Target Temperature</th>
+		<th>Fan Level</th>
+		<th>Swing</th>
+		<th>Horizontal Swing</th>
+		<th>Enable</th>
+		<th>Edit</th>
+		<th>Delete</th>
+	</tr>
+<?php
+	$query = "SELECT * FROM settings WHERE uid='${row['uid']}'";
+	$res = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($res))
+	{
+		echo "<tr>";
+		echo "<td>".$drow['created']."</td>";
+		echo "<td>".$drow['mode']."</td>";
+		echo "<td>".$drow['targetType']."</td>";
+		echo "<td>".$drow['onValue']."</td>";
+		echo "<td>".$drow['offValue']."</td>";
+		echo "<td>".$drow['targetTemperature']."</td>";
+		echo "<td>".$drow['fanLevel']."</td>";
+		echo "<td>".$drow['swing']."</td>";
+		echo "<td>".$drow['horizontalSwing']."</td>";
+		echo "<td>";
+		if($drow['enabled'])
+			echo "True";
+		else
+			echo "False";
+		echo "</td>";
+		echo "<td>Edit</td>";
+		echo "<td>Delete</td>";
+		echo "</tr>\n";
+	}
+?>
+	</table>
+    </div>
+  </form>
+</div>
 <script src="canvasjs.min.js"></script>
 <script>
 
@@ -533,6 +605,7 @@ document.getElementById("startTS2").value = startTS;
 
 var modal1 = document.getElementById('id01');
 var modal2 = document.getElementById('id02');
+var modal3 = document.getElementById('id03');
 
 var chart1 = new CanvasJS.Chart("chartContainer",
 {
@@ -1056,7 +1129,7 @@ function settings()
 
 function showSettings()
 {
-	modal2.style.display = "block";
+	modal3.style.display = "block";
 }
 
 DataLoop();

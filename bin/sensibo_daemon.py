@@ -209,9 +209,9 @@ def calcCost(mydb):
         cursor1 = mydb.cursor()
         cursor2 = mydb.cursor()
 
-        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='cool'"
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry')"
         cursor1.execute(query)
-        for (whentime, uid, dow, hod) in cursor1:
+        for (whentime, podUID, dow, hod) in cursor1:
             if(dow == 1 or dow == 7):
                 cost = cool / EER * offpeak * 90.0 / 3600.0
             else:
@@ -226,13 +226,13 @@ def calcCost(mydb):
                     cost = cool / EER * shoulder * 90.0 / 3600.0
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, uid)
+            values = (cost, whentime, podUID)
             doLog("info", query % values)
             cursor2.execute(query, values)
 
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
         cursor1.execute(query)
-        for (whentime, uid, dow, hod) in cursor1:
+        for (whentime, podUID, dow, hod) in cursor1:
             if(dow == 1 or dow == 7):
                 cost = heat / COP * offpeak * 90.0 / 3600.0
             else:
@@ -247,7 +247,7 @@ def calcCost(mydb):
                     cost = heat / COP * shoulder * 90.0 / 3600.0
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, uid)
+            values = (cost, whentime, podUID)
             doLog("info", query % values)
             cursor2.execute(query, values)
 
@@ -277,10 +277,10 @@ def calcFL(mydb, country):
             doLog("info", query)
             cursor1.execute(query)
             cursor2 = mydb.cursor()
-            for (whentime, uid, temp, humid) in cursor1:
+            for (whentime, podUID, temp, humid) in cursor1:
                 at = calcAT(temp, humid, country, None)
                 query = "UPDATE sensibo SET feelslike=%s WHERE whentime=%s AND uid=%s AND feelslike=-1"
-                values = (at, whentime, uid)
+                values = (at, whentime, podUID)
                 doLog("info", query % values)
                 cursor2.execute(query, values)
 
@@ -424,27 +424,27 @@ def checkSettings(mydb):
 
                 if(mode == 'cool' or mode == 'dry'):
                     if(targetType == 'temperature' and airconon == 0 and temperature >= onValue):
-                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                     if(targetType == 'temperature' and airconon == 1 and temperature <= offValue):
-                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                     if(targetType == 'feelsLike' and airconon == 0 and feelsLike >= onValue):
-                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                     if(targetType == 'feelsLike' and airconon == 1 and feelsLike <= offValue):
-                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                     if(targetType == 'humidity' and airconon == 0 and humidity >= onValue):
-                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                     if(targetType == 'humidity' and airconon == 1 and humidity <= offValue):
-                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
                 if(mode == 'heat'):
                     if(targetType == 'temperature' and airconon == 0 and temperature <= onValue):
-                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                     if(targetType == 'temperature' and airconon == 1 and temperature >= offValue):
-                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                     if(targetType == 'feelsLike' and airconon == 0 and feelsLike <= onValue):
-                        client.pod_change_ac_state(uid, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                     if(targetType == 'feelsLike' and airconon == 1 and feelsLike >= offValue):
-                        client.pod_change_ac_state(uid, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
