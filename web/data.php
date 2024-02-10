@@ -258,35 +258,23 @@
 	$ac = "off";
 	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime, UNIX_TIMESTAMP(whentime) * 1000 as startTS FROM ".
 				"sensibo WHERE uid='$uid' ORDER BY whentime DESC LIMIT 1";
-	if($redis->exists(md5($query)))
+	$res = mysqli_query($link, $query);
+	if(mysqli_num_rows($res) > 0)
 	{
-		$arr = unserialize($redis->get(md5($query)));
-		$currtemp = $arr['0'];
-		$currhumid = $arr['1'];
-		$currtime = $arr['2'];
-		$ac = $arr['3'];
+		$row = mysqli_fetch_assoc($res);
+		mysqli_free_result($res);
+
+		$currtemp = $row['temperature'];
+		$currhumid = $row['humidity'];
+		$currtime = $row['wttime'];
+
+		if($row['airconon'] == 1)
+			$ac = "on";
 	} else {
-		$res = mysqli_query($link, $query);
-		if(mysqli_num_rows($res) > 0)
-		{
-			$row = mysqli_fetch_assoc($res);
-			mysqli_free_result($res);
-
-			$currtemp = $row['temperature'];
-			$currhumid = $row['humidity'];
-			$currtime = $row['wttime'];
-
-			if($row['airconon'] == 1)
-				$ac = "on";
-		} else {
-			$currtemp = 0.0;
-			$currhumid = 0;
-			$currtime = "00:00";
-		}
-
-		$redis->set(md5($query), serialize(array($currtemp, $currhumid, $currtime, $ac)));
+		$currtemp = 0.0;
+		$currhumid = 0;
+		$currtime = "00:00";
 	}
-
 
 	if($period == 2592000000)
 	{
@@ -394,6 +382,17 @@
 
 	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
 	$commands .= "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
+	$commands .= "<li>&nbsp;</li>\n";
+
+	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime FROM weather ORDER BY whentime DESC LIMIT 1";
+	$row = mysqlI_fetch_assoc(mysqli_query($link, $query));
+	$commands .= "<li style='text-align:center;'><u><b>Closest Weather Station</b></u></li>\n";
+	if($row['pressure'] >= 900)
+		$pressure = $row['pressure'] . "hPa";
+	else
+		$pressure = $row['pressure'] . "in";
+
+	$commands .= "<li><b>".$row['wttime']."</b> -- ".$row['temperature']."°C, ".$row['humidity']."%, ".$pressure."</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM ".
 				"commands WHERE uid='$uid' AND changes!='' AND changes!='[]' ORDER BY whentime DESC";

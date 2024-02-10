@@ -13,6 +13,7 @@ import shutil
 import sys
 import time
 import traceback
+from bs4 import BeautifulSoup
 from datetime import datetime
 from dateutil import tz
 from systemd.journal import JournalHandler
@@ -31,6 +32,9 @@ _sqlselect3 = 'SELECT 1 FROM sensibo WHERE whentime=%s AND uid=%s'
 
 _INVOCATION_ID = os.environ.get('INVOCATION_ID', False)
 
+_lat = 0
+_lon = 0
+
 class SensiboClientAPI(object):
     def __init__(self, api_key):
         self._api_key = api_key
@@ -42,7 +46,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            doLog("error", "Request failed, full error messages hidden to protect the API key")
             return None
 
     def _patch(self, path, data, ** params):
@@ -52,7 +56,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            doLog("error", "Request failed, full error messages hidden to protect the API key")
             return None
 
     def _post(self, path, headers, data, ** params):
@@ -62,7 +66,7 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            doLog("error", "Request failed, full error messages hidden to protect the API key")
             return None
 
     def devices(self):
@@ -104,6 +108,12 @@ class SensiboClientAPI(object):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         self._post("/pods/%s/acStates" % podUid, headers,
                 json.dumps({"acState": {"on": on, "mode": mode, "targetTemperature": int(targetTemperature), "fanLevel": fanLevel, "swing": swing, "horizontalSwing": hswing}}))
+
+    def pod_location(self, podUid):
+        result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="pod")
+        if(result == None):
+            return None
+        return result['result'][0]['pod']['location']['latLon']
 
 def calcAT(temp, humid, country, feelslike):
     if(feelslike != None and country == 'None'):
@@ -456,6 +466,45 @@ def checkSettings(mydb):
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
 
+def getCurrentWeather(mydb, podUID):
+    global _lat
+    global _lon
+
+    if(_lat == 0 and _lon == 0):
+        latLon = client.pod_location(podUID)
+        if(latLon == None):
+            return None
+
+        _lat = latLon[0]
+        _lon = latLon[1]
+    url = "https://api.weatherapi.com/v1/current.json?key=6a8050742d564321871165959241002&q=" + str(_lat) + "," + str(_lon) + "&aqi=yes"
+    response = requests.get(url, timeout = 10)
+    result = response.json()
+    if(_corf == 'C'):
+        temp = str(result['current']['temp_c'])
+        fl = str(result['current']['feelslike_c'])
+        pressure = str(result['current']['pressure_mb'])
+    else:
+        temp = str(result['current']['temp_f'])
+        fl = str(result['current']['feelslike_f'])
+        pressure = str(result['current']['pressure_in'])
+    humid = str(result['current']['humidity'])
+    aq = str(result['current']['air_quality']['us-epa-index'])
+
+    cursor = mydb.cursor()
+    query = "SELECT 1 FROM weather WHERE whentime=%s"
+    values = (result['current']['last_updated'], )
+    cursor.execute(query, values)
+    row = cursor.fetchone()
+    if(row):
+        return
+
+    values = (result['current']['last_updated'], temp, fl, humid, pressure, aq)
+    query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aq) VALUES (%s, %s, %s, %s, %s, %s)"
+    doLog("info", query % values)
+    cursor.execute(query, values)
+    mydb.commit()
+
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
@@ -663,6 +712,7 @@ if __name__ == "__main__":
         exit(1)
 
     calcCost(mydb)
+    getCurrentWeather(mydb, podUID)
     mydb.close()
 
     while True:
@@ -730,7 +780,11 @@ if __name__ == "__main__":
 
             loops += 1
 
-            if(loops >= 15):
+            if(loops % 10 == 0):
+                getCurrentWeather(mydb, podUID)
+
+
+            if(loops >= 40):
                 loops = 0
                 doHistoricalMeasurements(mydb, 1)
 
