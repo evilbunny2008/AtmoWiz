@@ -846,10 +846,15 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		contentFormatter: function(e)
 		{
 			var content = "";
-			if(timePeriod == "year" || timePeriod == "month")
+			if(timePeriod == "year")
+			{
+				var isoWeek = getISOWeekNumber(e.entries[0].dataPoint.x);
+				content += "Week " + isoWeek + ", " + CanvasJS.formatDate(e.entries[0].dataPoint.x, "MMM YYYY") + "</br>------------";
+			} else if(timePeriod == "month") {
 				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM") + "</br>------------";
-			else
+			} else {
 				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+			}
 
 			for(var i = 0; i < e.entries.length; i++)
 			{
@@ -979,6 +984,23 @@ function toggleDataSeries(e)
 	chart1.render();
 }
 
+function getISOWeekNumber(dt)
+{
+	dt = new Date(dt);
+	var tdt = new Date(dt.valueOf());
+	var dayn = (dt.getDay() + 6) % 7;
+	tdt.setDate(tdt.getDate() - dayn + 3);
+	var firstThursday = tdt.valueOf();
+	tdt.setMonth(0, 1);
+
+	if (tdt.getDay() !== 4)
+		tdt.setMonth(0, 1 + ((4 - tdt.getDay()) + 7) % 7);
+
+	isoWeek = 1 + Math.ceil((firstThursday - tdt) / 604800000);
+
+	return isoWeek;
+}
+
 async function toggleAC()
 {
 <?php
@@ -1010,7 +1032,7 @@ async function DataLoop()
 	now = new Date().getTime();
 	if(startTS >= now - 87300000 && startTS <= now - 85500000)
 	{
-	        startTS = now - period;
+	  startTS = now - period;
 		document.getElementById("startTS1").value = startTS;
 		document.getElementById("startTS2").value = startTS;
 	}

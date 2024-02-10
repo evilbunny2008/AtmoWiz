@@ -1,4 +1,3 @@
-
 <?php
 	$error = null;
 	require_once('mariadb.php');
@@ -86,11 +85,20 @@
 		$startTS = $row['whentimes'] - $period;
 	}
 
-	$dataPoints1[] = array('x' => doubleval($startTS), 'y' => null);
-	$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
-	$dataPoints3[] = array('x' => doubleval($startTS), 'y' => null);
-	$dataPoints4[] = array('x' => doubleval($startTS), 'y' => null);
-	$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
+	if($period == 31536000000 || $period == 2592000000)
+	{
+		$dataPoints1[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints2[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints3[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints4[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints5[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+	} else {
+		$dataPoints1[] = array('x' => doubleval($startTS), 'y' => null);
+		$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
+		$dataPoints3[] = array('x' => doubleval($startTS), 'y' => null);
+		$dataPoints4[] = array('x' => doubleval($startTS), 'y' => null);
+		$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
+	}
 
 	$query = "";
 
@@ -247,8 +255,11 @@
 		$res = mysqli_query($link, $query);
 		while($row = mysqli_fetch_assoc($res))
 		{
-			if(doubleval($row['whentime']) > 0)
-				$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['cost']));
+			$wt = round(doubleval($row['whentime']) / 1000);
+			$wt = mktime(0, 0, 0, date("m", $wt), date("d", $wt), date("Y", $wt)) * 1000;
+			if($wt > 0)
+				$dataPoints5[] = array('x' => $wt, 'y' => floatval($row['cost']));
+
 		}
 
 		mysqli_free_result($res);
