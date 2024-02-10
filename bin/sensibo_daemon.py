@@ -470,6 +470,10 @@ def getCurrentWeather(mydb, podUID):
     global _lat
     global _lon
 
+    if(weatherapikey == 'apikey' or weatherapikey == '<apikey from weatherapi.com>'):
+        doLog("info", "WeatherAPIkey not set, skipping weather lookup...")
+        return
+
     doLog("info", "Getting forecast...")
 
     if(_lat == 0 and _lon == 0):
