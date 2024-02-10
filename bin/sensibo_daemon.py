@@ -308,6 +308,7 @@ def calcFL(mydb, country):
         pass
 
 def doHistoricalMeasurements(mydb, days = 1):
+    doLog("info", "Getting %d days of historical data from Sensibo.com..." % days)
     cursor = mydb.cursor()
 
     for podUID in uidList:
@@ -470,6 +471,8 @@ def getCurrentWeather(mydb, podUID):
     global _lat
     global _lon
 
+    doLog("info", "Getting forecast...")
+
     if(_lat == 0 and _lon == 0):
         latLon = client.pod_location(podUID)
         if(latLon == None):
@@ -477,6 +480,7 @@ def getCurrentWeather(mydb, podUID):
 
         _lat = latLon[0]
         _lon = latLon[1]
+
     url = "https://api.weatherapi.com/v1/current.json?key=6a8050742d564321871165959241002&q=" + str(_lat) + "," + str(_lon) + "&aqi=yes"
     response = requests.get(url, timeout = 10)
     result = response.json()
@@ -497,6 +501,7 @@ def getCurrentWeather(mydb, podUID):
     cursor.execute(query, values)
     row = cursor.fetchone()
     if(row):
+        doLog("info", "Skipping forecast as we already have it")
         return
 
     values = (result['current']['last_updated'], temp, fl, humid, pressure, aq)
@@ -715,12 +720,13 @@ if __name__ == "__main__":
     getCurrentWeather(mydb, podUID)
     mydb.close()
 
+    loops = 0
+
     while True:
         try:
             mydb = MySQLdb.connect(hostname, username, password, database)
             doLog("info", "Connection to mariadb accepted")
             secondsAgo = -1
-            loops = 0
 
             for podUID in uidList:
                 pod_measurement = client.pod_all_stats(podUID, 1)
@@ -782,11 +788,15 @@ if __name__ == "__main__":
 
             if(loops % 10 == 0):
                 getCurrentWeather(mydb, podUID)
+            else:
+                doLog("info", "loops=%d, loops %% 10=%d" % (loops, loops % 10))
 
 
             if(loops >= 40):
                 loops = 0
                 doHistoricalMeasurements(mydb, 1)
+            else:
+                doLog("info", "loops=%d, loops %% 10=%d" % (loops, loops % 10))
 
             if(secondsAgo <= 0):
                 secondsAgo = 90
@@ -795,6 +805,7 @@ if __name__ == "__main__":
 
             timeToWait = secondsAgo + random.randint(10, 20)
 
+            doLog("info", "Closing connection to MariaDB");
             mydb.close()
             doLog("info", "Sleeping for %d seconds..." % timeToWait)
             time.sleep(timeToWait)
