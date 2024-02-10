@@ -13,7 +13,6 @@ import shutil
 import sys
 import time
 import traceback
-from bs4 import BeautifulSoup
 from datetime import datetime
 from dateutil import tz
 from systemd.journal import JournalHandler
