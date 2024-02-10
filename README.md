@@ -1,7 +1,7 @@
 # Intro
-Python Code based on the [Sensibo Python SDK](https://github.com/Sensibo/sensibo-python-sdk/) and [Pull Requests Authors](https://github.com/Sensibo/sensibo-python-sdk/pulls)
+Sensibo client python code based on the [Sensibo Python SDK](https://github.com/Sensibo/sensibo-python-sdk/) and [Pull Requests Authors](https://github.com/Sensibo/sensibo-python-sdk/pulls)
 
-Client script is a basic script to interogate the Sensibo API
+Client script is a basic script to interogate the Sensibo API, can toggle the AC on/off, set the target temperature and so on.
 
 Daemon script is a python daemon script which can download all the data exposed by the API and store it in a local database. sensibo.conf can be copied to /etc and chmod 600 to protect the apikey and database password.
 
