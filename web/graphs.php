@@ -689,7 +689,12 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	{
 		contentFormatter: function(e)
 		{
-			var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+			var content = "";
+			if(timePeriod == "year" || timePeriod == "month")
+				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM") + "</br>------------";
+			else
+				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];
@@ -779,7 +784,12 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 	{
 		contentFormatter: function(e)
 		{
-			var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+			var content = "";
+			if(timePeriod == "year" || timePeriod == "month")
+				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM") + "</br>------------";
+			else
+				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];
@@ -835,7 +845,12 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	{
 		contentFormatter: function(e)
 		{
-			var content =  CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+			var content = "";
+			if(timePeriod == "year" || timePeriod == "month")
+				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM") + "</br>------------";
+			else
+				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];

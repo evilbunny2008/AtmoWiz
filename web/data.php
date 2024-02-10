@@ -156,21 +156,27 @@
 		{
 			if(++$rc == 7)
 			{
-				if(doubleval($row['whentime']) > 0)
+				if($wt > 0)
 					$dataPoints5[] = array('x' => $wt, 'y' => $cost);
 				$rc = $wt = $cost = 0;
 			} else {
-				if($wt == 0)
+				if(doubleval($row['whentime']) > 0)
 				{
-					$wt = doubleval($row['whentime']);
-					$wt = mktime(0, 0, 0, date("m", $wt / 1000), date("d", $wt / 1000), date("Y", $wt / 1000)) * 1000;
+					if($wt == 0)
+					{
+						$wt = doubleval($row['whentime']);
+						$wt = mktime(0, 0, 0, date("m", $wt / 1000), date("d", $wt / 1000), date("Y", $wt / 1000)) * 1000;
+					}
+
+					$cost += floatval($row['cost']);
 				}
-				$cost += floatval($row['cost']);
 			}
 		}
 
 		if($wt > 0)
 			$dataPoints5[] = array('x' => $wt, 'y' => $cost);
+
+		$dataPoints5[] = array('x' => $startTS + $period, 'y' => null);
 
 		mysqli_free_result($res);
 	} else {
@@ -258,7 +264,7 @@
 
 		mysqli_free_result($res);
 
-		$dataPoints5[] = array('x' => doubleval($startTS + $period + 300000), 'y' => floatval($row['cost']));
+		$dataPoints5[] = array('x' => doubleval($startTS + $period), 'y' => null);
 	}
 
 	$commands = '';
