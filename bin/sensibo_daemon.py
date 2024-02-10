@@ -788,15 +788,10 @@ if __name__ == "__main__":
 
             if(loops % 10 == 0):
                 getCurrentWeather(mydb, podUID)
-            else:
-                doLog("info", "loops=%d, loops %% 10=%d" % (loops, loops % 10))
-
 
             if(loops >= 40):
                 loops = 0
                 doHistoricalMeasurements(mydb, 1)
-            else:
-                doLog("info", "loops=%d, loops %% 10=%d" % (loops, loops % 10))
 
             if(secondsAgo <= 0):
                 secondsAgo = 90
