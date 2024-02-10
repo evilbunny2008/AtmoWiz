@@ -480,7 +480,7 @@ def getCurrentWeather(mydb, podUID):
         _lat = latLon[0]
         _lon = latLon[1]
 
-    url = "https://api.weatherapi.com/v1/current.json?key=6a8050742d564321871165959241002&q=" + str(_lat) + "," + str(_lon) + "&aqi=yes"
+    url = "https://api.weatherapi.com/v1/current.json?key=" + weatherapikey + "&q=" + str(_lat) + "," + str(_lon) + "&aqi=yes"
     response = requests.get(url, timeout = 10)
     result = response.json()
     if(_corf == 'C'):
@@ -542,6 +542,7 @@ if __name__ == "__main__":
     configParser.read(args.config)
     apikey = configParser.get('sensibo', 'apikey', fallback = 'apikey')
     days = configParser.getint('sensibo', 'days', fallback = 1)
+    weatherapikey = configParser.get('sensibo', 'weatherapikey', fallback = 'apikey')
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
     database = configParser.get('mariadb', 'database', fallback = 'sensibo')
     username = configParser.get('mariadb', 'username', fallback = 'sensibo')
