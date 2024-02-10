@@ -25,3 +25,6 @@
 
 	if($error == null && mysqli_connect_errno())
 		$error = "DB error: " . mysqli_connect_error();
+
+	$redis = new Redis();
+	$redis->connect('127.0.0.1');
