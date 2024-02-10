@@ -126,7 +126,7 @@
 
 	if($period == 31536000000)
 	{
-		$query = "SELECT DATE_FORMAT(whentime, '%Y-%m-%d') as wtdate FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ".
+		$query = "SELECT DATE_FORMAT(whentime, '%Y-%m-%d') as wtdate, count(uid) as c FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ".
 				"GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
@@ -140,17 +140,29 @@
 			while($row = mysqli_fetch_assoc($res))
 			{
 				$query1 = "SELECT count(uid) as c FROM sensibo WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%'";
-				$res1 = mysqli_query($link, $query1);
-				$rc = mysqli_fetch_assoc($res1)['c'];
-				mysqli_free_result($res1);
+				if($redis->exists(md5($query1)))
+				{
+					$rc = $redis->get(md5($query1));
+				} else {
+					$res1 = mysqli_query($link, $query1);
+					$rc = mysqli_fetch_assoc($res1)['c'];
+					$redis->set(md5($query1), $rc);
+				}
+
 				for($i = 0; $i <= $rc; $i += 64)
 				{
 					$query2 = "SELECT row.whentimes, row.airconon, ROUND(AVG(row.temperature), 1) AS temperature, ROUND(AVG(row.humidity), 1) AS humidity, ROUND(AVG(row.feelslike), 1) AS feelslike, ".
 							" AVG(row.rssi) AS rssi FROM (SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes, airconon, temperature, humidity, feelslike, rssi FROM sensibo ".
 							"WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%' LIMIT $i, 64) row";
-					$res2 = mysqli_query($link, $query2);
-					$row2 = mysqli_fetch_assoc($res2);
-					mysqli_free_result($res2);
+					if($redis->exists(md5($query2)))
+					{
+						$row2 = unserialize($redis->get(md5($query2)));
+					} else {
+						$res2 = mysqli_query($link, $query2);
+						$row2 = mysqli_fetch_assoc($res2);
+						mysqli_free_result($res2);
+						$redis->set(md5($query2), serialize($row2));
+					}
 
 					if(doubleval($row2['whentimes']) > 0)
 					{
@@ -172,8 +184,7 @@
 				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
-			$arr = unserialize($redis->get(md5($query)));
-			$dataPoints5 = $arr['0'];
+			$dataPoints5 = unserialize($redis->get(md5($query)));
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
