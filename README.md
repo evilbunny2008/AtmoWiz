@@ -19,6 +19,7 @@ Issues and feature requests can be filed [here](https://github.com/evilbunny2008
 * [Graphs by CanvasJS.com](https://canvasjs.com/)  
 * [Arrow Icons](https://svgsilh.com/00bcd4/image/34285.html)
 * [Flaticon Icons](https://www.flaticon.com)
+* [If you want current conditions you can sign up to WeatherAPI.com for free](https://www.weatherapi.com)
 
 # Screen Shots
 
