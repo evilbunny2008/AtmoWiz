@@ -75,4 +75,14 @@ CREATE TABLE IF NOT EXISTS `settings` (
   PRIMARY KEY (`uid`,`created`)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS `weather` (
+  `whentime` datetime NOT NULL,
+  `temperature` float NOT NULL,
+  `feelsLike` float NOT NULL,
+  `humidity` float NOT NULL,
+  `pressure` float NOT NULL,
+  `aq` float NOT NULL,
+  PRIMARY KEY (`whentime`)
+) ENGINE=InnoDB;
+
 COMMIT;
