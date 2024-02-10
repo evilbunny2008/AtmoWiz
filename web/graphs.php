@@ -1044,6 +1044,10 @@ console.log(url);
 			chart2.options.axisX.intervalType = 'hour';
 			chart3.options.axisX.intervalType = 'hour';
 			chart3.options.dataPointWidth = 50;
+
+			chart1.options.axisX.valueFormatString = 'D MMM, hTT';
+			chart2.options.axisX.valueFormatString = 'D MMM, hTT';
+			chart3.options.axisX.valueFormatString = 'D MMM, hTT';
 		}
 
 		if(timePeriod == "week")
@@ -1052,6 +1056,10 @@ console.log(url);
 			chart2.options.axisX.intervalType = 'day';
 			chart3.options.axisX.intervalType = 'day';
 			chart3.options.dataPointWidth = 7;
+
+			chart1.options.axisX.valueFormatString = 'D MMM';
+			chart2.options.axisX.valueFormatString = 'D MMM';
+			chart3.options.axisX.valueFormatString = 'D MMM';
 		}
 
 		if(timePeriod == "month")
@@ -1060,6 +1068,10 @@ console.log(url);
 			chart2.options.axisX.intervalType = 'week';
 			chart3.options.axisX.intervalType = 'week';
 			chart3.options.dataPointWidth = 40;
+
+			chart1.options.axisX.valueFormatString = 'D MMM YY';
+			chart2.options.axisX.valueFormatString = 'D MMM YY';
+			chart3.options.axisX.valueFormatString = 'D MMM YY';
 		}
 
 		if(timePeriod == "year")
@@ -1068,6 +1080,10 @@ console.log(url);
 			chart2.options.axisX.intervalType = 'month';
 			chart3.options.axisX.intervalType = 'month';
 			chart3.options.dataPointWidth = 20;
+
+			chart1.options.axisX.valueFormatString = 'MMM YYYY';
+			chart2.options.axisX.valueFormatString = 'MMM YYYY';
+			chart3.options.axisX.valueFormatString = 'MMM YYYY';
 		}
 
 		chart1.options.data[0].dataPoints = content['dataPoints3'];
