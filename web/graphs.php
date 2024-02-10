@@ -630,7 +630,7 @@ td
 	while($drow = mysqli_fetch_assoc($res))
 	{
 		echo "<tr>";
-		echo "<td style='cursor: default;' title='".$drow['created']."'>".$drow['created']."</td>";
+		echo "<td style='cursor: pointer;' title='".$drow['created']."'>".$drow['created']."</td>";
 		echo "<td>".$drow['mode']."</td>";
 		echo "<td>".$drow['targetType']."</td>";
 		echo "<td>".$drow['onValue']."</td>";
@@ -648,13 +648,13 @@ td
 
 		echo "<td onClick=\"editSetting('".$drow['created']."', '".$drow['uid']."', '".$drow['mode']."', '".$drow['targetType']."', '".$drow['onValue']."', '".$drow['offValue']."', '";
 		echo $drow['targetTemperature']."', '".$drow['fanLevel']."', '".$drow['swing']."', '".$drow['horizontalSwing']."', '".$drow['enabled'];
-		echo "'); return false;\" style=\"cursor: default;color: #085f24;\">Edit</td>";
-		echo "<td onClick=\"deleteSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: default;color: #085f24;\">Delete</td>";
+		echo "'); return false;\" style=\"cursor: pointer; color: #085f24;\">Edit</td>";
+		echo "<td onClick=\"deleteSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>";
 		echo "</tr>\n";
 	}
 ?>
 	</table><br/><br/>
-	<b onClick="newSetting(); return false;" style="cursor: default;color: #085f24;">Add Climate Setting</b>
+	<b onClick="newSetting(); return false;" style="cursor: pointer;color: #085f24;">Add Climate Setting</b>
     </div>
   </form>
 </div>

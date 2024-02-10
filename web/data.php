@@ -90,11 +90,7 @@
 	$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
 	$dataPoints3[] = array('x' => doubleval($startTS), 'y' => null);
 	$dataPoints4[] = array('x' => doubleval($startTS), 'y' => null);
-
-	if($period == 86400000)
-		$dataPoints5[] = array('x' => doubleval($startTS) + 900000, 'y' => null);
-	else
-		$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
+	$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
 
 	$query = "";
 
