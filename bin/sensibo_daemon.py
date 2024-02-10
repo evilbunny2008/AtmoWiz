@@ -485,33 +485,40 @@ def getCurrentWeather(mydb, podUID):
         _lon = latLon[1]
 
     url = "https://api.weatherapi.com/v1/current.json?key=" + weatherapikey + "&q=" + str(_lat) + "," + str(_lon) + "&aqi=yes"
-    response = requests.get(url, timeout = 10)
-    result = response.json()
-    if(_corf == 'C'):
-        temp = str(result['current']['temp_c'])
-        fl = str(result['current']['feelslike_c'])
-        pressure = str(result['current']['pressure_mb'])
-    else:
-        temp = str(result['current']['temp_f'])
-        fl = str(result['current']['feelslike_f'])
-        pressure = str(result['current']['pressure_in'])
-    humid = str(result['current']['humidity'])
-    aq = str(result['current']['air_quality']['us-epa-index'])
 
-    cursor = mydb.cursor()
-    query = "SELECT 1 FROM weather WHERE whentime=%s"
-    values = (result['current']['last_updated'], )
-    cursor.execute(query, values)
-    row = cursor.fetchone()
-    if(row):
-        doLog("info", "Skipping forecast as we already have it")
-        return
+    try:
+        response = requests.get(url, timeout = 10)
+        response.raise_for_status()
+        result = response.json()
+        if(_corf == 'C'):
+            temp = str(result['current']['temp_c'])
+            fl = str(result['current']['feelslike_c'])
+            pressure = str(result['current']['pressure_mb'])
+        else:
+            temp = str(result['current']['temp_f'])
+            fl = str(result['current']['feelslike_f'])
+            pressure = str(result['current']['pressure_in'])
+        humid = str(result['current']['humidity'])
+        aq = str(result['current']['air_quality']['us-epa-index'])
 
-    values = (result['current']['last_updated'], temp, fl, humid, pressure, aq)
-    query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aq) VALUES (%s, %s, %s, %s, %s, %s)"
-    doLog("info", query % values)
-    cursor.execute(query, values)
-    mydb.commit()
+        cursor = mydb.cursor()
+        query = "SELECT 1 FROM weather WHERE whentime=%s"
+        values = (result['current']['last_updated'], )
+        cursor.execute(query, values)
+        row = cursor.fetchone()
+        if(row):
+            doLog("info", "Skipping forecast as we already have it")
+            return
+
+        values = (result['current']['last_updated'], temp, fl, humid, pressure, aq)
+        query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aq) VALUES (%s, %s, %s, %s, %s, %s)"
+        doLog("info", query % values)
+        cursor.execute(query, values)
+        mydb.commit()
+
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
 
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
