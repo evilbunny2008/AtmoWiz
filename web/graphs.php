@@ -1123,13 +1123,9 @@ console.log(url);
 			chart3.options.axisX.valueFormatString = 'MMM YYYY';
 		}
 
-console.log(content['dataPoints3']);
 		chart1.options.data[0].dataPoints = content['dataPoints3'];
-console.log(content['dataPoints2']);
 		chart1.options.data[1].dataPoints = content['dataPoints2'];
-console.log(content['dataPoints1']);
 		chart1.options.data[2].dataPoints = content['dataPoints1'];
-console.log(content['dataPoints4']);
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
 console.log(content['dataPoints5']);
 		chart3.options.data[0].dataPoints = content['dataPoints5'];

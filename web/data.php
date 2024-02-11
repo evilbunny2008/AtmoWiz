@@ -20,7 +20,7 @@
 		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
 		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
 		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(),
-						'dataPoints4' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
+						'dataPoints4' => array(), 'dataPoints5' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
 		echo json_encode(array('status' => 200, 'content' => $data));
 		exit;
 	}
@@ -164,7 +164,7 @@
 						$redis->set(md5($query2), serialize($row2));
 					}
 
-					if(doubleval($row2['whentimes']) > 0)
+					if($row2 !== False && doubleval($row2['whentimes']) > 0)
 					{
 						$dataPoints1[] = array('x' => doubleval($row2['whentimes']), 'y' => floatval($row2['temperature']));
 						$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['humidity']));
@@ -195,7 +195,7 @@
 						$dataPoints5[] = array('x' => $wt, 'y' => $cost);
 					$rc = $wt = $cost = 0;
 				} else {
-					if(doubleval($row['whentime']) > 0)
+					if($row !== False && doubleval($row['whentime']) > 0)
 					{
 						if($wt == 0)
 						{
@@ -230,8 +230,8 @@
 			{
 				if($period == 86400000)
 				{
-					$query = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') < 0 LIMIT 1";
-					$dres = mysqli_query($link, $query);
+					$query1 = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') < 0 LIMIT 1";
+					$dres = mysqli_query($link, $query1);
 					if(mysqli_num_rows($dres) > 0)
 					{
 						while($drow = mysqli_fetch_assoc($dres))
@@ -293,7 +293,7 @@
 				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
-			$datapoints5 = unserialize($redis->get(md5($query)));
+			$dataPoints5 = unserialize($redis->get(md5($query)));
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
@@ -312,12 +312,12 @@
 				"UNIX_TIMESTAMP(whentime) * 1000 >= $startTS + 3600000 AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
-			$datapoints5 = unserialize($redis->get(md5($query)));
+			$dataPoints5 = unserialize($redis->get(md5($query)));
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
 			{
-				if(doubleval($row['whentime']) > 0)
+				if($row !== False && doubleval($row['whentime']) > 0)
 					$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['cost']));
 			}
 
