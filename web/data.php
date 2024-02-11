@@ -147,6 +147,7 @@
 					$res1 = mysqli_query($link, $query1);
 					$rc = mysqli_fetch_assoc($res1)['c'];
 					$redis->set(md5($query1), $rc);
+					$redis->expire(md5($query1), 86400);
 				}
 
 				for($i = 0; $i <= $rc; $i += 64)
@@ -162,6 +163,7 @@
 						$row2 = mysqli_fetch_assoc($res2);
 						mysqli_free_result($res2);
 						$redis->set(md5($query2), serialize($row2));
+						$redis->expire(md5($query2), 86400);
 					}
 
 					if($row2 !== False && doubleval($row2['whentimes']) > 0)
@@ -177,6 +179,7 @@
 			mysqli_free_result($res);
 
 			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4)));
+			$redis->expire(md5($query), 3600);
 		}
 
 		$rc = $wt = $cost = 0;
@@ -215,6 +218,7 @@
 
 			mysqli_free_result($res);
 			$redis->set(md5($query), serialize($dataPoints5));
+			$redis->expire(md5($query), 3600);
 		}
 	} else {
 		if($redis->exists(md5($query)))
@@ -263,6 +267,7 @@
 			mysqli_free_result($res);
 
 			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4)));
+			$redis->expire(md5($query), 3600);
 		}
 	}
 
@@ -306,6 +311,7 @@
 
 			mysqli_free_result($res);
 			$redis->set(md5($query), serialize($dataPoints5));
+			$redis->expire(md5($query), 3600);
 		}
 	} else if($period != 31536000000) {
 		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
@@ -325,6 +331,7 @@
 
 			$dataPoints5[] = array('x' => doubleval($startTS + $period), 'y' => null);
 			$redis->set(md5($query), serialize($dataPoints5));
+			$redis->expire(md5($query), 3600);
 		}
 	}
 
