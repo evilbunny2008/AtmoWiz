@@ -1061,9 +1061,11 @@ console.log(url);
 		}
 
 		content = ret['content'];
-
+console.log(currtime);
+console.log(content['currtime']);
 		if(!force && currtime == content['currtime'])
 			return;
+console.log("Update should have happened.");
 
 		currtime = content['currtime'];
 		startTS = content['startTS'];
@@ -1127,13 +1129,10 @@ console.log(url);
 		chart1.options.data[1].dataPoints = content['dataPoints2'];
 		chart1.options.data[2].dataPoints = content['dataPoints1'];
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
-console.log(content['dataPoints5']);
 		chart3.options.data[0].dataPoints = content['dataPoints5'];
 
 		for(var i = 0; i < charts.length; i++)
 			charts[i].render();
-
-		populateSelect();
 	} catch (e) {
 		console.log(e)
 	}
@@ -1340,6 +1339,7 @@ function deleteSetting(created, uid)
 }
 
 DataLoop();
+populateSelect();
 
 <?php
 	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && $_SESSION['rw'])
