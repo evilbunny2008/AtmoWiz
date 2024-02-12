@@ -121,24 +121,24 @@ def calcAT(temp, humid, country, feelslike):
         return feelslike
 
     if(country == 'au'):
-        doLog("info", "Using BoM Apparent Temp")
+        doLog("debug", "Using BoM Apparent Temp")
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         # UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1)
         if(_corf == 'F'):
             temp = (temp - 32) * 5 / 9
-            doLog("info", "temp = %f" % temp)
+            doLog("debug", "temp = %f" % temp)
 
         vp = (humid / 100.0) * 6.105 * math.exp((17.27 * temp) / (237.7 + temp))
-        doLog("info", "vp = %f" % vp)
+        doLog("debug", "vp = %f" % vp)
         at = round(temp + (0.33 * vp) - 4.0, 1)
-        doLog("info", "at = %f" % at)
+        doLog("debug", "at = %f" % at)
         return at
     else:
         # North American Heat Index -- https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
-        doLog("info", "Using NA HI")
+        doLog("debug", "Using NA HI")
         if(_corf == 'C'):
             temp =  (temp * 9 / 5) + 32
-            doLog("info", "temp = %f" % temp)
+            doLog("debug", "temp = %f" % temp)
 
 
         if(temp <= 80 and temp >= 50):
@@ -146,7 +146,7 @@ def calcAT(temp, humid, country, feelslike):
             if(_corf == 'C'):
                 HI = (HI - 32) * 5 / 9
 
-            doLog("info", "HI = %f" % HI)
+            doLog("debug", "HI = %f" % HI)
             return HI
         elif(temp > 50):
             HI = -42.379 + 2.04901523 * temp + 10.14333127 * humid - .22475541 * temp * humid - .00683783 * temp * temp - .05481717 * humid * humid + .00122874 * temp * temp * humid + .00085282 * temp * humid * humid - .00000199 * temp * temp * humid * humid
@@ -160,7 +160,7 @@ def calcAT(temp, humid, country, feelslike):
             if(_corf == 'C'):
                 HI = (HI - 32) * 5 / 9
 
-            doLog("info", "HI = %f" % HI)
+            doLog("debug", "HI = %f" % HI)
             return HI
         else:
             if(_corf == 'C'):
@@ -170,7 +170,7 @@ def calcAT(temp, humid, country, feelslike):
             if(_corf == 'C'):
                 WC = (WC - 32) * 5 / 9
 
-            doLog("info", "WC = %f" % WC)
+            doLog("debug", "WC = %f" % WC)
             return WC
 
 def validateValues(temp, humid):
@@ -201,18 +201,38 @@ def doLog(logType, line, doStackTrace = False):
     if(logType == 'info'):
         if(not _INVOCATION_ID):
             print (line)
-
         log.info(line)
+
         if(doStackTrace):
-            print (full_stack())
+            if(not _INVOCATION_ID):
+                print (full_stack())
             log.info(full_stack())
+    elif(logType == 'debug'):
+        if(not _INVOCATION_ID):
+            print (line)
+
+        log.debug(line)
+        if(doStackTrace):
+            if(not _INVOCATION_ID):
+                print (full_stack())
+            log.debug(full_stack())
+    elif(logType == 'warning'):
+        if(not _INVOCATION_ID):
+            print (line)
+
+        log.warning(line)
+        if(doStackTrace):
+            if(not _INVOCATION_ID):
+                print (full_stack())
+            log.warning(full_stack())
     else:
         if(not _INVOCATION_ID):
             print (line)
 
         log.error(line)
         if(doStackTrace):
-            print (full_stack())
+            if(not _INVOCATION_ID):
+                print (full_stack())
             log.error(full_stack())
 
 def calcCost(mydb):
@@ -238,7 +258,7 @@ def calcCost(mydb):
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
-            doLog("info", query % values)
+            doLog("debug", query % values)
             cursor2.execute(query, values)
 
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
@@ -259,7 +279,7 @@ def calcCost(mydb):
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
-            doLog("info", query % values)
+            doLog("debug", query % values)
             cursor2.execute(query, values)
 
         mydb.commit()
@@ -279,20 +299,20 @@ def calcFL(mydb, country):
 
         if(_corf == 'C' and country == 'au'):
             query = "UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1) WHERE feelslike=-1"
-            doLog("info", query)
+            doLog("debug", query)
             cursor1.execute(query)
             mydb.commit()
             return
         else:
             query = "SELECT whentime, uid, temperature, humidity FROM sensibo WHERE feelslike=-1"
-            doLog("info", query)
+            doLog("debug", query)
             cursor1.execute(query)
             cursor2 = mydb.cursor()
             for (whentime, podUID, temp, humid) in cursor1:
                 at = calcAT(temp, humid, country, None)
                 query = "UPDATE sensibo SET feelslike=%s WHERE whentime=%s AND uid=%s AND feelslike=-1"
                 values = (at, whentime, podUID)
-                doLog("info", query % values)
+                doLog("debug", query % values)
                 cursor2.execute(query, values)
 
             mydb.commit()
@@ -356,19 +376,19 @@ def doHistoricalMeasurements(mydb, days = 1):
             localzone = utc.astimezone(to_zone)
             sdate = localzone.strftime(fmt)
             values = (sdate, podUID)
-            #doLog("info", _sqlselect3 % values)
+            #doLog("debug", _sqlselect3 % values)
             cursor.execute(_sqlselect3, values)
             row = cursor.fetchone()
             if(row):
                 continue
 
-            doLog("info", "rc = %d, i = %d" % (rc, i))
-            doLog("info", historicalMeasurements['temperature'][i])
-            doLog("info", historicalMeasurements['humidity'][i])
+            doLog("debug", "rc = %d, i = %d" % (rc, i))
+            doLog("debug", historicalMeasurements['temperature'][i])
+            doLog("debug", historicalMeasurements['humidity'][i])
 
             at = calcAT(temp, humid, country, feelslike)
             values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing)
-            doLog("info", _sqlquery3 % values)
+            doLog("debug", _sqlquery3 % values)
             cursor.execute(_sqlquery3, values)
             mydb.commit()
 
@@ -386,7 +406,7 @@ def getLastCommands(mydb, nb = 5):
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
                 values = (sdate, podUID)
-                #doLog("info", _sqlselect1 % values)
+                #doLog("debug", _sqlselect1 % values)
                 cursor.execute(_sqlselect1, values)
                 row = cursor.fetchone()
                 if(row):
@@ -410,7 +430,7 @@ def getLastCommands(mydb, nb = 5):
                           last['status'], acState['on'], acState['mode'], acState['targetTemperature'],
                           acState['temperatureUnit'], acState['fanLevel'], acState['swing'],
                           acState['horizontalSwing'], str(changes))
-                doLog("info", _sqlquery1 % values)
+                doLog("debug", _sqlquery1 % values)
                 cursor.execute(_sqlquery1, values)
             except MySQLdb._exceptions.ProgrammingError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
@@ -431,17 +451,17 @@ def checkSettings(mydb):
             cursor = mydb.cursor()
             query = "SELECT onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing FROM settings WHERE uid=%s AND enabled=1"
             values = (podUID, )
-            #doLog("info", query % values)
+            #doLog("debug", query % values)
             cursor.execute(query, values)
             result = cursor.fetchall()
             for (onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing) in result:
-                #doLog("info", "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing))
+                #doLog("debug", "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing))
                 query = "SELECT airconon,temperature,humidity,feelsLike FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
                 values = (podUID, )
-                #doLog("info", query % values)
+                #doLog("debug", query % values)
                 cursor.execute(query, values)
                 (airconon, temperature, humidity, feelsLike) = cursor.fetchone()
-                #doLog("info", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
+                #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
 
                 dict = {}
                 dict['temperature'] = temperature
@@ -473,7 +493,7 @@ def checkSettings(mydb):
                             doLog("info", "Rule 8 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
 
                     #else:
-                    #    doLog("info", "Rule X hit, %s is %s... %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    #    doLog("debug", "Rule X hit, %s is %s... %s(%s)..." % (i, dict[i], mode, turnOnOff))
 
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
@@ -494,9 +514,58 @@ def getCurrentWeather(mydb, podUID):
     if(inigoURL != ''):
         getInigoData(mydb)
 
+    if(bomURL != ''):
+        getBOM(mydb)
+
+def getBOM(mydb):
+    if(bomURL == ''):
+        doLog("error", "BoM URL is not set, skipping weather lookup")
+        return
+
+    doLog("info", "Getting BoM forecast...")
+
+    try:
+        skip = 1
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+                   'Cache-Control': 'max-age=0', 'Accept-Language': 'en-au', 'Upgrade-Insecure-Requests': '1', 'Accept-Encoding': 'deflate'}
+        response = requests.get(bomURL, timeout = 10, headers = headers)
+        response.raise_for_status()
+        result = response.json()['observations']['data']
+        for i in result:
+            wt = i['local_date_time_full']
+            whentime = wt[0:4] + "-" + wt[4:6] + "-" + wt[6:8] + " " + wt[8:10] + ":" + wt[10:12] + ":" + wt[12:14]
+            temp = i['air_temp']
+            pressure = i['press']
+            humid = i['rel_hum']
+
+            cursor = mydb.cursor()
+            query = "SELECT 1 FROM weather WHERE whentime=%s"
+            values = (whentime, )
+            doLog("debug", query % values)
+            cursor.execute(query, values)
+            row = cursor.fetchone()
+            if(row):
+                doLog("debug", "Skipping forecast as we already have it")
+                continue
+
+            aqi = 0
+            fl = calcAT(float(temp), float(humid), country, None)
+            values = (whentime, temp, fl, humid, pressure, aqi)
+            query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
+            doLog("debug", query % values)
+            cursor.execute(query, values)
+            mydb.commit()
+
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+
 def getInigoData(mydb):
     if(inigoURL == ''):
-        doLog("info", "Inigo URL is not set, skipping weather lookup")
+        doLog("error", "Inigo URL is not set, skipping weather lookup")
+        return
+
+    doLog("info", "Getting Inigo forecast...")
 
     try:
         skip = 1
@@ -513,11 +582,11 @@ def getInigoData(mydb):
         cursor = mydb.cursor()
         query = "SELECT 1 FROM weather WHERE whentime=%s"
         values = (whentime, )
-        doLog("info", query % values)
+        doLog("debug", query % values)
         cursor.execute(query, values)
         row = cursor.fetchone()
         if(row):
-            doLog("info", "Skipping forecast as we already have it")
+            doLog("debug", "Skipping forecast as we already have it")
             return
 
         aqi = 0
@@ -526,13 +595,12 @@ def getInigoData(mydb):
             response = requests.get(urad_URL, timeout = 10, headers = headers)
             response.raise_for_status()
             result = response.json()
-            #doLog("info", result)
-
-        aqi = result[0]['aqi']
+            #doLog("debug", result)
+            aqi = result[0]['aqi']
 
         values = (whentime, temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
-        doLog("info", query % values)
+        doLog("debug", query % values)
         cursor.execute(query, values)
         mydb.commit()
 
@@ -540,14 +608,15 @@ def getInigoData(mydb):
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
-
 def getWeatherAPI(mydb, podUID):
     global _lat
     global _lon
 
     if(weatherapikey == ''):
-        doLog("info", "WeatherAPIkey not set, skipping weather lookup...")
+        doLog("error", "WeatherAPIkey not set, skipping weather lookup...")
         return
+
+    doLog("info", "Getting WeatherAPI.com forecast...")
 
     if(_lat == 0 and _lon == 0):
         latLon = client.pod_location(podUID)
@@ -580,12 +649,12 @@ def getWeatherAPI(mydb, podUID):
         cursor.execute(query, values)
         row = cursor.fetchone()
         if(row):
-            doLog("info", "Skipping forecast as we already have it")
+            doLog("debug", "Skipping forecast as we already have it")
             return
 
         values = (result['current']['last_updated'], temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
-        doLog("info", query % values)
+        doLog("debug", query % values)
         cursor.execute(query, values)
         mydb.commit()
 
@@ -626,11 +695,12 @@ if __name__ == "__main__":
     configParser.read(args.config)
     apikey = configParser.get('sensibo', 'apikey', fallback = 'apikey')
     days = configParser.getint('sensibo', 'days', fallback = 1)
-    weatherapikey = configParser.get('sensibo', 'weatherapikey', fallback = 'apikey')
-    inigoURL = configParser.get('sensibo', 'inigoURL', fallback = 'https://username:password@example.com/weewx/inigo-data.txt')
-    urad_URL = configParser.get('sensibo', 'urad_URL', fallback = 'https://data.uradmonitor.com/api/v1/devices')
+    weatherapikey = configParser.get('sensibo', 'weatherapikey', fallback = '')
+    inigoURL = configParser.get('sensibo', 'inigoURL', fallback = '')
+    urad_URL = configParser.get('sensibo', 'urad_URL', fallback = '')
     urad_userid = configParser.get('sensibo', 'urad_userid', fallback = '')
     urad_hash = configParser.get('sensibo', 'urad_hash', fallback = '')
+    bomURL = configParser.get('sensibo', 'bomURL', fallback = '')
 
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
     database = configParser.get('mariadb', 'database', fallback = 'sensibo')
@@ -649,13 +719,12 @@ if __name__ == "__main__":
     cool = configParser.getfloat('cost', 'cool', fallback = 5.0)
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
 
-    if(weatherapikey == 'apikey' or weatherapikey == '<apikey from weatherapi.com>'):
+    if(bomURL != ''):
         weatherapikey = ''
 
-    if(inigoURL == 'https://username:password@example.com/weewx/inigo-data.txt'):
-        inigoURL = ''
-    else:
+    if(inigoURL != ''):
         weatherapikey = ''
+        bomURL = ''
 
     if(days <= 0):
         days = 1
@@ -680,7 +749,7 @@ if __name__ == "__main__":
         exit(1)
 
     if(uid == 0 or gid == 0):
-        doLog("info", "UID or GID is set to superuser, this is not recommended.")
+        doLog("warning", "UID or GID is set to superuser, this is not recommended.")
     else:
         os.setgid(gid)
         os.setuid(uid)
@@ -713,12 +782,12 @@ if __name__ == "__main__":
         try:
             cursor = mydb.cursor()
             query = "UPDATE sensibo SET cost=0.0"
-            doLog("info", query)
+            doLog("debug", query)
             cursor.execute(query)
             mydb.commit()
             calcCost(mydb)
             mydb.close()
-            doLog("info", "Cost has been recalculated.")
+            doLog("debug", "Cost has been recalculated.")
             exit(0)
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
@@ -734,12 +803,12 @@ if __name__ == "__main__":
         try:
             cursor = mydb.cursor()
             query = "UPDATE sensibo SET feelslike=-1"
-            doLog("info", query)
+            doLog("debug", query)
             cursor.execute(query)
             mydb.commit()
             calcFL(mydb, country)
             mydb.close()
-            doLog("info", "Feels like has been recalculated.")
+            doLog("debug", "Feels like has been recalculated.")
             exit(0)
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
@@ -757,13 +826,13 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
-            # doLog("info", _sqlselect2 % values)
+            # doLog("debug", _sqlselect2 % values)
             cursor.execute(_sqlselect2, values)
             row = cursor.fetchone()
             if(row):
                 continue
 
-            doLog("info", _sqlquery2 % values)
+            doLog("debug", _sqlquery2 % values)
             cursor.execute(_sqlquery2, values)
 
         mydb.commit()
@@ -788,12 +857,12 @@ if __name__ == "__main__":
             for mode in device['modes']:
                 if(mode != "fan"):
                     for temp in device['modes'][mode]['temperatures'][_corf]['values']:
-                        # doLog("info", query % (podUID, mode, 'temperatures', temp))
+                        # doLog("debug", query % (podUID, mode, 'temperatures', temp))
                         cursor.execute(query, (podUID, mode, 'temperatures', temp))
 
                 for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
                     for modes in device['modes'][mode][keyval]:
-                        # doLog("info", query % (podUID, mode, keyval, modes))
+                        # doLog("debug", query % (podUID, mode, keyval, modes))
                         cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
@@ -823,7 +892,7 @@ if __name__ == "__main__":
     while True:
         try:
             mydb = MySQLdb.connect(hostname, username, password, database)
-            doLog("info", "Connection to mariadb accepted")
+            doLog("debug", "Connection to mariadb accepted")
             secondsAgo = -1
 
             for podUID in uidList:
@@ -840,7 +909,7 @@ if __name__ == "__main__":
                     continue
 
                 if(secondsAgo == -1):
-                    #doLog("info", "secondsAgo = %d" % measurements['time']['secondsAgo'])
+                    #doLog("debug", "secondsAgo = %d" % measurements['time']['secondsAgo'])
                     secondsAgo = 90 - measurements['time']['secondsAgo']
 
                 sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
@@ -851,11 +920,11 @@ if __name__ == "__main__":
 
                 try:
                     cursor = mydb.cursor()
-                    #doLog("info", _sqlselect3 % values)
+                    #doLog("debug", _sqlselect3 % values)
                     cursor.execute(_sqlselect3, values)
                     row = cursor.fetchone()
                     if(row):
-                        #doLog("info", "Skipping insert due to row already existing.")
+                        #doLog("debug", "Skipping insert due to row already existing.")
                         continue
 
                     at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
@@ -864,7 +933,7 @@ if __name__ == "__main__":
                               at, measurements['rssi'], ac_state['on'],
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
                               ac_state['swing'], ac_state['horizontalSwing'])
-                    doLog("info", _sqlquery3 % values)
+                    doLog("debug", _sqlquery3 % values)
                     cursor.execute(_sqlquery3, values)
                     mydb.commit()
                 except MySQLdb._exceptions.ProgrammingError as e:
@@ -887,6 +956,9 @@ if __name__ == "__main__":
             if(inigoURL != ''):
                 if(loops % 3 == 0):
                     getCurrentWeather(mydb, podUID)
+            elif(bomURL != ''):
+                if(loops % 20 == 0):
+                    getCurrentWeather(mydb, podUID)
             else:
                 if(loops % 10 == 0):
                     getCurrentWeather(mydb, podUID)
@@ -902,9 +974,9 @@ if __name__ == "__main__":
 
             timeToWait = secondsAgo + random.randint(10, 20)
 
-            doLog("info", "Closing connection to MariaDB");
+            doLog("debug", "Closing connection to MariaDB");
             mydb.close()
-            doLog("info", "Sleeping for %d seconds..." % timeToWait)
+            doLog("debug", "Sleeping for %d seconds..." % timeToWait)
             time.sleep(timeToWait)
         except Exception as e:
             doLog("error", "There was a problem, error was %s" % e, True)
