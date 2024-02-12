@@ -506,7 +506,7 @@ def checkSettings(mydb):
             pass
 
 def getCurrentWeather(mydb, podUID):
-    doLog("info", "Getting forecast...")
+    doLog("info", "Getting observation...")
 
     if(weatherapikey != ''):
         getWeatherAPI(mydb, podUID)
@@ -517,12 +517,58 @@ def getCurrentWeather(mydb, podUID):
     if(bomURL != ''):
         getBOM(mydb)
 
+    if(metLocation != ''):
+        getMetService(mydb)
+
+def getMetService(mydb):
+    if(metLocation == ''):
+        doLog("error", "MetService.com URL is not set, skipping weather lookup")
+        return
+
+    doLog("info", "Getting MetService.com URL observation...")
+
+    try:
+        #url = "https://www.metservice.com/publicData/hourlyObsAndForecast_" + metLocation
+        #url = "https://www.metservice.com/publicData/oneMinObs_" + metLocation
+        url = "https://www.metservice.com/publicData/localObs_" + metLocation
+        response = requests.get(url, timeout = 10)
+        response.raise_for_status()
+        result = response.json()
+        doLog("info", result)
+
+        whentime = datetime.fromtimestamp(round(result['threeHour']['rawTime'] / 1000)).strftime(fmt)
+        temp = result['threeHour']['temp']
+        humid = result['threeHour']['humidity']
+        pressure = result['threeHour']['pressure']
+        fl = calcAT(float(temp), float(humid), country, None)
+        aqi = -1
+
+        cursor = mydb.cursor()
+        query = "SELECT 1 FROM weather WHERE whentime=%s"
+        values = (whentime, )
+        doLog("debug", query % values)
+        cursor.execute(query, values)
+        row = cursor.fetchone()
+        if(row):
+            doLog("debug", "Skipping observation as we already have it")
+            return
+
+        values = (whentime, temp, fl, humid, pressure, aqi)
+        query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
+        doLog("debug", query % values)
+        cursor.execute(query, values)
+        mydb.commit()
+
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+
 def getBOM(mydb):
     if(bomURL == ''):
         doLog("error", "BoM URL is not set, skipping weather lookup")
         return
 
-    doLog("info", "Getting BoM forecast...")
+    doLog("info", "Getting BoM observation...")
 
     try:
         skip = 1
@@ -545,10 +591,10 @@ def getBOM(mydb):
             cursor.execute(query, values)
             row = cursor.fetchone()
             if(row):
-                doLog("debug", "Skipping forecast as we already have it")
+                doLog("debug", "Skipping observation as we already have it")
                 continue
 
-            aqi = 0
+            aqi = -1
             fl = calcAT(float(temp), float(humid), country, None)
             values = (whentime, temp, fl, humid, pressure, aqi)
             query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
@@ -565,7 +611,7 @@ def getInigoData(mydb):
         doLog("error", "Inigo URL is not set, skipping weather lookup")
         return
 
-    doLog("info", "Getting Inigo forecast...")
+    doLog("info", "Getting Inigo observation...")
 
     try:
         skip = 1
@@ -586,10 +632,10 @@ def getInigoData(mydb):
         cursor.execute(query, values)
         row = cursor.fetchone()
         if(row):
-            doLog("debug", "Skipping forecast as we already have it")
+            doLog("debug", "Skipping observation as we already have it")
             return
 
-        aqi = 0
+        aqi = -1
         if(urad_userid != '' and urad_hash != ''):
             headers = {"X-User-id": urad_userid, "X-User-hash": urad_hash}
             response = requests.get(urad_URL, timeout = 10, headers = headers)
@@ -616,7 +662,7 @@ def getWeatherAPI(mydb, podUID):
         doLog("error", "WeatherAPIkey not set, skipping weather lookup...")
         return
 
-    doLog("info", "Getting WeatherAPI.com forecast...")
+    doLog("info", "Getting WeatherAPI.com observation...")
 
     if(_lat == 0 and _lon == 0):
         latLon = client.pod_location(podUID)
@@ -649,7 +695,7 @@ def getWeatherAPI(mydb, podUID):
         cursor.execute(query, values)
         row = cursor.fetchone()
         if(row):
-            doLog("debug", "Skipping forecast as we already have it")
+            doLog("debug", "Skipping observation as we already have it")
             return
 
         values = (result['current']['last_updated'], temp, fl, humid, pressure, aqi)
@@ -695,12 +741,14 @@ if __name__ == "__main__":
     configParser.read(args.config)
     apikey = configParser.get('sensibo', 'apikey', fallback = 'apikey')
     days = configParser.getint('sensibo', 'days', fallback = 1)
+
     weatherapikey = configParser.get('sensibo', 'weatherapikey', fallback = '')
     inigoURL = configParser.get('sensibo', 'inigoURL', fallback = '')
     urad_URL = configParser.get('sensibo', 'urad_URL', fallback = '')
     urad_userid = configParser.get('sensibo', 'urad_userid', fallback = '')
     urad_hash = configParser.get('sensibo', 'urad_hash', fallback = '')
     bomURL = configParser.get('sensibo', 'bomURL', fallback = '')
+    metLocation = configParser.get('sensibo', 'metLocation', fallback = '')
 
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
     database = configParser.get('mariadb', 'database', fallback = 'sensibo')
@@ -719,11 +767,16 @@ if __name__ == "__main__":
     cool = configParser.getfloat('cost', 'cool', fallback = 5.0)
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
 
+    if(metLocation != ''):
+        weatherapikey = ''
+
     if(bomURL != ''):
+        metLocation = ''
         weatherapikey = ''
 
     if(inigoURL != ''):
         weatherapikey = ''
+        metLocation = ''
         bomURL = ''
 
     if(days <= 0):
