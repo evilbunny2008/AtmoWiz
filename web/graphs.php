@@ -138,7 +138,7 @@
 		$created = mysqli_real_escape_string($link, $_REQUEST['created2']);
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
 		$onOff = mysqli_real_escape_string($link, $_REQUEST['onOff']);
-		$targetType = str_replace(' ', '', mysqli_real_escape_string($link, $_REQUEST['targetType']));
+		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
 		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
 		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);

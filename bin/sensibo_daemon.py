@@ -394,7 +394,14 @@ def getLastCommands(mydb, nb = 5):
                     last['causedByUser'] = {}
                     last['causedByUser']['firstName'] = 'Remote'
 
-                acState = last['resultingAcState']
+
+                try:
+                    acState = last['resultingAcState']
+                    acState['targetTemperature']
+                except Exception as e:
+                    acState = last['acState']
+                    pass
+
                 changes = last['changedProperties']
 
                 values = (sdate, podUID, last['reason'], last['causedByUser']['firstName'],
@@ -416,25 +423,55 @@ def getLastCommands(mydb, nb = 5):
     mydb.commit()
 
 def checkSettings(mydb):
+    doLog("info", "Checking climate settings...")
     for podUID in uidList:
         try:
             cursor = mydb.cursor()
-            # ('evR7kbvf', datetime.datetime(2024, 2, 9, 8, 37, 14), 'cool', 'temperature', 28.0, 26.1, 26.0, 'auto', 'fixedTop', 'fixedCenter', 1)
             query = "SELECT onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing FROM settings WHERE uid=%s AND enabled=1"
             values = (podUID, )
             #doLog("info", query % values)
             cursor.execute(query, values)
             result = cursor.fetchall()
             for (onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing) in result:
+                #doLog("info", "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing))
                 query = "SELECT airconon,temperature,humidity,feelsLike FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
                 values = (podUID, )
                 #doLog("info", query % values)
                 cursor.execute(query, values)
                 (airconon, temperature, humidity, feelsLike) = cursor.fetchone()
+                #doLog("info", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
 
-                if(mode == 'cool' or mode == 'dry'):
-#                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    pass
+                dict = {}
+                dict['temperature'] = temperature
+                dict['humidity'] = humidity
+                dict['feelsLike'] = feelsLike
+
+                #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+
+                for i in dict:
+                    if(onOff == 'Off' and airconon == 0 and i == targetType and targetOp == '>=' and dict[i] >= targetValue):
+                        if(turnOnOff == 'On'):
+                            doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                        else:
+                            doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    elif(onOff == 'Off' and airconon == 0 and i == targetType and targetOp == '<=' and dict[i] <= targetValue):
+                        if(turnOnOff == 'Off'):
+                            doLog("info", "Rule 3 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                        else:
+                            doLog("info", "Rule 4 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    elif(onOff == 'On' and airconon == 1 and i == targetType and targetOp == '>=' and dict[i] >= targetValue):
+                        if(turnOnOff == 'On'):
+                            doLog("info", "Rule 5 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                        else:
+                            doLog("info", "Rule 6 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    elif(onOff == 'On' and airconon == 1 and i == targetType and targetOp == '<=' and dict[i] <= targetValue):
+                        if(turnOnOff == 'Off'):
+                            doLog("info", "Rule 7 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                        else:
+                            doLog("info", "Rule 8 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+
+                    #else:
+                    #    doLog("info", "Rule X hit, %s is %s... %s(%s)..." % (i, dict[i], mode, turnOnOff))
 
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
