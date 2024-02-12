@@ -412,7 +412,7 @@
 		else
 			$pressure = $row['pressure'] . "in";
 
-		$commands .= "<li><b>".$row['wttime']."</b> -- ".$row['temperature']."°C, ".$row['humidity']."%, ".$pressure.", ".$row['aq']." AQI</li>\n";
+		$commands .= "<li><b>".$row['wttime']."</b> -- ".$row['temperature']."°C, ".$row['humidity']."%, ".$pressure.", ".$row['aqi']." AQI</li>\n";
 	}
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM ".
