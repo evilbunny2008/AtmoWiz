@@ -63,16 +63,18 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
 CREATE TABLE IF NOT EXISTS `settings` (
   `uid` varchar(20) NOT NULL,
   `created` datetime NOT NULL DEFAULT current_timestamp(),
-  `mode` enum('cool','heat','dry') NOT NULL DEFAULT 'cool',
+  `onOff` enum('On','Off') NOT NULL DEFAULT 'Off',
   `targetType` enum('temperature','humidity','feelsLike') NOT NULL DEFAULT 'temperature',
-  `onValue` float NOT NULL DEFAULT 28,
-  `offValue` float NOT NULL DEFAULT 26.1,
+  `targetOp` enum('>=','<=') NOT NULL DEFAULT '>=',
+  `targetValue` tinyint(4) NOT NULL DEFAULT 30,
+  `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
   `targetTemperature` smallint(6) NOT NULL DEFAULT 26,
+  `mode` enum('Cool','Heat','Auto','Fan','Dry') NOT NULL DEFAULT 'Cool',
   `fanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'auto',
   `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
   `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
   `enabled` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`uid`,`created`)
+  PRIMARY KEY (`whentime`,`uid`) USING BTREE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `weather` (

@@ -420,41 +420,21 @@ def checkSettings(mydb):
         try:
             cursor = mydb.cursor()
             # ('evR7kbvf', datetime.datetime(2024, 2, 9, 8, 37, 14), 'cool', 'temperature', 28.0, 26.1, 26.0, 'auto', 'fixedTop', 'fixedCenter', 1)
-            query = "SELECT mode, targetType, onValue, offValue, targetTemperature, fanLevel, swing, horizontalSwing FROM settings WHERE uid=%s AND enabled=1"
+            query = "SELECT onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing FROM settings WHERE uid=%s AND enabled=1"
             values = (podUID, )
             #doLog("info", query % values)
             cursor.execute(query, values)
             result = cursor.fetchall()
-            for (mode, targetType, onValue, offValue, targetTemperature, fanLevel, swing, horizontalSwing) in result:
+            for (onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing) in result:
                 query = "SELECT airconon,temperature,humidity,feelsLike FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
                 values = (podUID, )
                 #doLog("info", query % values)
                 cursor.execute(query, values)
-                (airconon,temperature,humidity,feelsLike) = cursor.fetchone()
+                (airconon, temperature, humidity, feelsLike) = cursor.fetchone()
 
                 if(mode == 'cool' or mode == 'dry'):
-                    if(targetType == 'temperature' and airconon == 0 and temperature >= onValue):
-                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    if(targetType == 'temperature' and airconon == 1 and temperature <= offValue):
-                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    if(targetType == 'feelsLike' and airconon == 0 and feelsLike >= onValue):
-                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    if(targetType == 'feelsLike' and airconon == 1 and feelsLike <= offValue):
-                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    if(targetType == 'humidity' and airconon == 0 and humidity >= onValue):
-                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    if(targetType == 'humidity' and airconon == 1 and humidity <= offValue):
-                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-
-                if(mode == 'heat'):
-                    if(targetType == 'temperature' and airconon == 0 and temperature <= onValue):
-                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    if(targetType == 'temperature' and airconon == 1 and temperature >= offValue):
-                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    if(targetType == 'feelsLike' and airconon == 0 and feelsLike <= onValue):
-                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                    if(targetType == 'feelsLike' and airconon == 1 and feelsLike >= offValue):
-                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+#                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                    pass
 
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
