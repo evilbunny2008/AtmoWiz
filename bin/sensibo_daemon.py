@@ -15,7 +15,9 @@ import time
 import traceback
 from datetime import datetime
 from dateutil import tz
+from requests.auth import HTTPBasicAuth
 from systemd.journal import JournalHandler
+from urllib.parse import urlparse
 
 _corf = "C"
 _hasPlus = False
@@ -484,14 +486,68 @@ def checkSettings(mydb):
             pass
 
 def getCurrentWeather(mydb, podUID):
+    doLog("info", "Getting forecast...")
+
+    if(weatherapikey != ''):
+        getWeatherAPI(mydb, podUID)
+
+    if(inigoURL != ''):
+        getInigoData(mydb)
+
+def getInigoData(mydb):
+    if(inigoURL == ''):
+        doLog("info", "Inigo URL is not set, skipping weather lookup")
+
+    try:
+        skip = 1
+        response = requests.get(inigoURL, timeout = 10)
+        response.raise_for_status()
+        result = response.text.split('|')
+        temp = result[skip+0]
+        pressure = result[skip+37]
+        humid = result[skip+6]
+        fl = calcAT(float(temp), float(humid), country, None)
+
+        whentime = datetime.fromtimestamp(int(result[skip+225])).strftime(fmt)
+
+        cursor = mydb.cursor()
+        query = "SELECT 1 FROM weather WHERE whentime=%s"
+        values = (whentime, )
+        doLog("info", query % values)
+        cursor.execute(query, values)
+        row = cursor.fetchone()
+        if(row):
+            doLog("info", "Skipping forecast as we already have it")
+            return
+
+        aqi = 0
+        if(urad_userid != '' and urad_hash != ''):
+            headers = {"X-User-id": urad_userid, "X-User-hash": urad_hash}
+            response = requests.get(urad_URL, timeout = 10, headers = headers)
+            response.raise_for_status()
+            result = response.json()
+            #doLog("info", result)
+
+        aqi = result[0]['aqi']
+
+        values = (whentime, temp, fl, humid, pressure, aqi)
+        query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
+        doLog("info", query % values)
+        cursor.execute(query, values)
+        mydb.commit()
+
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+
+
+def getWeatherAPI(mydb, podUID):
     global _lat
     global _lon
 
-    if(weatherapikey == 'apikey' or weatherapikey == '<apikey from weatherapi.com>'):
+    if(weatherapikey == ''):
         doLog("info", "WeatherAPIkey not set, skipping weather lookup...")
         return
-
-    doLog("info", "Getting forecast...")
 
     if(_lat == 0 and _lon == 0):
         latLon = client.pod_location(podUID)
@@ -516,7 +572,7 @@ def getCurrentWeather(mydb, podUID):
             fl = str(result['current']['feelslike_f'])
             pressure = str(result['current']['pressure_in'])
         humid = str(result['current']['humidity'])
-        aq = str(result['current']['air_quality']['us-epa-index'])
+        aqi = str(result['current']['air_quality']['us-epa-index'])
 
         cursor = mydb.cursor()
         query = "SELECT 1 FROM weather WHERE whentime=%s"
@@ -527,8 +583,8 @@ def getCurrentWeather(mydb, podUID):
             doLog("info", "Skipping forecast as we already have it")
             return
 
-        values = (result['current']['last_updated'], temp, fl, humid, pressure, aq)
-        query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aq) VALUES (%s, %s, %s, %s, %s, %s)"
+        values = (result['current']['last_updated'], temp, fl, humid, pressure, aqi)
+        query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
         doLog("info", query % values)
         cursor.execute(query, values)
         mydb.commit()
@@ -571,10 +627,16 @@ if __name__ == "__main__":
     apikey = configParser.get('sensibo', 'apikey', fallback = 'apikey')
     days = configParser.getint('sensibo', 'days', fallback = 1)
     weatherapikey = configParser.get('sensibo', 'weatherapikey', fallback = 'apikey')
+    inigoURL = configParser.get('sensibo', 'inigoURL', fallback = 'https://username:password@example.com/weewx/inigo-data.txt')
+    urad_URL = configParser.get('sensibo', 'urad_URL', fallback = 'https://data.uradmonitor.com/api/v1/devices')
+    urad_userid = configParser.get('sensibo', 'urad_userid', fallback = '')
+    urad_hash = configParser.get('sensibo', 'urad_hash', fallback = '')
+
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
     database = configParser.get('mariadb', 'database', fallback = 'sensibo')
     username = configParser.get('mariadb', 'username', fallback = 'sensibo')
     password = configParser.get('mariadb', 'password', fallback = 'password')
+
     uid = configParser.getint('system', 'uid', fallback = 0)
     gid = configParser.getint('system', 'gid', fallback = 0)
     country = configParser.get('system', 'country', fallback = 'None')
@@ -586,6 +648,14 @@ if __name__ == "__main__":
     COP = configParser.getfloat('cost', 'COP', fallback = 3.0)
     cool = configParser.getfloat('cost', 'cool', fallback = 5.0)
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
+
+    if(weatherapikey == 'apikey' or weatherapikey == '<apikey from weatherapi.com>'):
+        weatherapikey = ''
+
+    if(inigoURL == 'https://username:password@example.com/weewx/inigo-data.txt'):
+        inigoURL = ''
+    else:
+        weatherapikey = ''
 
     if(days <= 0):
         days = 1
@@ -769,11 +839,11 @@ if __name__ == "__main__":
                     doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (measurements['temperature'], measurements['humidity']))
                     continue
 
-                sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
-
                 if(secondsAgo == -1):
                     #doLog("info", "secondsAgo = %d" % measurements['time']['secondsAgo'])
                     secondsAgo = 90 - measurements['time']['secondsAgo']
+
+                sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
@@ -814,8 +884,12 @@ if __name__ == "__main__":
 
             loops += 1
 
-            if(loops % 10 == 0):
-                getCurrentWeather(mydb, podUID)
+            if(inigoURL != ''):
+                if(loops % 3 == 0):
+                    getCurrentWeather(mydb, podUID)
+            else:
+                if(loops % 10 == 0):
+                    getCurrentWeather(mydb, podUID)
 
             if(loops >= 40):
                 loops = 0

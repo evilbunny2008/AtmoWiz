@@ -623,18 +623,6 @@ td
 	}
 ?>
 	</select>
-	<label for="targetTemperature2"><b>Target Temperature:</b></label><select class="myInputs2" id='targetTemperature2' name='targetTemperature'>
-<?php
-	$defmode = 'cool';
-	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='temperatures'";
-	$dres = mysqli_query($link, $query);
-	while($drow = mysqli_fetch_assoc($dres))
-	{
-		$v = $drow['value'];
-		echo "\t\t<option value='$v'>$v</option>\n";
-	}
-?>
-	</select>
 	<label for="mode2"><b>Mode:</b></label><select class="myInputs2" id='mode2' name="mode" onChange='populateSettings(this.value); return false;'>
 <?php
 	$defmode = "";
@@ -650,7 +638,19 @@ td
 			$defmode = $v;
 	}
 ?>
-		</select>
+	</select>
+	<label for="targetTemperature2"><b>Target Temperature:</b></label><select class="myInputs2" id='targetTemperature2' name='targetTemperature'>
+<?php
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='temperatures'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
 		</div>
 		<div id="divRight">
 	<label for="fanLevel2"><b>Fan Level:</b></label><select class="myInputs2" id='fanLevel2' name="fanLevel">
@@ -1222,6 +1222,35 @@ async function populateSelect()
 	}
 }
 
+async function doPopSettings(mode, val, contentType)
+{
+	var url = 'modes.php?time=' + new Date().getTime() + '&uid=' + uid + '&mode=' + mode + '&keyval=' + val;
+console.log(url);
+	const response = await fetch(url);
+	const ret = await response.json();
+
+	if(ret['status'] == 200)
+		popSelect(document.getElementById(contentType+"2"), ret['content'], ret[contentType]);
+	else
+		console.log(ret);
+}
+
+async function populateSettings()
+{
+	try
+	{
+		var e = document.getElementById("mode2");
+		var value = e.options[e.selectedIndex].value;
+
+		doPopSettings(value, 'temperatures', 'targetTemperature');
+		doPopSettings(value, 'fanLevels', 'fanLevel');
+		doPopSettings(value, 'swing', 'swing');
+		doPopSettings(value, 'horizontalSwing', 'horizontalSwing');
+	} catch (e) {
+		console.log(e)
+	}
+}
+
 async function changeAC(value)
 {
 	uid = value;
@@ -1425,6 +1454,7 @@ function deleteSetting(created, uid)
 
 DataLoop();
 populateSelect();
+populateSettings();
 
 <?php
 	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && $_SESSION['rw'])
