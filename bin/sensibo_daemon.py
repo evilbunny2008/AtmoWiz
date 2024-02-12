@@ -453,7 +453,7 @@ def checkSettings(mydb):
                         if(turnOnOff == 'On'):
                             doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
                         else:
-                            doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            doLog("info", "Rule 2 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
                     elif(onOff == 'Off' and airconon == 0 and i == targetType and targetOp == '<=' and dict[i] <= targetValue):
                         if(turnOnOff == 'Off'):
                             doLog("info", "Rule 3 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
@@ -468,7 +468,7 @@ def checkSettings(mydb):
                         if(turnOnOff == 'Off'):
                             doLog("info", "Rule 7 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
                         else:
-                            doLog("info", "Rule 8 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            doLog("info", "Rule 8 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
 
                     #else:
                     #    doLog("info", "Rule X hit, %s is %s... %s(%s)..." % (i, dict[i], mode, turnOnOff))
