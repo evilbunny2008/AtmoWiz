@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
   `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
   `enabled` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`whentime`,`uid`) USING BTREE
+  PRIMARY KEY (`created`,`uid`) USING BTREE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `weather` (
