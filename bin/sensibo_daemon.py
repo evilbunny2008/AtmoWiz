@@ -511,6 +511,9 @@ def getCurrentWeather(mydb, podUID):
     if(weatherapikey != ''):
         getWeatherAPI(mydb, podUID)
 
+    if(OWMapikey != ''):
+        getOpenWeatherMap(mydb, podUID)
+
     if(inigoURL != ''):
         getInigoData(mydb)
 
@@ -519,6 +522,61 @@ def getCurrentWeather(mydb, podUID):
 
     if(metLocation != ''):
         getMetService(mydb)
+
+def getOpenWeatherMap(mydb, podUID):
+    global _lat
+    global _lon
+
+    if(OWMapikey == ''):
+        doLog("error", "OpenWeatherMap.org API Key is not set, skipping weather lookup")
+        return
+
+    doLog("info", "Getting OpenWeatherMap.org observation...")
+
+    if(_lat == 0 and _lon == 0):
+        latLon = client.pod_location(podUID)
+        if(latLon == None):
+            return None
+
+        _lat = latLon[0]
+        _lon = latLon[1]
+
+    units = 'metric'
+    if(_corf == 'F'):
+        units = 'imperial'
+
+    url = "https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s&units=%s" % (_lat, _lon, OWMapikey, units)
+
+    try:
+        response = requests.get(url, timeout = 10)
+        response.raise_for_status()
+        result = response.json()
+        doLog("info", result)
+        # ,"main":{"temp":23.34,"feels_like":23.11,"temp_min":23.34,"temp_max":23.34,"pressure":1019,"humidity":53,"sea_level":1019,"grnd_level":951}
+        whentime = datetime.fromtimestamp(result['dt']).strftime(fmt)
+        temp = result['main']['temp']
+        pressure = result['main']['pressure']
+        humid = result['main']['humidity']
+        fl = calcAT(temp, humid, country, result['main']['feels_like'])
+        aqi = -1
+
+        cursor = mydb.cursor()
+        query = "SELECT 1 FROM weather WHERE whentime=%s"
+        values = (whentime, )
+        doLog("debug", query % values)
+        cursor.execute(query, values)
+        row = cursor.fetchone()
+        if(row):
+            doLog("debug", "Skipping observation as we already have it")
+
+        values = (whentime, temp, fl, humid, pressure, aqi)
+        query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
+        doLog("debug", query % values)
+        cursor.execute(query, values)
+        mydb.commit()
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
 
 def getMetService(mydb):
     if(metLocation == ''):
@@ -534,7 +592,7 @@ def getMetService(mydb):
         response = requests.get(url, timeout = 10)
         response.raise_for_status()
         result = response.json()
-        doLog("info", result)
+        #doLog("info", result)
 
         whentime = datetime.fromtimestamp(round(result['threeHour']['rawTime'] / 1000)).strftime(fmt)
         temp = result['threeHour']['temp']
@@ -749,6 +807,7 @@ if __name__ == "__main__":
     urad_hash = configParser.get('sensibo', 'urad_hash', fallback = '')
     bomURL = configParser.get('sensibo', 'bomURL', fallback = '')
     metLocation = configParser.get('sensibo', 'metLocation', fallback = '')
+    OWMapikey = configParser.get('sensibo', 'OWMapikey', fallback = '')
 
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
     database = configParser.get('mariadb', 'database', fallback = 'sensibo')
@@ -767,7 +826,11 @@ if __name__ == "__main__":
     cool = configParser.getfloat('cost', 'cool', fallback = 5.0)
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
 
+    if(OWMapikey != ''):
+        weatherapikey = ''
+
     if(metLocation != ''):
+        OWMapikey = ''
         weatherapikey = ''
 
     if(bomURL != ''):
