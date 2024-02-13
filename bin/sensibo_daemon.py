@@ -551,14 +551,12 @@ def getOpenWeatherMap(mydb, podUID):
         response = requests.get(url, timeout = 10)
         response.raise_for_status()
         result = response.json()
-        doLog("info", result)
-        # ,"main":{"temp":23.34,"feels_like":23.11,"temp_min":23.34,"temp_max":23.34,"pressure":1019,"humidity":53,"sea_level":1019,"grnd_level":951}
+
         whentime = datetime.fromtimestamp(result['dt']).strftime(fmt)
         temp = result['main']['temp']
         pressure = result['main']['pressure']
         humid = result['main']['humidity']
         fl = calcAT(temp, humid, country, result['main']['feels_like'])
-        aqi = -1
 
         cursor = mydb.cursor()
         query = "SELECT 1 FROM weather WHERE whentime=%s"
@@ -568,7 +566,9 @@ def getOpenWeatherMap(mydb, podUID):
         row = cursor.fetchone()
         if(row):
             doLog("debug", "Skipping observation as we already have it")
+            return
 
+        aqi = uradmonitor()
         values = (whentime, temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
         doLog("debug", query % values)
@@ -599,7 +599,6 @@ def getMetService(mydb):
         humid = result['threeHour']['humidity']
         pressure = result['threeHour']['pressure']
         fl = calcAT(float(temp), float(humid), country, None)
-        aqi = -1
 
         cursor = mydb.cursor()
         query = "SELECT 1 FROM weather WHERE whentime=%s"
@@ -611,6 +610,7 @@ def getMetService(mydb):
             doLog("debug", "Skipping observation as we already have it")
             return
 
+        aqi = uradmonitor()
         values = (whentime, temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
         doLog("debug", query % values)
@@ -652,7 +652,7 @@ def getBOM(mydb):
                 doLog("debug", "Skipping observation as we already have it")
                 continue
 
-            aqi = -1
+            aqi = uradmonitor()
             fl = calcAT(float(temp), float(humid), country, None)
             values = (whentime, temp, fl, humid, pressure, aqi)
             query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
@@ -663,6 +663,16 @@ def getBOM(mydb):
     except Exception as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
+
+def uradmonitor():
+    if(urad_userid != '' and urad_hash != ''):
+        headers = {"X-User-id": urad_userid, "X-User-hash": urad_hash}
+        response = requests.get("https://data.uradmonitor.com/api/v1/devices", timeout = 10, headers = headers)
+        response.raise_for_status()
+        result = response.json()
+        #doLog("debug", result)
+        return result[0]['aqi']
+    return -1
 
 def getInigoData(mydb):
     if(inigoURL == ''):
@@ -693,15 +703,7 @@ def getInigoData(mydb):
             doLog("debug", "Skipping observation as we already have it")
             return
 
-        aqi = -1
-        if(urad_userid != '' and urad_hash != ''):
-            headers = {"X-User-id": urad_userid, "X-User-hash": urad_hash}
-            response = requests.get(urad_URL, timeout = 10, headers = headers)
-            response.raise_for_status()
-            result = response.json()
-            #doLog("debug", result)
-            aqi = result[0]['aqi']
-
+        aqi = uradmonitor()
         values = (whentime, temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
         doLog("debug", query % values)
