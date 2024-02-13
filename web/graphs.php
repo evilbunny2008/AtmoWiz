@@ -633,7 +633,7 @@ td
 	{
 		$vv = sprintf('%02d', $v);
 		echo "\t\t<option value='$v'";
-		if(date("i") == $v)
+		if($v == 0)
 			echo " selected";
 		echo ">$vv</option>\n";
 	}
@@ -645,7 +645,7 @@ td
 	{
 		$vv = sprintf('%02d', $v);
 		echo "\t\t<option value='$v'";
-		if(date("i") == $v)
+		if($v == 0)
 			echo " selected";
 		echo ">$vv</option>\n";
 	}
@@ -704,7 +704,7 @@ td
 	{
 		$vv = sprintf('%02d', $v);
 		echo "\t\t<option value='$v'";
-		if(date("i") == $v)
+		if($v == 59)
 			echo " selected";
 		echo ">$vv</option>\n";
 	}
@@ -716,7 +716,7 @@ td
 	{
 		$vv = sprintf('%02d', $v);
 		echo "\t\t<option value='$v'";
-		if(date("i") == $v)
+		if($v == 23)
 			echo " selected";
 		echo ">$vv</option>\n";
 	}
@@ -1402,13 +1402,10 @@ function newSetting()
 	document.getElementById("targetOp2").options[0].selected = 'selected';
 	document.getElementById("targetValue2").value = "30";
 
-	var date = new Date();
-	var hours = date.getHours() - 1;
-	var minutes = date.getMinutes() - 1;
-	document.getElementById("startTimeHour2").options[hours].selected = "selected";
-	document.getElementById("startTimeMinute2").options[minutes].selected = "selected";
-	document.getElementById("endTimeHour2").options[hours].selected = "selected";
-	document.getElementById("endTimeMinute2").options[minutes].selected = "selected";
+	document.getElementById("startTimeHour2").options[0].selected = "selected";
+	document.getElementById("startTimeMinute2").options[0].selected = "selected";
+	document.getElementById("endTimeHour2").options[23].selected = "selected";
+	document.getElementById("endTimeMinute2").options[59].selected = "selected";
 
 	document.getElementById("turnOnOff2").options[0].selected = 'selected';
 	document.getElementById("targetTemperature2").options[8].selected = 'selected';
