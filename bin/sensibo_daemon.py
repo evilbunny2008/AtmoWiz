@@ -199,6 +199,7 @@ def full_stack():
 
 def doLog(logType, line, doStackTrace = False):
     if(logType == 'info'):
+        log.setLevel(logging.INFO)
         if(not _INVOCATION_ID):
             print (line)
         log.info(line)
@@ -208,6 +209,7 @@ def doLog(logType, line, doStackTrace = False):
                 print (full_stack())
             log.info(full_stack())
     elif(logType == 'debug'):
+        log.setLevel(logging.DEBUG)
         if(not _INVOCATION_ID):
             print (line)
 
@@ -217,6 +219,7 @@ def doLog(logType, line, doStackTrace = False):
                 print (full_stack())
             log.debug(full_stack())
     elif(logType == 'warning'):
+        log.setLevel(logging.WARNING)
         if(not _INVOCATION_ID):
             print (line)
 
@@ -226,6 +229,7 @@ def doLog(logType, line, doStackTrace = False):
                 print (full_stack())
             log.warning(full_stack())
     else:
+        log.setLevel(logging.ERROR)
         if(not _INVOCATION_ID):
             print (line)
 
@@ -449,7 +453,8 @@ def checkSettings(mydb):
     for podUID in uidList:
         try:
             cursor = mydb.cursor()
-            query = "SELECT onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing FROM settings WHERE uid=%s AND enabled=1"
+            query = "SELECT onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing FROM settings WHERE uid=%s AND enabled=1 AND " + \
+                    "(TIME(NOW()) BETWEEN startTime AND endTime OR (endTime < startTime AND (TIME(NOW()) BETWEEN startTime AND '23:59:59' OR TIME(NOW()) BETWEEN '00:00:00' and endTime)))"
             values = (podUID, )
             #doLog("debug", query % values)
             cursor.execute(query, values)
@@ -771,7 +776,6 @@ def getWeatherAPI(mydb, podUID):
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
-    log.setLevel(logging.INFO)
     doLog("info", "Daemon started....")
     if(not _INVOCATION_ID):
         doLog("info", "Not started by SystemD")

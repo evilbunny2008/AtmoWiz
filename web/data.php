@@ -403,16 +403,19 @@
 	$commands .= "<li>&nbsp;</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime FROM weather ORDER BY whentime DESC LIMIT 1";
-	$row = mysqlI_fetch_assoc(mysqli_query($link, $query));
+	$row = mysqli_fetch_assoc(mysqli_query($link, $query));
 	if($row !== False)
 	{
 		$commands .= "<li style='text-align:center;'><u><b>Closest Weather Station</b></u></li>\n";
-		if($row['pressure'] >= 900)
+		if($row['pressure'] >= 800)
 			$pressure = $row['pressure'] . "hPa";
 		else
 			$pressure = $row['pressure'] . "in";
 
-		$commands .= "<li><b>".$row['wttime']."</b> -- ".$row['temperature']."°C, ".$row['humidity']."%, ".$pressure.", ".$row['aqi']." AQI</li>\n";
+		$commands .= "<li><b>".$row['wttime']."</b> -- ".$row['temperature']."°C, ".$row['humidity']."%, ".$pressure;
+
+		if($row['aqi'] != -1)
+			$commands .= ", ".$row['aqi']." AQI</li>\n";
 	}
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM ".

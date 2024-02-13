@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `onOff` enum('On','Off') NOT NULL DEFAULT 'Off',
   `targetType` enum('temperature','humidity','feelsLike') NOT NULL DEFAULT 'temperature',
   `targetOp` enum('>=','<=') NOT NULL DEFAULT '>=',
-  `targetValue` tinyint(4) NOT NULL DEFAULT 30,
+  `targetValue` float NOT NULL DEFAULT 30,
   `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
   `targetTemperature` smallint(6) NOT NULL DEFAULT 26,
   `mode` enum('Cool','Heat','Auto','Fan','Dry') NOT NULL DEFAULT 'Cool',
