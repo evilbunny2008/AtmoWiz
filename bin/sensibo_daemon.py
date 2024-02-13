@@ -776,7 +776,7 @@ def getOpenMeteo(mydb, podUID):
         doLog("error", "Open-Meteo not set, skipping weather lookup...")
         return
 
-    doLog("info", "Getting WeatherAPI.com observation...")
+    doLog("info", "Getting Open-Meteo observation...")
 
     if(_lat == 0 and _lon == 0):
         getLatLon(podUID)
@@ -787,6 +787,7 @@ def getOpenMeteo(mydb, podUID):
         response = requests.get(url, timeout = 10)
         response.raise_for_status()
         result = response.json()
+        doLog("info", result)
         temp = result['current']['temperature_2m']
         fl = result['current']['apparent_temperature']
         pressure = result['current']['pressure_msl']
