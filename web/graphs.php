@@ -346,6 +346,7 @@ span.psw
 {
   width: 500px;
   padding-top: 0px;
+  margin-top: 0px;
 }
 
 .close
