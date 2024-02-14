@@ -4,7 +4,6 @@
 	$startTS = time() * 1000 - $period;
 	$row = array('uid' => '');
 
-
 	require_once('mariadb.php');
 
 	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
@@ -168,6 +167,71 @@
 		$query = "DELETE FROM settings WHERE uid='${row['uid']}' AND created='$created'";
 		mysqli_query($link, $query);
 	}
+
+	if(isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && isset($_REQUEST['created5']) && !empty($_REQUEST['created5']) && $_SESSION['rw'])
+	{
+		$created = mysqli_real_escape_string($link, $_REQUEST['created5']);
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
+		$startTime = intval($_REQUEST['startTimeHour']).":".intval($_REQUEST['startTimeMinute']).":00";
+		$endTime = intval($_REQUEST['endTimeHour']).":".intval($_REQUEST['endTimeMinute']).":59";
+		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
+		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
+		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
+		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
+		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
+		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+
+		$daysOfWeek = 0;
+		foreach($_REQUEST['days'] as $k => $v)
+			$daysOfWeek += 2 ** $v;
+
+		if($daysOfWeek == 0 || $daysOfWeek > 127)
+			$daysOfWeek = 127;
+
+		$enabled = 0;
+		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
+			$enabled = 1;
+
+		$query = "UPDATE timesettings SET daysOfWeek='$daysOfWeek', startTime='$startTime', endTime='$endTime', turnOnOff='$turnOnOff', mode='$mode', targetTemperature='$targetTemperature', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='${row['uid']}' AND created='$created'";
+		mysqli_query($link, $query);
+	}
+
+	if(isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && (!isset($_REQUEST['created5']) || empty($_REQUEST['created5'])) && $_SESSION['rw'] && (!isset($_REQUEST['action']) || empty($_REQUEST['action'])))
+	{
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
+		$startTime = intval($_REQUEST['startTimeHour']).":".intval($_REQUEST['startTimeMinute']).":00";
+		$endTime = intval($_REQUEST['endTimeHour']).":".intval($_REQUEST['endTimeMinute']).":59";
+		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
+		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
+		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
+		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
+		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
+		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+
+		$daysOfWeek = 0;
+		foreach($_REQUEST['days'] as $k => $v)
+			$daysOfWeek += 2 ** $v;
+
+		if($daysOfWeek == 0 || $daysOfWeek > 127)
+			$daysOfWeek = 127;
+
+		$enabled = 0;
+		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
+			$enabled = 1;
+
+		$query = "INSERT INTO timesettings (uid, created, daysOfWeek, startTime, endTime, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, enabled) VALUES ".
+			 "('${row['uid']}', NOW(), '$daysOfWeek', '$startTime', '$endTime', '$turnOnOff', '$mode', '$targetTemperature', '$fanLevel', '$swing', '$horizontalSwing', '$enabled')";
+		mysqli_query($link, $query);
+	}
+
+	if(isset($_REQUEST['action']) && $_REQUEST['action'] == "delete" && isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && isset($_REQUEST['created']) && !empty($_REQUEST['created']) && $_SESSION['rw'])
+	{
+		$created = mysqli_real_escape_string($link, $_REQUEST['created']);
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
+
+		$query = "DELETE FROM timesettings WHERE uid='${row['uid']}' AND created='$created'";
+		mysqli_query($link, $query);
+	}
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -177,8 +241,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.svg">
 <script src="canvasjs.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <style>
 *
 {
@@ -279,6 +341,16 @@ body
   box-sizing: border-box;
 }
 
+.myInputs5
+{
+  width: 100%;
+  padding: 12px 12px;
+  margin: 8px 8px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
 button
 {
   background-color: #04AA6D;
@@ -343,6 +415,21 @@ span.psw
 }
 
 #id03 .modal-content
+{
+  width: 500px;
+  padding-top: 0px;
+  margin-top: 0px;
+  padding-bottom: 50px;
+  margin-bottom: 50px;
+}
+
+#id04 .modal-content
+{
+  width: 1700px;
+  text-align: center;
+}
+
+#id05 .modal-content
 {
   width: 500px;
   padding-top: 0px;
@@ -483,7 +570,7 @@ td
 	<input id="startTS1" type="hidden" name="startTS" />
 	<input id="podUID1" type="hidden" name="podUID1" value="<?=$row['uid']?>" />
 	<label for="mode1"><b>Mode:</b></label>
-	<select id='mode1' name="mode" onChange='populateSelect(this.value); return false;'>
+	<select id='mode1' name="mode" onChange='populateSelect(\'1\'); return false;'>
 <?php
 	$dquery = "SELECT mode FROM meta GROUP BY mode";
 	$dres = mysqli_query($link, $dquery);
@@ -669,7 +756,7 @@ td
 	}
 ?>
 	</select>
-	<label for="mode2"><b>Mode:</b></label><select class="myInputs2" id='mode2' name="mode" onChange='populateSettings(this.value); return false;'>
+	<label for="mode2"><b>Mode:</b></label><select class="myInputs2" id='mode2' name="mode" onChange='populateSelect(\'2\'); return false;'>
 <?php
 	$defmode = "";
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -769,7 +856,249 @@ td
 		</div>
 	</div>
 	<label for="enabled2"><b>Enabled:</b></label><input style='text-align: left;' type="checkbox" id="enabled2" name="enabled" value="1" checked />
-	<button id="submitAddUpdate" type="submit">Add</button>
+	<button id="submitAddUpdate2" type="submit">Add</button>
+    </div>
+  </form>
+</div>
+<div id="id04" class="modal">
+  <form class="modal-content animate" action="graphs.php" method="post">
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id04').style.display='none'" class="close">&times;</span>
+    </div>
+    <div class="container">
+	<h1>Climate Settings</h1>
+	<br/>
+	<table>
+	<tr>
+		<th>Created</th>
+		<th>Day(s)</th>
+		<th>Start Time</th>
+		<th>End Time</th>
+		<th>Turn On/Off</th>
+		<th>Mode</th>
+		<th>Target Temp</th>
+		<th>Fan Level</th>
+		<th>Swing</th>
+		<th>Hor. Swing</th>
+		<th>Enabled</th>
+		<th>Edit</th>
+		<th>Delete</th>
+	</tr>
+<?php
+	$query = "SELECT * FROM timesettings WHERE uid='${row['uid']}'";
+	$res = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($res))
+	{
+		echo "<tr>";
+		echo "<td style='cursor: pointer;' title='".$drow['created']."'>".$drow['created']."</td>\n";
+
+		$days = "";
+		for($v = 0; $v < 7; $v++)
+		{
+			if($drow['daysOfWeek'] & 2 ** $v)
+			{
+				if($days != "")
+					$days .= ", ";
+				$days .= date("D", mktime(0, 0, 0, 0, $v + 6, 0));
+			}
+		}
+
+		echo "<td style='cursor: pointer;' title='$days'>$days</td>\n";
+		echo "<td>".$drow['startTime']."</td>\n";
+		echo "<td>".$drow['endTime']."</td>\n";
+		echo "<td>".$drow['turnOnOff']."</td>\n";
+		echo "<td>".$drow['mode']."</td>\n";
+		echo "<td>".$drow['targetTemperature']."</td>\n";
+		echo "<td>".$drow['fanLevel']."</td>\n";
+		echo "<td>".$drow['swing']."</td>\n";
+		echo "<td>".$drow['horizontalSwing']."</td>\n";
+		echo "<td>";
+		if($drow['enabled'])
+			echo "True";
+		else
+			echo "False";
+		echo "</td>\n";
+
+		list($startTimeHour, $startTimeMinute, $crud) = explode(':', $drow['startTime'], 3);
+		list($endTimeHour, $endTimeMinute, $crud) = explode(':', $drow['endTime'], 3);
+
+		echo "<td onClick=\"editTimeSetting('".$drow['created']."', '".$drow['uid']."', '".$drow['daysOfWeek']."', '";
+		echo $startTimeHour."', '".$startTimeMinute."', '".$endTimeHour."', '".$endTimeMinute."', '";
+		echo $drow['turnOnOff']."', '".$drow['mode']."', '".$drow['targetTemperature']."', '".$drow['fanLevel']."', '".$drow['swing']."', '".$drow['horizontalSwing']."', '".$drow['enabled']."'";
+		echo "); return false;\" style=\"cursor: pointer; color: #085f24;\">Edit</td>\n";
+		echo "<td onClick=\"deleteTimeSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>\n";
+		echo "</tr>\n";
+	}
+?>
+	</table><br/><br/>
+	<b onClick="newTimeSetting(); return false;" style="cursor: pointer;color: #085f24;">Add Climate Setting</b>
+    </div>
+  </form>
+</div>
+<div id="id05" class="modal">
+  <form class="modal-content animate" action="graphs.php" method="post">
+    <div class="imgcontainer">
+      <span onclick="cancelAddUpdateTime(); return false;" class="close">&times;</span>
+    </div>
+    <div class="container">
+	<h1 style='text-align: center;'>Climate Settings</h1><br/>
+	<input id="created5" type="hidden" name="created5" />
+	<input id="startTS5" type="hidden" name="startTS" />
+	<input id="podUID5" type="hidden" name="podUID5" />
+	<label for="dayOfWeek5"><b>Day(s) of the Week:</b></label><br/>
+	<select class="myInputs5" id="days5" name="days[]" size="7" multiple="multiple" required>
+<?php
+	for($i = 0; $i < 7; $i++)
+	{
+		$day = date('l', mktime(0, 0, 0, 0, $i + 6, 0));
+		echo "<option value='$i' selected>$day</option>\n";
+	}
+?>
+	</select>
+	<div id="wrapper">
+		<div id="divLeft">
+	<label for="startTimeHour5"><b>Start Time:</b></label><br/>
+		<div style="width:200px">
+	<select class="myInputs5" style='width:80px;right:0px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="startTimeMinute5" name="startTimeMinute">
+<?php
+	for($v = 0; $v < 60; $v++)
+	{
+		$vv = sprintf('%02d', $v);
+		echo "\t\t<option value='$v'";
+		if($v == 0)
+			echo " selected";
+		echo ">$vv</option>\n";
+	}
+?>
+	</select>
+	<select class="myInputs5" style='width:80px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="startTimeHour5" name="startTimeHour">
+<?php
+	for($v = 0; $v < 24; $v++)
+	{
+		$vv = sprintf('%02d', $v);
+		echo "\t\t<option value='$v'";
+		if($v == 0)
+			echo " selected";
+		echo ">$vv</option>\n";
+	}
+?>
+	</select>
+		</div>
+	<br/><br/><br/><br/>
+	<label for="turnOnOff5"><b>Turn On/Off:</b></label><select class="myInputs5" id="turnOnOff5" name="turnOnOff">
+<?php
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'turnOnOff'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	<label for="mode5"><b>Mode:</b></label><select class="myInputs5" id='mode5' name="mode" onChange='populateSelect(\'5\'); return false;'>
+<?php
+	$defmode = "";
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'mode'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+		if($defmode == "")
+			$defmode = $v;
+	}
+?>
+	</select>
+	<label for="targetTemperature5"><b>Target Temperature:</b></label><select class="myInputs5" id='targetTemperature5' name='targetTemperature'>
+<?php
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='temperatures'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+		</div>
+		<div id="divRight">
+	<div style="width:200px">
+	<label for="endTimeHour5"><b>End Time:</b></label><br/>
+	<select class="myInputs5" style='width:80px;right:0px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="endTimeMinute5" name="endTimeMinute">
+<?php
+	for($v = 0; $v < 60; $v++)
+	{
+		$vv = sprintf('%02d', $v);
+		echo "\t\t<option value='$v'";
+		if($v == 59)
+			echo " selected";
+		echo ">$vv</option>\n";
+	}
+?>
+	</select>
+	<select class="myInputs5" style='width:80px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="endTimeHour5" name="endTimeHour">
+<?php
+	for($v = 0; $v < 24; $v++)
+	{
+		$vv = sprintf('%02d', $v);
+		echo "\t\t<option value='$v'";
+		if($v == 23)
+			echo " selected";
+		echo ">$vv</option>\n";
+	}
+?>
+	</select>
+	</div>
+	<br/><br/><br/><br/>
+	<label for="fanLevel5"><b>Fan Level:</b></label><select class="myInputs5" id='fanLevel5' name="fanLevel">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'fanLevel'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+		</select>
+	<label for="swing5"><b>Swing:</b></label><select class="myInputs5" id="swing5" name="swing">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'swing'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+		</select>
+	<label for="horizontalSwing5"><b>Horizontal Swing:</b></label><select class="myInputs5" id="horizontalSwing5" name="horizontalSwing">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'horizontalSwing'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+		</div>
+	</div>
+	<label for="enabled5"><b>Enabled:</b></label><input style='text-align: left;' type="checkbox" id="enabled5" name="enabled" value="1" checked />
+	<button id="submitAddUpdate5" type="submit">Add</button>
     </div>
   </form>
 </div>
@@ -781,14 +1110,18 @@ var uid = "<?=$row['uid']?>";
 var currtime = "";
 document.getElementById("podUID1").value = uid;
 document.getElementById("podUID2").value = uid;
+document.getElementById("podUID5").value = uid;
 
 var startTS = <?=$startTS?>;
 document.getElementById("startTS1").value = startTS;
 document.getElementById("startTS2").value = startTS;
+document.getElementById("startTS5").value = startTS;
 
 var modal1 = document.getElementById('id01');
 var modal2 = document.getElementById('id02');
 var modal3 = document.getElementById('id03');
+var modal4 = document.getElementById('id04');
+var modal5 = document.getElementById('id05');
 
 var chart1 = new CanvasJS.Chart("chartContainer",
 {
@@ -1190,6 +1523,7 @@ console.log("Update should have happened.");
 		uid = content['uid'];
 		document.getElementById("podUID1").value = uid;
 		document.getElementById("podUID2").value = uid;
+		document.getElementById("podUID5").value = uid;
 
 		if(timePeriod == "day")
 		{
@@ -1266,7 +1600,7 @@ async function popSelect(dropdown, content, current)
 	}
 }
 
-async function doPop(mode, val, contentType)
+async function doPop(mode, val, contentType, fieldID)
 {
 	var url = 'modes.php?time=' + new Date().getTime() + '&uid=' + uid + '&mode=' + mode + '&keyval=' + val;
 console.log(url);
@@ -1274,51 +1608,22 @@ console.log(url);
 	const ret = await response.json();
 
 	if(ret['status'] == 200)
-		popSelect(document.getElementById(contentType+"1"), ret['content'], ret[contentType]);
+		popSelect(document.getElementById(contentType + fieldID), ret['content'], ret[contentType]);
 	else
 		console.log(ret);
 }
 
-async function populateSelect()
+async function populateSelect(fieldID)
 {
 	try
 	{
-		var e = document.getElementById("mode1");
+		var e = document.getElementById("mode" + fieldID);
 		var value = e.options[e.selectedIndex].value;
 
-		doPop(value, 'temperatures', 'targetTemperature');
-		doPop(value, 'fanLevels', 'fanLevel');
-		doPop(value, 'swing', 'swing');
-		doPop(value, 'horizontalSwing', 'horizontalSwing');
-	} catch (e) {
-		console.log(e)
-	}
-}
-
-async function doPopSettings(mode, val, contentType)
-{
-	var url = 'modes.php?time=' + new Date().getTime() + '&uid=' + uid + '&mode=' + mode + '&keyval=' + val;
-console.log(url);
-	const response = await fetch(url);
-	const ret = await response.json();
-
-	if(ret['status'] == 200)
-		popSelect(document.getElementById(contentType+"2"), ret['content'], ret[contentType]);
-	else
-		console.log(ret);
-}
-
-async function populateSettings()
-{
-	try
-	{
-		var e = document.getElementById("mode2");
-		var value = e.options[e.selectedIndex].value;
-
-		doPopSettings(value, 'temperatures', 'targetTemperature');
-		doPopSettings(value, 'fanLevels', 'fanLevel');
-		doPopSettings(value, 'swing', 'swing');
-		doPopSettings(value, 'horizontalSwing', 'horizontalSwing');
+		doPop(value, 'temperatures', 'targetTemperature', fieldID);
+		doPop(value, 'fanLevels', 'fanLevel', fieldID);
+		doPop(value, 'swing', 'swing', fieldID);
+		doPop(value, 'horizontalSwing', 'horizontalSwing', fieldID);
 	} catch (e) {
 		console.log(e)
 	}
@@ -1420,7 +1725,7 @@ function newSetting()
 	document.getElementById("horizontalSwing2").options[3].selected = 'selected';
 
 	document.getElementById("enabled2").checked = true;
-	document.getElementById("submitAddUpdate").innerHTML = "Add Setting";
+	document.getElementById("submitAddUpdate2").innerHTML = "Add Setting";
 
 	modal2.style.display = "none";
 	modal3.style.display = "block";
@@ -1545,10 +1850,118 @@ function editSetting(created, uid, onOff, targetType, targetOp, targetValue, sta
 	else
 		document.getElementById("enabled2").checked = false;
 
-	document.getElementById("submitAddUpdate").innerHTML = "Update";
+	document.getElementById("submitAddUpdate2").innerHTML = "Update";
 
 	modal2.style.display = "none";
 	modal3.style.display = "block";
+}
+
+function editTimeSetting(created, uid, daysOfWeek, startTimeHour, startTimeMinute, endTimeHour, endTimeMinute, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, enabled)
+{
+	document.getElementById("created5").value = created;
+
+	var def = null;
+	var dd = null;
+
+	def = daysOfWeek;
+	dd = document.getElementById("days5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(def & 2 ** i)
+			dd.options[i].selected = 'selected';
+		else
+			dd.options[i].selected = '';
+	}
+
+	def = startTimeHour;
+	dd = document.getElementById("startTimeHour5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = parseInt(startTimeMinute);
+	dd = document.getElementById("startTimeMinute5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = parseInt(endTimeHour);
+	dd = document.getElementById("endTimeHour5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = parseInt(endTimeMinute);
+	dd = document.getElementById("endTimeMinute5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = turnOnOff;
+	dd = document.getElementById("turnOnOff5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = mode;
+	dd = document.getElementById("mode5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = targetTemperature;
+	dd = document.getElementById("targetTemperature5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = fanLevel;
+	dd = document.getElementById("fanLevel5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = swing;
+	dd = document.getElementById("swing5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	def = horizontalSwing;
+	dd = document.getElementById("horizontalSwing5");
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+
+	if(enabled == 1)
+		document.getElementById("enabled5").checked = true;
+	else
+		document.getElementById("enabled5").checked = false;
+
+	document.getElementById("submitAddUpdate5").innerHTML = "Update";
+
+	modal4.style.display = "none";
+	modal5.style.display = "block";
 }
 
 function cancelAddUpdate()
@@ -1557,15 +1970,57 @@ function cancelAddUpdate()
 	modal2.style.display = "block";
 }
 
+function cancelAddUpdateTime()
+{
+	modal5.style.display = "none";
+	modal4.style.display = "block";
+}
+
 function deleteSetting(created, uid)
 {
 	if(confirm("Are you sure you want to delete this setting?"))
 		window.location = 'graphs.php?action=delete&created=' + created + '&podUID2=' + uid;
 }
 
+function deleteTimeSetting(created, uid)
+{
+	if(confirm("Are you sure you want to delete this setting?"))
+		window.location = 'graphs.php?action=delete&created=' + created + '&podUID5=' + uid;
+}
+
+function newTimeSetting()
+{
+	document.getElementById("created5").value = "";
+
+	document.getElementById("startTimeHour5").options[0].selected = "selected";
+	document.getElementById("startTimeMinute5").options[0].selected = "selected";
+	document.getElementById("endTimeHour5").options[23].selected = "selected";
+	document.getElementById("endTimeMinute5").options[59].selected = "selected";
+
+	document.getElementById("turnOnOff5").options[0].selected = 'selected';
+	document.getElementById("mode5").options[0].selected = 'selected';
+	document.getElementById("targetTemperature5").options[8].selected = 'selected';
+
+	document.getElementById("fanLevel5").options[2].selected = 'selected';
+	document.getElementById("swing5").options[1].selected = 'selected';
+	document.getElementById("horizontalSwing5").options[3].selected = 'selected';
+
+	document.getElementById("enabled5").checked = true;
+	document.getElementById("submitAddUpdate5").innerHTML = "Add Setting";
+
+	modal4.style.display = "none";
+	modal5.style.display = "block";
+}
+
+function showTimeSettings()
+{
+	modal4.style.display = "block";
+}
+
 DataLoop();
-populateSelect();
-populateSettings();
+populateSelect("1");
+populateSelect("2");
+populateSelect("5");
 
 <?php
 	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && $_SESSION['rw'])
@@ -1579,6 +2034,12 @@ populateSettings();
 		echo "function delayLoading()\n";
 		echo "{\n";
 		echo "\tmodal1.style.display = 'block';\n";
+		echo "}\n\n";
+		echo "setTimeout('delayLoading()', 250);\n";
+	} else if(isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && $_SESSION['rw']) {
+		echo "function delayLoading()\n";
+		echo "{\n";
+		echo "\tmodal4.style.display = 'block';\n";
 		echo "}\n\n";
 		echo "setTimeout('delayLoading()', 250);\n";
 	}

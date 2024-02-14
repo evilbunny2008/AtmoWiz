@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `weather` (
   `feelsLike` float NOT NULL,
   `humidity` float NOT NULL,
   `pressure` float NOT NULL,
-  `aq` float NOT NULL,
+  `aqi` float NOT NULL,
   PRIMARY KEY (`whentime`)
 ) ENGINE=InnoDB;
 

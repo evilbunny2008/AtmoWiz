@@ -741,7 +741,10 @@ def getWeatherAPI(mydb, podUID):
             fl = str(result['current']['feelslike_f'])
             pressure = str(result['current']['pressure_in'])
         humid = str(result['current']['humidity'])
-        aqi = str(result['current']['air_quality']['us-epa-index'])
+        if(urad_userid != '' and urad_hash != ''):
+            aqi = uradmonitor()
+        else:
+            aqi = str(result['current']['air_quality']['us-epa-index'])
 
         cursor = mydb.cursor()
         query = "SELECT 1 FROM weather WHERE whentime=%s"

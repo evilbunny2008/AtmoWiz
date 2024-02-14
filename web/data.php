@@ -341,6 +341,7 @@
 	{
 		$commands .= "<li style='text-align:center'>";
 		$commands .= "<img style='width:50px;' onClick='showSettings(); return false;' src='wand.png' />\n";
+		$commands .= "<img style='width:50px;' onClick='showTimeSettings(); return false;' src='watch.png' />\n";
 		$commands .= "<img style='width:50px;' onClick='settings(); return false;' src='settings.png' />\n";
 
 		if($ac == "on")
