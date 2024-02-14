@@ -502,6 +502,34 @@ def checkSettings(mydb):
                     #else:
                     #    doLog("debug", "Rule X hit, %s is %s... %s(%s)..." % (i, dict[i], mode, turnOnOff))
 
+            query = "SELECT daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM timesettings WHERE uid=%s AND enabled=1 AND " + \
+                    "(TIME(NOW()) BETWEEN startTime AND endTime OR (endTime < startTime AND (TIME(NOW()) BETWEEN startTime AND '23:59:59' OR TIME(NOW()) BETWEEN '00:00:00' and endTime)))"
+            values = (podUID, )
+            #doLog("debug", query % values)
+            cursor.execute(query, values)
+            result = cursor.fetchall()
+            for(daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing) in result:
+                if(not daysOfWeek & 2 ** datetime.today().day):
+                    continue
+
+                query = "SELECT airconon, mode, temperature, humidity, feelsLike FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                values = (podUID, )
+                #doLog("debug", query % values)
+                cursor.execute(query, values)
+                (airconon, mode, temperature, humidity, feelsLike) = cursor.fetchone()
+                #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
+
+                if(turnOnOff == "On" and airconon == 0):
+                    doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                if(turnOnOff == "Off" and airconon == 1):
+                    doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                if(turnOnOff == "On" and airconon == 1):
+                    doLog("info", "Rule 3 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                if(turnOnOff == "Off" and airconon == 0):
+                    doLog("info", "Rule 2 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+
+                #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
