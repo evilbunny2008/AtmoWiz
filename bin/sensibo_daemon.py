@@ -426,13 +426,9 @@ def getLastCommands(mydb, nb = 5):
                     last['causedByUser'] = {}
                     last['causedByUser']['firstName'] = 'Remote'
 
-
-                try:
-                    acState = last['resultingAcState']
-                    acState['targetTemperature']
-                except Exception as e:
+                acState = last['resultingAcState']
+                if(not acState['swing']):
                     acState = last['acState']
-                    pass
 
                 if(acState['mode'] == 'fan'):
                     acState['targetTemperature'] = 0
