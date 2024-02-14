@@ -234,7 +234,7 @@
 			{
 				if($period == 86400000)
 				{
-					$query1 = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') < 0 LIMIT 1";
+					$query1 = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') <= 2 LIMIT 1";
 					$dres = mysqli_query($link, $query1);
 					if(mysqli_num_rows($dres) > 0)
 					{
