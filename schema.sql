@@ -60,13 +60,15 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   KEY `cost` (`cost`)
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS `settings` (
+CREATE TABLE `settings` (
   `uid` varchar(20) NOT NULL,
   `created` datetime NOT NULL DEFAULT current_timestamp(),
   `onOff` enum('On','Off') NOT NULL DEFAULT 'Off',
   `targetType` enum('temperature','humidity','feelsLike') NOT NULL DEFAULT 'temperature',
   `targetOp` enum('>=','<=') NOT NULL DEFAULT '>=',
   `targetValue` float NOT NULL DEFAULT 30,
+  `startTime` time NOT NULL,
+  `endTime` time NOT NULL,
   `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
   `targetTemperature` smallint(6) NOT NULL DEFAULT 26,
   `mode` enum('Cool','Heat','Auto','Fan','Dry') NOT NULL DEFAULT 'Cool',

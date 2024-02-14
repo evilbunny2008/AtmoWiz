@@ -199,7 +199,6 @@ def full_stack():
 
 def doLog(logType, line, doStackTrace = False):
     if(logType == 'info'):
-        log.setLevel(logging.INFO)
         if(not _INVOCATION_ID):
             print (line)
         log.info(line)
@@ -209,7 +208,6 @@ def doLog(logType, line, doStackTrace = False):
                 print (full_stack())
             log.info(full_stack())
     elif(logType == 'debug'):
-        log.setLevel(logging.DEBUG)
         if(not _INVOCATION_ID):
             print (line)
 
@@ -219,7 +217,6 @@ def doLog(logType, line, doStackTrace = False):
                 print (full_stack())
             log.debug(full_stack())
     elif(logType == 'warning'):
-        log.setLevel(logging.WARNING)
         if(not _INVOCATION_ID):
             print (line)
 
@@ -229,7 +226,6 @@ def doLog(logType, line, doStackTrace = False):
                 print (full_stack())
             log.warning(full_stack())
     else:
-        log.setLevel(logging.ERROR)
         if(not _INVOCATION_ID):
             print (line)
 
@@ -793,7 +789,7 @@ def getOpenMeteo(mydb, podUID):
         response = requests.get(url, timeout = 10)
         response.raise_for_status()
         result = response.json()
-        doLog("info", result)
+        #doLog("info", result)
         temp = result['current']['temperature_2m']
         fl = result['current']['apparent_temperature']
         pressure = result['current']['pressure_msl']
@@ -825,6 +821,7 @@ def getOpenMeteo(mydb, podUID):
 if __name__ == "__main__":
     log = logging.getLogger('Sensibo Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
+    log.setLevel(logging.DEBUG)
     doLog("info", "Daemon started....")
     if(not _INVOCATION_ID):
         doLog("info", "Not started by SystemD")
