@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   KEY `cost` (`cost`)
 ) ENGINE=InnoDB;
 
-CREATE TABLE `settings` (
+CREATE TABLE IF NOT EXISTS `settings` (
   `uid` varchar(20) NOT NULL,
   `created` datetime NOT NULL DEFAULT current_timestamp(),
   `onOff` enum('On','Off') NOT NULL DEFAULT 'Off',
