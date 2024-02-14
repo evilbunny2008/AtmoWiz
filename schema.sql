@@ -79,6 +79,21 @@ CREATE TABLE IF NOT EXISTS `settings` (
   PRIMARY KEY (`created`,`uid`) USING BTREE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS `timesettings` (
+  `created` datetime NOT NULL,
+  `uid` varchar(8) NOT NULL,
+  `daysOfWeek` tinyint(3) NOT NULL,
+  `startTime` time NOT NULL,
+  `endTime` time NOT NULL,
+  `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
+  `mode` enum('Cool','Heat','Auto','Fan','Dry') NOT NULL DEFAULT 'Cool',
+  `targetTemperature` tinyint(4) NOT NULL DEFAULT 26,
+  `fanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
+  `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
+  `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
+  `enabled` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS `weather` (
   `whentime` datetime NOT NULL,
   `temperature` float NOT NULL,
