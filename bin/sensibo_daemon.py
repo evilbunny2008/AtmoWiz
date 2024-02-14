@@ -361,7 +361,13 @@ def doHistoricalMeasurements(mydb, days = 1):
                 rssi = pod_measurement40[rc]['device']['measurements']['rssi']
                 airconon = pod_measurement40[rc]['device']['acState']['on']
                 mode = pod_measurement40[rc]['device']['acState']['mode']
-                targetTemperature = pod_measurement40[rc]['device']['acState']['targetTemperature']
+                if(mode != 'fan'):
+                    targetTemperature = pod_measurement40[rc]['device']['acState']['targetTemperature']
+                    temperatureUnit = pod_measurement40[rc]['device']['acState']['temperatureUnit']
+                else:
+                    targetTemperature = 0
+                    temperatureUnit = _corf
+
                 fanLevel = pod_measurement40[rc]['device']['acState']['fanLevel']
                 swing = pod_measurement40[rc]['device']['acState']['swing']
                 horizontalSwing = pod_measurement40[rc]['device']['acState']['horizontalSwing']
@@ -425,8 +431,12 @@ def getLastCommands(mydb, nb = 5):
                     acState = last['resultingAcState']
                     acState['targetTemperature']
                 except Exception as e:
-                    acState = last['acState']
+                    acState = acState['acState']
                     pass
+
+                if(acState['mode'] == 'fan'):
+                    acState['targetTemperature'] = 0
+                    acState['temperatureUnit'] = _corf
 
                 changes = last['changedProperties']
 
@@ -1099,6 +1109,10 @@ if __name__ == "__main__":
                     if(row):
                         #doLog("debug", "Skipping insert due to row already existing.")
                         continue
+
+                    if(ac_state['mode'] == 'fan'):
+                        ac_state['targetTemperature'] = 0
+                        ac_state['temperatureUnit'] = _corf
 
                     at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
 

@@ -347,6 +347,8 @@ span.psw
   width: 500px;
   padding-top: 0px;
   margin-top: 0px;
+  padding-bottom: 50px;
+  margin-bottom: 50px;
 }
 
 .close
