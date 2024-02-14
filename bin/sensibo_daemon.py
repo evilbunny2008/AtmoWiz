@@ -431,7 +431,7 @@ def getLastCommands(mydb, nb = 5):
                     acState = last['resultingAcState']
                     acState['targetTemperature']
                 except Exception as e:
-                    acState = acState['acState']
+                    acState = last['acState']
                     pass
 
                 if(acState['mode'] == 'fan'):
