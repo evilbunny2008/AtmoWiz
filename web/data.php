@@ -318,7 +318,6 @@
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
 			{
-				date_default_timezone_set('');
 				$wt = doubleval($row['whentime']);
 				$wt = mktime(0, 0, 0, date("m", $wt), date("d", $wt), date("Y", $wt)) * 1000;
 				if($wt > 0)
