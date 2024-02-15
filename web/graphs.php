@@ -1348,6 +1348,10 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		markerSize: 0,
 		showInLegend: true,
 		color: "<?=$costColour?>",
+		click: function(e)
+		{
+			window.location = 'graphs.php?startTS=' + e.dataPoint.x + '&period=86400000&uid=' + uid;
+		},
        	}],
 });
 

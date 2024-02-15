@@ -555,13 +555,12 @@ def checkSettings(mydb):
 
             query = "SELECT daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM timesettings WHERE uid=%s AND enabled=1 AND " + \
                     "(TIME(NOW()) BETWEEN startTime AND endTime OR (endTime < startTime AND (TIME(NOW()) BETWEEN startTime AND '23:59:59' OR TIME(NOW()) BETWEEN '00:00:00' and endTime)))"
-            doLog("info", query % podUID)
+            doLog("debug", query % podUID)
             values = (podUID, )
             #doLog("debug", query % values)
             cursor.execute(query, values)
             result = cursor.fetchall()
             for(daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing) in result:
-                doLog("info", datetime.today().weekday())
                 if(not daysOfWeek & 2 ** datetime.today().weekday()):
                     continue
 
