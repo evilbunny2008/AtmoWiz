@@ -209,12 +209,12 @@ def doLog(logType, line, doStackTrace = False):
             log.info(full_stack())
     elif(logType == 'debug'):
         if(not _INVOCATION_ID):
-            print (line)
+            print ('\33[90m' + line + '\033[0m')
 
         log.debug(line)
         if(doStackTrace):
             if(not _INVOCATION_ID):
-                print (full_stack())
+                print ('\33[90m' + full_stack() + '\033[0m')
             log.debug(full_stack())
     elif(logType == 'warning'):
         if(not _INVOCATION_ID):
@@ -227,12 +227,12 @@ def doLog(logType, line, doStackTrace = False):
             log.warning(full_stack())
     else:
         if(not _INVOCATION_ID):
-            print (line)
+            print ('\33[91m' + line + '\033[0m')
 
         log.error(line)
         if(doStackTrace):
             if(not _INVOCATION_ID):
-                print (full_stack())
+                print ('\33[90m' + full_stack() + '\033[0m')
             log.error(full_stack())
 
 def calcCost(mydb):
@@ -525,10 +525,10 @@ def checkSettings(mydb):
                     doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
                 elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
                     doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                elif(turnOnOff == "On" and airconon == 1):
-                    doLog("info", "Rule 3 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                elif(turnOnOff == "Off" and airconon == 0):
-                    doLog("info", "Rule 4 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
+                    doLog("info", "Rule 3 hit, %s is %s keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
+                elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
+                    doLog("info", "Rule 4 hit, %s is %s keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
 
                 #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
@@ -852,6 +852,7 @@ def getOpenMeteo(mydb, podUID):
         pass
 
 if __name__ == "__main__":
+    os.system("")
     log = logging.getLogger('Sensibo Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
     log.setLevel(logging.DEBUG)
