@@ -361,8 +361,8 @@ def doHistoricalMeasurements(mydb, days = 1):
                     targetTemperature = pod_measurement40[rc]['device']['acState']['targetTemperature']
                     temperatureUnit = pod_measurement40[rc]['device']['acState']['temperatureUnit']
                 else:
-                    targetTemperature = 0
-                    temperatureUnit = _corf
+                    targetTemperature = None
+                    temperatureUnit = None
 
                 fanLevel = pod_measurement40[rc]['device']['acState']['fanLevel']
                 swing = pod_measurement40[rc]['device']['acState']['swing']
@@ -427,8 +427,8 @@ def getLastCommands(mydb, nb = 5):
                     acState = last['acState']
 
                 if(acState['mode'] == 'fan'):
-                    acState['targetTemperature'] = 0
-                    acState['temperatureUnit'] = _corf
+                    acState['targetTemperature'] = None
+                    acState['temperatureUnit'] = None
 
                 changes = last['changedProperties']
 
@@ -1143,8 +1143,8 @@ if __name__ == "__main__":
                         continue
 
                     if(ac_state['mode'] == 'fan'):
-                        ac_state['targetTemperature'] = 0
-                        ac_state['temperatureUnit'] = _corf
+                        ac_state['targetTemperature'] = None
+                        ac_state['temperatureUnit'] = None
 
                     at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
 
