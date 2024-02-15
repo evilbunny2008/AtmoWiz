@@ -521,19 +521,13 @@ def checkSettings(mydb):
                 (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
                 #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
 
-                if(turnOnOff == "On" and airconon == 0):
-                    if(mode != current_mode):
-                        if(targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                            doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                if(turnOnOff == "Off" and airconon == 1):
-                    if(mode != current_mode):
-                        if(targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                            doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-
-                if(turnOnOff == "On" and airconon == 1):
+                if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
+                    doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
+                    doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                elif(turnOnOff == "On" and airconon == 1):
                     doLog("info", "Rule 3 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-
-                if(turnOnOff == "Off" and airconon == 0):
+                elif(turnOnOff == "Off" and airconon == 0):
                     doLog("info", "Rule 4 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
 
                 #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)

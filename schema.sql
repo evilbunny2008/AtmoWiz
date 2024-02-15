@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   `rssi` tinyint(3) NOT NULL DEFAULT 0,
   `airconon` tinyint(1) NOT NULL DEFAULT 0,
   `mode` enum('cool','heat','dry','auto','fan') NOT NULL DEFAULT 'cool',
-  `targetTemperature` smallint(6) NOT NULL DEFAULT 0,
+  `targetTemperature` tinyint(4) NULL DEFAULT 0,
   `fanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
   `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
   `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
