@@ -218,12 +218,12 @@ def doLog(logType, line, doStackTrace = False):
             log.debug(full_stack())
     elif(logType == 'warning'):
         if(not _INVOCATION_ID):
-            print (line)
+            print ('\033[93m' + line + '\033[0m')
 
         log.warning(line)
         if(doStackTrace):
             if(not _INVOCATION_ID):
-                print (full_stack())
+                print ('\033[93m' + full_stack() + '\033[0m')
             log.warning(full_stack())
     else:
         if(not _INVOCATION_ID):
