@@ -198,6 +198,7 @@ def full_stack():
     return stackstr
 
 def doLog(logType, line, doStackTrace = False):
+    line = str(line)
     if(logType == 'info'):
         if(not _INVOCATION_ID):
             print (line)
@@ -447,7 +448,38 @@ def getLastCommands(mydb, nb = 5):
             except MySQLdb._exceptions.OperationalError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 pass
+            except MySQLdb._exceptions.DataError as e:
+                if(e.args[0] == 1265):
+                    table_name = 'commands'
+                    field = e.args[1].split("'")[1]
+                    updateEnum(mydb, table_name, field)
+                    doLog("debug", _sqlquery1 % values)
+                    cursor.execute(_sqlquery1, values)
+                    mydb.commit()
+                    exit(0)
 
+    mydb.commit()
+
+def updateEnum(mydb, table_name, field):
+    cursor = mydb.cursor()
+    query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN " + \
+            "(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 " + \
+           f"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME='{table_name}' AND COLUMN_NAME='{field}'"
+    doLog("info", query)
+    cursor.execute(query)
+    result = cursor.fetchall()
+    values = []
+    default = ""
+    for value in result:
+        if(default == ""):
+            default = value[0]
+        values.append(value[0])
+    values.append(acState[field])
+
+    enum_values = ', '.join(["'{}'".format(value) for value in values])
+    alter_query = f"ALTER TABLE `{table_name}` CHANGE `{field}` `{field}` ENUM({enum_values}) NOT NULL DEFAULT '{default}'"
+    doLog("info", alter_query)
+    cursor.execute(query)
     mydb.commit()
 
 def checkSettings(mydb):
@@ -1159,6 +1191,15 @@ if __name__ == "__main__":
                 except MySQLdb._exceptions.OperationalError as e:
                     doLog("error", "There was a problem, error was %s" % e, True)
                     pass
+                except MySQLdb._exceptions.DataError as e:
+                    if(e.args[0] == 1265):
+                        table_name = 'sensibo'
+                        field = e.args[1].split("'")[1]
+                        updateEnum(mydb, table_name, field)
+                        doLog("debug", _sqlquery3 % values)
+                        cursor.execute(_sqlquery3, values)
+                        mydb.commit()
+                        pass
 
             calcCost(mydb)
 
