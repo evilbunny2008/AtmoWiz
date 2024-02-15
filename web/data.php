@@ -38,6 +38,16 @@
 		return "Unknown";
 	}
 
+	function setSystemTz()
+	{
+		$systemTz = trim(file_get_contents("/etc/timezone"));
+		if($systemTz == 'Etc/UTC')
+			$systemTz = 'UTC';
+		date_default_timezone_set($systemTz);
+	}
+
+	setSystemTz();
+
 	if($error != null)
 		reportError($error);
 
@@ -74,6 +84,11 @@
 		$period = doubleval($_REQUEST['period']);
 	else
 		$period = 86400000;
+
+
+	$query = "SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW()) as tzoffset";
+	$res = mysqli_query($link, $query);
+	$tzoffset = mysqli_fetch_assoc($res)['tzoffset'];
 
 	if(isset($_REQUEST['startTS']) && $_REQUEST['startTS'] > 0)
 	{
@@ -294,8 +309,8 @@
 
 	if($period == 2592000000)
 	{
-		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
-				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC LIMIT 500";
 		if($redis->exists(md5($query)))
 		{
 			$dataPoints5 = unserialize($redis->get(md5($query)));
@@ -303,7 +318,8 @@
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
 			{
-				$wt = round(doubleval($row['whentime']) / 1000);
+				date_default_timezone_set('');
+				$wt = doubleval($row['whentime']);
 				$wt = mktime(0, 0, 0, date("m", $wt), date("d", $wt), date("Y", $wt)) * 1000;
 				if($wt > 0)
 					$dataPoints5[] = array('x' => $wt, 'y' => floatval($row['cost']));
@@ -314,8 +330,8 @@
 			$redis->expire(md5($query), 3600);
 		}
 	} else if($period != 31536000000) {
-		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
-				"UNIX_TIMESTAMP(whentime) * 1000 >= $startTS + 3600000 AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC";
+		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS + 3600000 AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC LIMIT 500";
 		if($redis->exists(md5($query)))
 		{
 			$dataPoints5 = unserialize($redis->get(md5($query)));
@@ -324,7 +340,10 @@
 			while($row = mysqli_fetch_assoc($res))
 			{
 				if($row !== False && doubleval($row['whentime']) > 0)
-					$dataPoints5[] = array('x' => doubleval($row['whentime']), 'y' => floatval($row['cost']));
+				{
+					$wt = doubleval($row['whentime']);
+					$dataPoints5[] = array('x' => $wt, 'y' => floatval($row['cost']));
+				}
 			}
 
 			mysqli_free_result($res);

@@ -514,19 +514,25 @@ def checkSettings(mydb):
                 if(not daysOfWeek & 2 ** datetime.today().weekday()):
                     continue
 
-                query = "SELECT airconon, mode, temperature, humidity, feelsLike FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
                 values = (podUID, )
                 #doLog("debug", query % values)
                 cursor.execute(query, values)
-                (airconon, current_mode, temperature, humidity, feelsLike) = cursor.fetchone()
+                (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
                 #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
 
                 if(turnOnOff == "On" and airconon == 0):
-                    doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    if(mode != current_mode):
+                        if(targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
+                            doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
                 if(turnOnOff == "Off" and airconon == 1):
-                    doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    if(mode != current_mode):
+                        if(targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
+                            doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+
                 if(turnOnOff == "On" and airconon == 1):
                     doLog("info", "Rule 3 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+
                 if(turnOnOff == "Off" and airconon == 0):
                     doLog("info", "Rule 4 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
 
