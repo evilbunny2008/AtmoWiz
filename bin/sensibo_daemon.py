@@ -236,14 +236,31 @@ def doLog(logType, line, doStackTrace = False):
                 print ('\33[90m' + full_stack() + '\033[0m')
             log.error(full_stack())
 
+def costFactor(mode, targetTemperature, temperature):
+    if(mode == 'heat'):
+        if(targetTemperature - temperature <= 0):
+            return 0.03
+        elif(targetTemperature - temperature >= 10):
+            return 1
+        else:
+            return (targetTemperature * temperature) / temperature * 0.5
+
+    if(mode == 'cool' or mode == 'dry'):
+        if(targetTemperature - temperature <= 0):
+            return 0.03
+        elif(targetTemperature - temperature >= 10):
+            return 1
+        else:
+            return (targetTemperature * temperature) / temperature * 0.25
+
 def calcCost(mydb):
     try:
         cursor1 = mydb.cursor()
         cursor2 = mydb.cursor()
 
-        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry')"
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry')"
         cursor1.execute(query)
-        for (whentime, podUID, dow, hod) in cursor1:
+        for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             if(dow == 1 or dow == 7):
                 cost = cool / EER * offpeak * 90.0 / 3600.0
             else:
@@ -257,14 +274,15 @@ def calcCost(mydb):
                 if(hod >= 20 and hod < 22):
                     cost = cool / EER * shoulder * 90.0 / 3600.0
 
+            cost *= costFactor(mode, targetTemperature, temperature)
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
 
-        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
         cursor1.execute(query)
-        for (whentime, podUID, dow, hod) in cursor1:
+        for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             if(dow == 1 or dow == 7):
                 cost = heat / COP * offpeak * 90.0 / 3600.0
             else:
@@ -278,6 +296,7 @@ def calcCost(mydb):
                 if(hod >= 20 and hod < 22):
                     cost = heat / COP * shoulder * 90.0 / 3600.0
 
+            cost *= costFactor(mode, targetTemperature, temperature)
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
