@@ -48,6 +48,17 @@
 	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
 		$startTS = doubleval($_REQUEST['startTS']);
 
+	if(isset($_REQUEST['period']) && !empty($_REQUEST['period']))
+		$period = doubleval($_REQUEST['period']);
+
+	$timePeriod = "day";
+	if($period == 604800000)
+		$timePeriod = "week";
+	if($period == 2592000000)
+		$timePeriod = "month";
+	if($period == 31536000000)
+		$timePeriod = "year";
+
 	if(isset($_REQUEST['podUID1']) && !empty($_REQUEST['podUID1']) && $_SESSION['rw'])
 	{
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID1']);
@@ -117,8 +128,8 @@
 		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
 		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
 		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
-		$startTime = intval($_REQUEST['startTimeHour']).":".intval($_REQUEST['startTimeMinute']).":00";
-		$endTime = intval($_REQUEST['endTimeHour']).":".intval($_REQUEST['endTimeMinute']).":59";
+		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTimeMinute']).":00";
+		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTimeMinute']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
@@ -142,8 +153,8 @@
 		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
 		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
 		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
-		$startTime = intval($_REQUEST['startTimeHour']).":".intval($_REQUEST['startTimeMinute']).":00";
-		$endTime = intval($_REQUEST['endTimeHour']).":".intval($_REQUEST['endTimeMinute']).":59";
+		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTimeMinute']).":00";
+		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTimeMinute']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
@@ -172,8 +183,8 @@
 	{
 		$created = mysqli_real_escape_string($link, $_REQUEST['created5']);
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
-		$startTime = intval($_REQUEST['startTimeHour']).":".intval($_REQUEST['startTimeMinute']).":00";
-		$endTime = intval($_REQUEST['endTimeHour']).":".intval($_REQUEST['endTimeMinute']).":59";
+		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTimeMinute']).":00";
+		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTimeMinute']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
@@ -199,8 +210,8 @@
 	if(isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && (!isset($_REQUEST['created5']) || empty($_REQUEST['created5'])) && $_SESSION['rw'] && (!isset($_REQUEST['action']) || empty($_REQUEST['action'])))
 	{
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
-		$startTime = intval($_REQUEST['startTimeHour']).":".intval($_REQUEST['startTimeMinute']).":00";
-		$endTime = intval($_REQUEST['endTimeHour']).":".intval($_REQUEST['endTimeMinute']).":59";
+		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTimeMinute']).":00";
+		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTimeMinute']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
@@ -240,7 +251,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="clocklet.min.css">
 <script src="canvasjs.min.js"></script>
+<script src="clocklet.js"></script>
 <style>
 *
 {
@@ -570,7 +583,7 @@ td
 	<input id="startTS1" type="hidden" name="startTS" />
 	<input id="podUID1" type="hidden" name="podUID1" value="<?=$row['uid']?>" />
 	<label for="mode1"><b>Mode:</b></label>
-	<select id='mode1' name="mode" onChange='populateSelect(\'1\'); return false;'>
+	<select id="mode1" name="mode" onChange="populateSelect('1'); return false;">
 <?php
 	$dquery = "SELECT mode FROM meta GROUP BY mode";
 	$dres = mysqli_query($link, $dquery);
@@ -633,10 +646,10 @@ td
 		echo "<td style='cursor: pointer;' title='".$drow['created']."'>".$drow['created']."</td>";
 		echo "<td>".$drow['onOff']."</td>";
 		echo "<td>".$drow['targetType']."</td>";
-		echo "<td>".$drow['targetOp']."</td>";
+		echo "<td>".htmlentities($drow['targetOp'])."</td>";
 		echo "<td>".$drow['targetValue']."</td>";
-		echo "<td>".$drow['startTime']."</td>";
-		echo "<td>".$drow['endTime']."</td>";
+		echo "<td>".substr($drow['startTime'],0,5)."</td>";
+		echo "<td>".substr($drow['endTime'],0,5)."</td>";
 		echo "<td>".$drow['turnOnOff']."</td>";
 		echo "<td>".$drow['mode']."</td>";
 		echo "<td>".$drow['targetTemperature']."</td>";
@@ -647,12 +660,9 @@ td
 			echo "False";
 		echo "</td>";
 
-		list($startTimeHour, $startTimeMinute, $crud) = explode(':', $drow['startTime'], 3);
-		list($endTimeHour, $endTimeMinute, $crud) = explode(':', $drow['endTime'], 3);
-
 		echo "<td onClick=\"editSetting('".$drow['created']."', '".$drow['uid']."', '".$drow['onOff']."', '".$drow['targetType']."', '".$drow['targetOp']."', '".$drow['targetValue']."', '";
-		echo $startTimeHour."', '".$startTimeMinute."', '".$endTimeHour."', '".$endTimeMinute."', '";
-		echo $drow['turnOnOff']."', '".$drow['targetTemperature']."', '".$drow['mode']."', '".$drow['fanLevel']."', '".$drow['swing']."', '".$drow['horizontalSwing']."', '".$drow['enabled']."'";
+		echo substr($drow['startTime'],0,5)."', '".substr($drow['endTime'],0,5)."', '".$drow['turnOnOff']."', '".$drow['targetTemperature']."', '".$drow['mode']."', '".$drow['fanLevel']."', '".$drow['swing']."', '";
+		echo $drow['horizontalSwing']."', '".$drow['enabled']."'";
 		echo "); return false;\" style=\"cursor: pointer; color: #085f24;\">Edit</td>";
 		echo "<td onClick=\"deleteSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>";
 		echo "</tr>\n";
@@ -673,7 +683,8 @@ td
 	<input id="created2" type="hidden" name="created2" />
 	<input id="startTS2" type="hidden" name="startTS" />
 	<input id="podUID2" type="hidden" name="podUID2" />
-	<label for="onOff2" style="width:200px;"><b>If On/Off:</b></lable><select class="myInputs2" style='width:300px;right:0px;float:right;' id="onOff2" name="onOff">
+	<label for="onOff2" style="width:200px;"><b>If On/Off:</b></label>
+	<select class="myInputs2" style='width:300px;right:0px;float:right;' id="onOff2" name="onOff">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
@@ -685,8 +696,10 @@ td
 		echo "\t\t<option value='$v'>$v</option>\n";
 	}
 ?>
-	</select><br/><br/><br/><br/>
-	<label for="targetType2" style="width:200px;"><b>Target Type:</b></label><select class="myInputs2" style='width:300px;right:0px;float:right;' id="targetType2" name="targetType">
+	</select>
+	<br/><br/><br/><br/>
+	<label for="targetType2" style="width:200px;"><b>Target Type:</b></label>
+	<select class="myInputs2" style='width:300px;right:0px;float:right;' id="targetType2" name="targetType">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
@@ -698,8 +711,10 @@ td
 		echo "\t\t<option value='$v'>$v</option>\n";
 	}
 ?>
-	</select><br/><br/><br/><br/>
-	<label for="targetOp2" style="width:200px;"><b>Target Operation:</b></label><select class="myInputs2" style='width:300px;right:0px;float:right;' id="targetOp2" name="targetOp">
+	</select>
+	<br/><br/><br/><br/>
+	<label for="targetOp2" style="width:200px;"><b>Target Operation:</b></label>
+	<select class="myInputs2" style='width:300px;right:0px;float:right;' id="targetOp2" name="targetOp">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
@@ -707,42 +722,19 @@ td
 	$dres = mysqli_query($link, $dquery);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
-		$v = $drow['value'];
+		$v = htmlentities($drow['value']);
 		echo "\t\t<option value='$v'>$v</option>\n";
 	}
 ?>
-	</select><br/><br/><br/><br/>
-	<label for="targetValue2" style="width:200px;"><b>Target Value:</b></label><input class="myInputs2" style='width:300px;right:0px;float:right;' id="targetValue2" name="targetValue" type="number" min="0.0" step="0.1" max="40.0" value="30" /><br/><br/><br/><br/>
+	</select>
+	<br/><br/><br/><br/>
+	<label for="targetValue2" style="width:200px;"><b>Target Value:</b></label>
+	<input class="myInputs2" style='width:300px;right:0px;float:right;' id="targetValue2" name="targetValue" type="number" min="0.0" step="0.1" max="40.0" value="30" />
+	<br/><br/><br/><br/>
 	<div id="wrapper">
 		<div id="divLeft">
-	<label for="startTimeHour2"><b>Start Time:</b></label><br/>
-	<div style="width:200px">
-	<select class="myInputs2" style='width:80px;right:0px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="startTimeMinute2" name="startTimeMinute">
-<?php
-	for($v = 0; $v < 60; $v++)
-	{
-		$vv = sprintf('%02d', $v);
-		echo "\t\t<option value='$v'";
-		if($v == 0)
-			echo " selected";
-		echo ">$vv</option>\n";
-	}
-?>
-	</select>
-	<select class="myInputs2" style='width:80px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="startTimeHour2" name="startTimeHour">
-<?php
-	for($v = 0; $v < 24; $v++)
-	{
-		$vv = sprintf('%02d', $v);
-		echo "\t\t<option value='$v'";
-		if($v == 0)
-			echo " selected";
-		echo ">$vv</option>\n";
-	}
-?>
-	</select>
-	</div>
-	<br/><br/><br/><br/>
+	<label for="startTime2"><b>Start Time:</b></label>
+	<input id='startTime2' name='startTime' class="myInputs2" data-clocklet>
 	<label for="turnOnOff2"><b>Turn On/Off:</b></label><select class="myInputs2" id="turnOnOff2" name="turnOnOff">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -756,7 +748,7 @@ td
 	}
 ?>
 	</select>
-	<label for="mode2"><b>Mode:</b></label><select class="myInputs2" id='mode2' name="mode" onChange='populateSelect(\'2\'); return false;'>
+	<label for="mode2"><b>Mode:</b></label><select class="myInputs2" id="mode2" name="mode" onChange="populateSelect('2'); return false;">
 <?php
 	$defmode = "";
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -786,34 +778,8 @@ td
 	</select>
 		</div>
 		<div id="divRight">
-	<div style="width:200px">
-	<label for="endTimeHour2"><b>End Time:</b></label><br/>
-	<select class="myInputs2" style='width:80px;right:0px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="endTimeMinute2" name="endTimeMinute">
-<?php
-	for($v = 0; $v < 60; $v++)
-	{
-		$vv = sprintf('%02d', $v);
-		echo "\t\t<option value='$v'";
-		if($v == 59)
-			echo " selected";
-		echo ">$vv</option>\n";
-	}
-?>
-	</select>
-	<select class="myInputs2" style='width:80px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="endTimeHour2" name="endTimeHour">
-<?php
-	for($v = 0; $v < 24; $v++)
-	{
-		$vv = sprintf('%02d', $v);
-		echo "\t\t<option value='$v'";
-		if($v == 23)
-			echo " selected";
-		echo ">$vv</option>\n";
-	}
-?>
-	</select>
-	</div>
-	<br/><br/><br/><br/>
+	<label for="endTime2"><b>Start Time:</b></label>
+	<input id='endTime2' name='endTime' class="myInputs2" data-clocklet>
 	<label for="fanLevel2"><b>Fan Level:</b></label><select class="myInputs2" id='fanLevel2' name="fanLevel">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -904,8 +870,8 @@ td
 		}
 
 		echo "<td style='cursor: pointer;' title='$days'>$days</td>\n";
-		echo "<td>".$drow['startTime']."</td>\n";
-		echo "<td>".$drow['endTime']."</td>\n";
+		echo "<td>".substr($drow['startTime'],0,5)."</td>\n";
+		echo "<td>".substr($drow['endTime'],0,5)."</td>\n";
 		echo "<td>".$drow['turnOnOff']."</td>\n";
 		echo "<td>".$drow['mode']."</td>\n";
 		echo "<td>".$drow['targetTemperature']."</td>\n";
@@ -919,12 +885,9 @@ td
 			echo "False";
 		echo "</td>\n";
 
-		list($startTimeHour, $startTimeMinute, $crud) = explode(':', $drow['startTime'], 3);
-		list($endTimeHour, $endTimeMinute, $crud) = explode(':', $drow['endTime'], 3);
-
 		echo "<td onClick=\"editTimeSetting('".$drow['created']."', '".$drow['uid']."', '".$drow['daysOfWeek']."', '";
-		echo $startTimeHour."', '".$startTimeMinute."', '".$endTimeHour."', '".$endTimeMinute."', '";
-		echo $drow['turnOnOff']."', '".$drow['mode']."', '".$drow['targetTemperature']."', '".$drow['fanLevel']."', '".$drow['swing']."', '".$drow['horizontalSwing']."', '".$drow['enabled']."'";
+		echo substr($drow['startTime'],0,5)."', '".substr($drow['endTime'],0,5)."', '".$drow['turnOnOff']."', '".$drow['mode']."', '".$drow['targetTemperature']."', '";
+		echo $drow['fanLevel']."', '".$drow['swing']."', '".$drow['horizontalSwing']."', '".$drow['enabled']."'";
 		echo "); return false;\" style=\"cursor: pointer; color: #085f24;\">Edit</td>\n";
 		echo "<td onClick=\"deleteTimeSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>\n";
 		echo "</tr>\n";
@@ -957,34 +920,8 @@ td
 	</select>
 	<div id="wrapper">
 		<div id="divLeft">
-	<label for="startTimeHour5"><b>Start Time:</b></label><br/>
-		<div style="width:200px">
-	<select class="myInputs5" style='width:80px;right:0px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="startTimeMinute5" name="startTimeMinute">
-<?php
-	for($v = 0; $v < 60; $v++)
-	{
-		$vv = sprintf('%02d', $v);
-		echo "\t\t<option value='$v'";
-		if($v == 0)
-			echo " selected";
-		echo ">$vv</option>\n";
-	}
-?>
-	</select>
-	<select class="myInputs5" style='width:80px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="startTimeHour5" name="startTimeHour">
-<?php
-	for($v = 0; $v < 24; $v++)
-	{
-		$vv = sprintf('%02d', $v);
-		echo "\t\t<option value='$v'";
-		if($v == 0)
-			echo " selected";
-		echo ">$vv</option>\n";
-	}
-?>
-	</select>
-		</div>
-	<br/><br/><br/><br/>
+	<label for="startTime5"><b>Start Time:</b></label>
+	<input id='startTime5' name='startTime' class="myInputs5" data-clocklet>
 	<label for="turnOnOff5"><b>Turn On/Off:</b></label><select class="myInputs5" id="turnOnOff5" name="turnOnOff">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -998,7 +935,7 @@ td
 	}
 ?>
 	</select>
-	<label for="mode5"><b>Mode:</b></label><select class="myInputs5" id='mode5' name="mode" onChange='populateSelect(\'5\'); return false;'>
+	<label for="mode5"><b>Mode:</b></label><select class="myInputs5" id="mode5" name="mode" onChange="populateSelect('5'); return false;">
 <?php
 	$defmode = "";
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -1028,34 +965,8 @@ td
 	</select>
 		</div>
 		<div id="divRight">
-	<div style="width:200px">
-	<label for="endTimeHour5"><b>End Time:</b></label><br/>
-	<select class="myInputs5" style='width:80px;right:0px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="endTimeMinute5" name="endTimeMinute">
-<?php
-	for($v = 0; $v < 60; $v++)
-	{
-		$vv = sprintf('%02d', $v);
-		echo "\t\t<option value='$v'";
-		if($v == 59)
-			echo " selected";
-		echo ">$vv</option>\n";
-	}
-?>
-	</select>
-	<select class="myInputs5" style='width:80px;float:right;' onmousedown="if(this.options.length>5){this.size=5;}"  onchange='this.size=0;' onblur="this.size=0;" id="endTimeHour5" name="endTimeHour">
-<?php
-	for($v = 0; $v < 24; $v++)
-	{
-		$vv = sprintf('%02d', $v);
-		echo "\t\t<option value='$v'";
-		if($v == 23)
-			echo " selected";
-		echo ">$vv</option>\n";
-	}
-?>
-	</select>
-	</div>
-	<br/><br/><br/><br/>
+	<label for="endTime5"><b>End Time:</b></label>
+	<input id='endTime5' name='endTime' class="myInputs5" data-clocklet>
 	<label for="fanLevel5"><b>Fan Level:</b></label><select class="myInputs5" id='fanLevel5' name="fanLevel">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -1104,8 +1015,8 @@ td
 </div>
 <script>
 
-var timePeriod = "day";
-var period = 86400000;
+var timePeriod = "<?=$timePeriod?>";
+var period = <?=$period?>;
 var uid = "<?=$row['uid']?>";
 var currtime = "";
 document.getElementById("podUID1").value = uid;
@@ -1350,7 +1261,12 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		color: "<?=$costColour?>",
 		click: function(e)
 		{
-			window.location = 'graphs.php?startTS=' + e.dataPoint.x + '&period=86400000&uid=' + uid;
+			if(timePeriod == "month")
+				tperiod = 86400000;
+			if(timePeriod == "year")
+				tperiod = 604800000;
+
+			window.location = 'graphs.php?startTS=' + e.dataPoint.x + '&period=' + tperiod + '&uid=' + uid;
 		},
        	}],
 });
@@ -1714,10 +1630,8 @@ function newSetting()
 	document.getElementById("targetOp2").options[0].selected = 'selected';
 	document.getElementById("targetValue2").value = "30";
 
-	document.getElementById("startTimeHour2").options[0].selected = "selected";
-	document.getElementById("startTimeMinute2").options[0].selected = "selected";
-	document.getElementById("endTimeHour2").options[23].selected = "selected";
-	document.getElementById("endTimeMinute2").options[59].selected = "selected";
+	document.getElementById("startTime2").value = "00:00";
+	document.getElementById("endTime2").value = "23:59";
 
 	document.getElementById("turnOnOff2").options[0].selected = 'selected';
 	document.getElementById("targetTemperature2").options[8].selected = 'selected';
@@ -1735,7 +1649,7 @@ function newSetting()
 	modal3.style.display = "block";
 }
 
-function editSetting(created, uid, onOff, targetType, targetOp, targetValue, startTimeHour, startTimeMinute, endTimeHour, endTimeMinute, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing, enabled)
+function editSetting(created, uid, onOff, targetType, targetOp, targetValue, startTime, endTime, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing, enabled)
 {
 	document.getElementById("created2").value = created;
 
@@ -1766,40 +1680,9 @@ function editSetting(created, uid, onOff, targetType, targetOp, targetValue, sta
 			dd.options[i].selected = 'selected';
 	}
 
-	def = parseInt(targetValue);
-	dd = document.getElementById("targetValue2").value = def;
-
-	def = startTimeHour;
-	dd = document.getElementById("startTimeHour2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = parseInt(startTimeMinute);
-	dd = document.getElementById("startTimeMinute2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = parseInt(endTimeHour);
-	dd = document.getElementById("endTimeHour2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = parseInt(endTimeMinute);
-	dd = document.getElementById("endTimeMinute2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
+	dd = document.getElementById("targetValue2").value = parseInt(targetValue);
+	dd = document.getElementById("startTime2").value = startTime;
+	dd = document.getElementById("endTime2").value = endTime;
 
 	def = turnOnOff;
 	dd = document.getElementById("turnOnOff2");
@@ -1860,7 +1743,7 @@ function editSetting(created, uid, onOff, targetType, targetOp, targetValue, sta
 	modal3.style.display = "block";
 }
 
-function editTimeSetting(created, uid, daysOfWeek, startTimeHour, startTimeMinute, endTimeHour, endTimeMinute, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, enabled)
+function editTimeSetting(created, uid, daysOfWeek, startTime, endTime, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, enabled)
 {
 	document.getElementById("created5").value = created;
 
@@ -1877,37 +1760,8 @@ function editTimeSetting(created, uid, daysOfWeek, startTimeHour, startTimeMinut
 			dd.options[i].selected = '';
 	}
 
-	def = startTimeHour;
-	dd = document.getElementById("startTimeHour5");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = parseInt(startTimeMinute);
-	dd = document.getElementById("startTimeMinute5");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = parseInt(endTimeHour);
-	dd = document.getElementById("endTimeHour5");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = parseInt(endTimeMinute);
-	dd = document.getElementById("endTimeMinute5");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
+	dd = document.getElementById("startTime5").value = startTime;
+	dd = document.getElementById("endTime5").value = endTime;
 
 	def = turnOnOff;
 	dd = document.getElementById("turnOnOff5");
@@ -1996,10 +1850,8 @@ function newTimeSetting()
 {
 	document.getElementById("created5").value = "";
 
-	document.getElementById("startTimeHour5").options[0].selected = "selected";
-	document.getElementById("startTimeMinute5").options[0].selected = "selected";
-	document.getElementById("endTimeHour5").options[23].selected = "selected";
-	document.getElementById("endTimeMinute5").options[59].selected = "selected";
+	document.getElementById("startTime5").value = "00:00";
+	document.getElementById("endTime5").value = "23:59";
 
 	document.getElementById("turnOnOff5").options[0].selected = 'selected';
 	document.getElementById("mode5").options[0].selected = 'selected';
