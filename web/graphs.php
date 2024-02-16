@@ -128,8 +128,8 @@
 		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
 		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
 		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
-		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTimeMinute']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTimeMinute']).":59";
+		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
+		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
@@ -153,8 +153,8 @@
 		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
 		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
 		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
-		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTimeMinute']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTimeMinute']).":59";
+		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
+		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
@@ -167,7 +167,11 @@
 
 		$query = "UPDATE settings SET onOff='$onOff', targetType='$targetType', targetOp='$targetOp', targetValue='$targetValue', startTime='$startTime', endTime='$endTime', turnOnOff='$turnOnOff', ".
 			 "targetTemperature='$targetTemperature', mode='$mode', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='${row['uid']}' AND created='$created'";
-		mysqli_query($link, $query);
+		if(!mysqli_query($link, $query))
+		{
+			printf("Error message: %s\n", mysqli_error($link));
+			die;
+		}
 	}
 
 	if(isset($_REQUEST['action']) && $_REQUEST['action'] == "delete" && isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && isset($_REQUEST['created']) && !empty($_REQUEST['created']) && $_SESSION['rw'])
@@ -183,8 +187,8 @@
 	{
 		$created = mysqli_real_escape_string($link, $_REQUEST['created5']);
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
-		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTimeMinute']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTimeMinute']).":59";
+		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
+		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
@@ -210,8 +214,8 @@
 	if(isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && (!isset($_REQUEST['created5']) || empty($_REQUEST['created5'])) && $_SESSION['rw'] && (!isset($_REQUEST['action']) || empty($_REQUEST['action'])))
 	{
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
-		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTimeMinute']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTimeMinute']).":59";
+		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
+		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
