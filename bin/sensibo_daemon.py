@@ -1104,7 +1104,7 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
-            # doLog("debug", _sqlselect2 % values)
+            doLog("debug", _sqlselect2 % values)
             cursor.execute(_sqlselect2, values)
             row = cursor.fetchone()
             if(row):
@@ -1135,12 +1135,12 @@ if __name__ == "__main__":
             for mode in device['modes']:
                 if(mode != "fan"):
                     for temp in device['modes'][mode]['temperatures'][_corf]['values']:
-                        # doLog("debug", query % (podUID, mode, 'temperatures', temp))
+                        doLog("debug", query % (podUID, mode, 'temperatures', temp))
                         cursor.execute(query, (podUID, mode, 'temperatures', temp))
 
                 for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
                     for modes in device['modes'][mode][keyval]:
-                        # doLog("debug", query % (podUID, mode, keyval, modes))
+                        doLog("debug", query % (podUID, mode, keyval, modes))
                         cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
