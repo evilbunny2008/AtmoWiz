@@ -283,23 +283,23 @@ def costFactor(mode, targetTemperature, temperature):
           mf = 2
 
     if(mode == 'heat'):
-        if(targetTemperature <= 18):
+        if(targetTemperature <= 21):
           mf = 1.1
-        elif(targetTemperature <= 19):
-          mf = 1.2
-        elif(targetTemperature <= 20):
-          mf = 1.3
-        elif(targetTemperature <= 21):
-          mf = 1.4
         elif(targetTemperature <= 22):
-          mf = 1.5
+          mf = 1.2
         elif(targetTemperature <= 23):
-          mf = 1.6
+          mf = 1.3
         elif(targetTemperature <= 24):
-          mf = 1.7
+          mf = 1.4
         elif(targetTemperature <= 25):
-          mf = 1.8
+          mf = 1.5
         elif(targetTemperature <= 26):
+          mf = 1.6
+        elif(targetTemperature <= 27):
+          mf = 1.7
+        elif(targetTemperature <= 28):
+          mf = 1.8
+        elif(targetTemperature <= 29):
           mf = 1.9
         else:
           mf = 2

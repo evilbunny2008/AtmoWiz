@@ -115,8 +115,7 @@
 			$ret = changeState($row['uid'], $changes);
 			if($ret != 200)
 			{
-				echo $ret;
-				die;
+				$error = $ret;
 			}
 		}
 	}
@@ -142,7 +141,8 @@
 
 		$query = "INSERT INTO settings (uid, created, onOff, targetType, targetOp, targetValue, startTime, endTime, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing, enabled) VALUES ".
 			 "('${row['uid']}', NOW(), '$onOff', '$targetType', '$targetOp', '$targetValue', '$startTime', '$endTime', '$turnOnOff', '$targetTemperature', '$mode', '$fanLevel', '$swing', '$horizontalSwing', '$enabled')";
-		mysqli_query($link, $query);
+		if(!mysqli_query($link, $query))
+			$error = sprintf("Error message: %s\n", mysqli_error($link));
 	}
 
 	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && isset($_REQUEST['created2']) && !empty($_REQUEST['created2']) && $_SESSION['rw'])
@@ -168,10 +168,7 @@
 		$query = "UPDATE settings SET onOff='$onOff', targetType='$targetType', targetOp='$targetOp', targetValue='$targetValue', startTime='$startTime', endTime='$endTime', turnOnOff='$turnOnOff', ".
 			 "targetTemperature='$targetTemperature', mode='$mode', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='${row['uid']}' AND created='$created'";
 		if(!mysqli_query($link, $query))
-		{
-			printf("Error message: %s\n", mysqli_error($link));
-			die;
-		}
+			$error = sprintf("Error message: %s\n", mysqli_error($link));
 	}
 
 	if(isset($_REQUEST['action']) && $_REQUEST['action'] == "delete" && isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && isset($_REQUEST['created']) && !empty($_REQUEST['created']) && $_SESSION['rw'])
@@ -180,7 +177,8 @@
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
 
 		$query = "DELETE FROM settings WHERE uid='${row['uid']}' AND created='$created'";
-		mysqli_query($link, $query);
+		if(!mysqli_query($link, $query))
+			$error = sprintf("Error message: %s\n", mysqli_error($link));
 	}
 
 	if(isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && isset($_REQUEST['created5']) && !empty($_REQUEST['created5']) && $_SESSION['rw'])
@@ -208,7 +206,8 @@
 			$enabled = 1;
 
 		$query = "UPDATE timesettings SET daysOfWeek='$daysOfWeek', startTime='$startTime', endTime='$endTime', turnOnOff='$turnOnOff', mode='$mode', targetTemperature='$targetTemperature', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='${row['uid']}' AND created='$created'";
-		mysqli_query($link, $query);
+		if(!mysqli_query($link, $query))
+			$error = sprintf("Error message: %s\n", mysqli_error($link));
 	}
 
 	if(isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && (!isset($_REQUEST['created5']) || empty($_REQUEST['created5'])) && $_SESSION['rw'] && (!isset($_REQUEST['action']) || empty($_REQUEST['action'])))
@@ -236,7 +235,8 @@
 
 		$query = "INSERT INTO timesettings (uid, created, daysOfWeek, startTime, endTime, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, enabled) VALUES ".
 			 "('${row['uid']}', NOW(), '$daysOfWeek', '$startTime', '$endTime', '$turnOnOff', '$mode', '$targetTemperature', '$fanLevel', '$swing', '$horizontalSwing', '$enabled')";
-		mysqli_query($link, $query);
+		if(!mysqli_query($link, $query))
+			$error = sprintf("Error message: %s\n", mysqli_error($link));
 	}
 
 	if(isset($_REQUEST['action']) && $_REQUEST['action'] == "delete" && isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && isset($_REQUEST['created']) && !empty($_REQUEST['created']) && $_SESSION['rw'])
@@ -245,7 +245,8 @@
 		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
 
 		$query = "DELETE FROM timesettings WHERE uid='${row['uid']}' AND created='$created'";
-		mysqli_query($link, $query);
+		if(!mysqli_query($link, $query))
+			$error = sprintf("Error message: %s\n", mysqli_error($link));
 	}
 ?>
 <!DOCTYPE HTML>
@@ -447,6 +448,15 @@ span.psw
 }
 
 #id05 .modal-content
+{
+  width: 500px;
+  padding-top: 0px;
+  margin-top: 0px;
+  padding-bottom: 50px;
+  margin-bottom: 50px;
+}
+
+#id06 .modal-content
 {
   width: 500px;
   padding-top: 0px;
@@ -1017,6 +1027,19 @@ td
     </div>
   </form>
 </div>
+<div id="id06" class="modal">
+  <form class="modal-content animate" action="graphs.php" method="post">
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id06').style.display='none'" class="close">&times;</span>
+    </div>
+    <div class="container">
+	<h1>Error!</h1>
+	<b>
+	<div id='errorMessage' style='text-align:center;color:red;font-size:xx-large;'>&nbsp;</div>
+	</b>
+    </div>
+  </form>
+</div>
 <script>
 
 var timePeriod = "<?=$timePeriod?>";
@@ -1037,6 +1060,7 @@ var modal2 = document.getElementById('id02');
 var modal3 = document.getElementById('id03');
 var modal4 = document.getElementById('id04');
 var modal5 = document.getElementById('id05');
+var modal6 = document.getElementById('id06');
 
 var chart1 = new CanvasJS.Chart("chartContainer",
 {
@@ -1902,6 +1926,16 @@ populateSelect("5");
 		echo "\tmodal4.style.display = 'block';\n";
 		echo "}\n\n";
 		echo "setTimeout('delayLoading()', 250);\n";
+	}
+
+	if($error != null)
+	{
+		echo "function errorLoading()\n";
+		echo "{\n";
+		echo "\tmodal6.style.display = 'block';\n";
+		echo "\tdocument.getElementById('errorMessage').innerHTML = \"$error\";\n";
+		echo "}\n\n";
+		echo "errorLoading();\n";
 	}
 ?>
 </script>
