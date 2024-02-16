@@ -2,11 +2,13 @@
 
 import argparse
 import configparser
+import grp
 import json
 import logging
 import math
 import MySQLdb
 import os
+import pwd
 import random
 import requests
 import shutil
@@ -907,10 +909,10 @@ if __name__ == "__main__":
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
     log.setLevel(logging.DEBUG)
     doLog("info", "Daemon started....")
-    if(not _INVOCATION_ID):
-        doLog("info", "Not started by SystemD")
+    if(_INVOCATION_ID):
+        doLog("info", "Started by SystemD: Yes")
     else:
-        doLog("info", "Started by SystemD")
+        doLog("info", "Started by SystemD: No")
 
     if(os.getuid() != 0 or os.getgid() != 0):
         doLog("error", "This program is designed to be started as root.", True)
@@ -1013,6 +1015,26 @@ if __name__ == "__main__":
     else:
         os.setgid(gid)
         os.setuid(uid)
+
+    try:
+        doLog("info", "User: %s" % pwd.getpwuid(uid)[0])
+    except Exception as e:
+        doLog("error", "User unavailable: %s" % e)
+
+    try:
+        doLog("info", "Group: %s" % grp.getgrgid(gid)[0])
+    except Exception as e:
+        doLog("error", "Group unavailable: %s" % e)
+
+    try:
+        groupList = os.getgroups()
+        mygroups = []
+        for group in groupList:
+             mygroups.append(grp.getgrgid(uid)[0])
+        mygrouplist = ' '.join(mygroups)
+        doLog("info", "Groups: %s" % mygrouplist)
+    except Exception as e:
+        doLog("error", "Group membership unavailable: %s" % e)
 
     fromfmt1 = '%Y-%m-%dT%H:%M:%S.%fZ'
     fromfmt2 = '%Y-%m-%dT%H:%M:%SZ'

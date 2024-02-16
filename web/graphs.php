@@ -734,7 +734,7 @@ td
 	<div id="wrapper">
 		<div id="divLeft">
 	<label for="startTime2"><b>Start Time:</b></label>
-	<input id='startTime2' name='startTime' class="myInputs2" data-clocklet>
+	<input id='startTime2' name='startTime' class="myInputs2" data-clocklet="class-name: clocklet-options-1; alignment: center;">
 	<label for="turnOnOff2"><b>Turn On/Off:</b></label><select class="myInputs2" id="turnOnOff2" name="turnOnOff">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -779,7 +779,7 @@ td
 		</div>
 		<div id="divRight">
 	<label for="endTime2"><b>Start Time:</b></label>
-	<input id='endTime2' name='endTime' class="myInputs2" data-clocklet>
+	<input id='endTime2' name='endTime' class="myInputs2" data-clocklet="class-name: clocklet-options-1; alignment: center;">
 	<label for="fanLevel2"><b>Fan Level:</b></label><select class="myInputs2" id='fanLevel2' name="fanLevel">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -921,7 +921,7 @@ td
 	<div id="wrapper">
 		<div id="divLeft">
 	<label for="startTime5"><b>Start Time:</b></label>
-	<input id='startTime5' name='startTime' class="myInputs5" data-clocklet>
+	<input id='startTime5' name='startTime' class="myInputs5" data-clocklet="class-name: clocklet-options-1; alignment: center;">
 	<label for="turnOnOff5"><b>Turn On/Off:</b></label><select class="myInputs5" id="turnOnOff5" name="turnOnOff">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -966,7 +966,7 @@ td
 		</div>
 		<div id="divRight">
 	<label for="endTime5"><b>End Time:</b></label>
-	<input id='endTime5' name='endTime' class="myInputs5" data-clocklet>
+	<input id='endTime5' name='endTime' class="myInputs5" data-clocklet="class-name: clocklet-options-1; alignment: center;">
 	<label for="fanLevel5"><b>Fan Level:</b></label><select class="myInputs5" id='fanLevel5' name="fanLevel">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
