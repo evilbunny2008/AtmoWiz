@@ -112,7 +112,7 @@
 		$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints3[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints4[] = array('x' => doubleval($startTS), 'y' => null);
-		$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
+		$dataPoints5[] = array('x' => mktime(date("H", $startTS / 1000), 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 	}
 
 	$query = "";

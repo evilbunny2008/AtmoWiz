@@ -76,19 +76,34 @@ class SensiboClientAPI(object):
         result = self._get("/users/me/pods", fields="id,room")
         if(result == None):
             return None
-        return {x['room']['name']: x['id'] for x in result['result']}
+
+        try:
+            return {x['room']['name']: x['id'] for x in result['result']}
+        except Exception as e:
+            doLog("error", result, True)
+            return None
 
     def pod_all_stats(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,feelsLike")
         if(result == None):
             return None
-        return result['result']
+
+        try:
+            return result['result']
+        except Exception as e:
+            doLog("error", result, True)
+            return None
 
     def pod_get_remote_capabilities(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,remoteCapabilities,features")
         if(result == None):
             return None
-        return result['result']
+
+        try:
+            return result['result']
+        except Exception as e:
+            doLog("error", result, True)
+            return None
 
     def pod_status(self, podUid, lastlimit = 5):
         result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser,resultingAcState,changedProperties")
@@ -105,7 +120,12 @@ class SensiboClientAPI(object):
         result = self._get("/pods/%s/historicalMeasurements" % podUid, days = days, fields="status,reason,time,acState,causedByUser")
         if(result == None):
             return None
-        return result['result']
+
+        try:
+            return result['result']
+        except Exception as e:
+            doLog("error", result, True)
+            return None
 
     def pod_change_ac_state(self, podUid, on, targetTemperature, mode, fanLevel, swing, hswing):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
@@ -1120,7 +1140,9 @@ if __name__ == "__main__":
 
         for podUID in uidList:
             remoteCapabilities = client.pod_get_remote_capabilities(podUID)
-            if(remoteCapabilities == None):
+            doLog("debug", podUID)
+            doLog("debug", remoteCapabilities)
+            if(remoteCapabilities == None or remoteCapabilities == []):
                 continue
 
             _corf = remoteCapabilities[0]['device']['temperatureUnit']
