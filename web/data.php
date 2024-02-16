@@ -210,7 +210,7 @@
 				if(++$rc == 7)
 				{
 					if($wt > 0)
-						$dataPoints5[] = array('x' => $wt, 'y' => $cost);
+						$dataPoints5[] = array('x' => $wt, 'y' => round($cost, 2));
 					$rc = $wt = $cost = 0;
 				} else {
 					if($row !== False && doubleval($row['whentime']) > 0)
@@ -227,7 +227,7 @@
 			}
 
 			if($wt > 0)
-				$dataPoints5[] = array('x' => $wt, 'y' => $cost);
+				$dataPoints5[] = array('x' => $wt, 'y' => round($cost, 2));
 
 			$dataPoints5[] = array('x' => $startTS + $period, 'y' => null);
 
@@ -321,7 +321,7 @@
 				$wt = doubleval($row['whentime']);
 				$wt = mktime(0, 0, 0, date("m", $wt), date("d", $wt), date("Y", $wt)) * 1000;
 				if($wt > 0)
-					$dataPoints5[] = array('x' => $wt, 'y' => floatval($row['cost']));
+					$dataPoints5[] = array('x' => $wt, 'y' => round(floatval($row['cost']), 2));
 			}
 
 			mysqli_free_result($res);
@@ -329,7 +329,8 @@
 			$redis->expire(md5($query), 3600);
 		}
 	} else if($period != 31536000000) {
-		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS + 3600000 AND ".
+		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 >= floor($startTS / 3600000) * 3600000 + 3600000 AND ".
 				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC LIMIT 500";
 		if($redis->exists(md5($query)))
 		{
@@ -341,7 +342,7 @@
 				if($row !== False && doubleval($row['whentime']) > 0)
 				{
 					$wt = doubleval($row['whentime']);
-					$dataPoints5[] = array('x' => $wt, 'y' => floatval($row['cost']));
+					$dataPoints5[] = array('x' => $wt, 'y' => round(floatval($row['cost']), 2));
 				}
 			}
 

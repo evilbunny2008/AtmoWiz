@@ -261,17 +261,19 @@ def doLog(logType, line, doStackTrace = False):
 def costFactor(mode, targetTemperature, temperature):
     if(mode == 'heat'):
         if(targetTemperature - temperature <= 0):
-            return 0.02
+            return 0.25
         return (1.035 - (1 / (1 + (targetTemperature - temperature))) ** 2)
 
     if(mode == 'cool' or mode == 'dry'):
         if(temperature - targetTemperature <= 0):
-            return 0.03
+            return 0.25
         return (1.035 - (1 / (1 + (temperature - targetTemperature))) ** 2)
 
     return 1
 
 def calcCost(mydb):
+    doLog("info", "Running cost calc...")
+
     try:
         cursor1 = mydb.cursor()
         cursor2 = mydb.cursor()
@@ -297,6 +299,7 @@ def calcCost(mydb):
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
+            mydb.commit()
 
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
         cursor1.execute(query)
@@ -319,8 +322,30 @@ def calcCost(mydb):
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
+            mydb.commit()
 
-        mydb.commit()
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=0 AND cost=0.0"
+        cursor1.execute(query)
+        for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
+            if(dow == 1 or dow == 7):
+                cost = offkw * offpeak * 90.0 / 3600.0
+            else:
+                cost = offkw * offpeak * 90.0 / 3600.0
+                if(hod >= 7 and hod < 9):
+                    cost = offkw * peak * 90.0 / 3600.0
+                if(hod >= 9 and hod < 17):
+                    cost = offkw * shoulder * 90.0 / 3600.0
+                if(hod >= 17 and hod < 20):
+                    cost = offkw * peak * 90.0 / 3600.0
+                if(hod >= 20 and hod < 22):
+                    cost = offkw * shoulder * 90.0 / 3600.0
+
+            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, whentime, podUID)
+            doLog("debug", query % values)
+            cursor2.execute(query, values)
+            mydb.commit()
+
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
@@ -980,6 +1005,7 @@ if __name__ == "__main__":
     COP = configParser.getfloat('cost', 'COP', fallback = 3.0)
     cool = configParser.getfloat('cost', 'cool', fallback = 5.0)
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
+    offkw = configParser.getfloat('cost', 'offkw', fallback = 0.012)
 
     if(weatherapikey != ''):
         doOpenMeteo = False
