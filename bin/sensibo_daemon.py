@@ -324,7 +324,7 @@ def calcCost(mydb):
             cursor2.execute(query, values)
             mydb.commit()
 
-        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=0 AND cost=0.0 AND mode='fan'"
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='fan'"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             if(dow == 1 or dow == 7):
@@ -339,6 +339,12 @@ def calcCost(mydb):
                     cost = fankw * peak * 90.0 / 3600.0
                 if(hod >= 20 and hod < 22):
                     cost = fankw * shoulder * 90.0 / 3600.0
+
+            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, whentime, podUID)
+            doLog("debug", query % values)
+            cursor2.execute(query, values)
+            mydb.commit()
 
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=0 AND cost=0.0"
         cursor1.execute(query)
@@ -578,12 +584,20 @@ def checkSettings(mydb):
                 #doLog("debug", query % values)
                 cursor.execute(query, values)
                 (airconon, temperature, humidity, feelsLike) = cursor.fetchone()
-                #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
+                doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
+
+                query = "SELECT temperature,humidity,feelsLike FROM weather ORDER BY whentime DESC LIMIT 1"
+                cursor.execute(query)
+                (outdoorTemperature, outdoorHumidity, outdoorFeelsLike) = cursor.fetchone()
+                doLog("debug", "%s, %s, %s" % (outdoorTemperature, outdoorHumidity, outdoorFeelsLike))
 
                 dict = {}
                 dict['temperature'] = temperature
                 dict['humidity'] = humidity
                 dict['feelsLike'] = feelsLike
+                dict['outdoorTemperature'] = outdoorTemperature
+                dict['outdoorHumidity'] = outdoorHumidity
+                dict['outdoorFeelsLike'] = outdoorFeelsLike
 
                 #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
@@ -591,23 +605,31 @@ def checkSettings(mydb):
                     if(onOff == 'Off' and airconon == 0 and i == targetType and targetOp == '>=' and dict[i] >= targetValue):
                         if(turnOnOff == 'On'):
                             doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            return
                         else:
                             doLog("info", "Rule 2 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            return
                     elif(onOff == 'Off' and airconon == 0 and i == targetType and targetOp == '<=' and dict[i] <= targetValue):
                         if(turnOnOff == 'Off'):
                             doLog("info", "Rule 3 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            return
                         else:
                             doLog("info", "Rule 4 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            return
                     elif(onOff == 'On' and airconon == 1 and i == targetType and targetOp == '>=' and dict[i] >= targetValue):
                         if(turnOnOff == 'On'):
                             doLog("info", "Rule 5 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            return
                         else:
                             doLog("info", "Rule 6 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            return
                     elif(onOff == 'On' and airconon == 1 and i == targetType and targetOp == '<=' and dict[i] <= targetValue):
                         if(turnOnOff == 'Off'):
                             doLog("info", "Rule 7 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            return
                         else:
                             doLog("info", "Rule 8 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                            return
 
                     #else:
                     #    doLog("debug", "Rule X hit, %s is %s... %s(%s)..." % (i, dict[i], mode, turnOnOff))
@@ -632,12 +654,16 @@ def checkSettings(mydb):
 
                 if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
                     doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    return
                 elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
                     doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    return
                 elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
                     doLog("info", "Rule 3 hit, %s is %s keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
+                    return
                 elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
                     doLog("info", "Rule 4 hit, %s is %s keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
+                    return
 
                 #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
@@ -1021,6 +1047,7 @@ if __name__ == "__main__":
     COP = configParser.getfloat('cost', 'COP', fallback = 3.0)
     cool = configParser.getfloat('cost', 'cool', fallback = 5.0)
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
+    fankw = configParser.getfloat('cost', 'fankw', fallback = 0.050)
     offkw = configParser.getfloat('cost', 'offkw', fallback = 0.012)
 
     if(weatherapikey != ''):
