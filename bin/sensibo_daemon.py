@@ -324,6 +324,22 @@ def calcCost(mydb):
             cursor2.execute(query, values)
             mydb.commit()
 
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=0 AND cost=0.0 AND mode='fan'"
+        cursor1.execute(query)
+        for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
+            if(dow == 1 or dow == 7):
+                cost = fankw * offpeak * 90.0 / 3600.0
+            else:
+                cost = fankw * offpeak * 90.0 / 3600.0
+                if(hod >= 7 and hod < 9):
+                    cost = fankw * peak * 90.0 / 3600.0
+                if(hod >= 9 and hod < 17):
+                    cost = fankw * shoulder * 90.0 / 3600.0
+                if(hod >= 17 and hod < 20):
+                    cost = fankw * peak * 90.0 / 3600.0
+                if(hod >= 20 and hod < 22):
+                    cost = fankw * shoulder * 90.0 / 3600.0
+
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=0 AND cost=0.0"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
@@ -1111,7 +1127,7 @@ if __name__ == "__main__":
             mydb.commit()
             calcCost(mydb)
             mydb.close()
-            doLog("debug", "Cost has been recalculated.")
+            doLog("info", "Cost has been recalculated.")
             exit(0)
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
@@ -1132,7 +1148,7 @@ if __name__ == "__main__":
             mydb.commit()
             calcFL(mydb, country)
             mydb.close()
-            doLog("debug", "Feels like has been recalculated.")
+            doLog("info", "Feels like has been recalculated.")
             exit(0)
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
