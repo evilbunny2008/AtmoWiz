@@ -241,19 +241,15 @@ def doLog(logType, line, doStackTrace = False):
 def costFactor(mode, targetTemperature, temperature):
     if(mode == 'heat'):
         if(targetTemperature - temperature <= 0):
-            return 0.03
-        elif(targetTemperature - temperature >= 10):
-            return 1
-        else:
-            return (targetTemperature * temperature) / temperature * 0.5
+            return 0.02
+        return (1.035 - (1 / (1 + (targetTemperature - temperature))) ** 2)
 
     if(mode == 'cool' or mode == 'dry'):
-        if(targetTemperature - temperature <= 0):
+        if(temperature - targetTemperature <= 0):
             return 0.03
-        elif(targetTemperature - temperature >= 10):
-            return 1
-        else:
-            return (targetTemperature * temperature) / temperature * 0.25
+        return (1.035 - (1 / (1 + (temperature - targetTemperature))) ** 2)
+
+    return 1
 
 def calcCost(mydb):
     try:
