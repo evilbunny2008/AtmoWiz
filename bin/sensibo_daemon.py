@@ -77,8 +77,13 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
 
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            sleep(5)
+            result = devices()
+
         try:
-            return {x['room']['name']: x['id'] for x in result['result']}
+            return result
         except Exception as e:
             doLog("error", result, True)
             return None
@@ -88,8 +93,13 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
 
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            sleep(5)
+            result = pod_all_stats(podUid, nb)
+
         try:
-            return result['result']
+            return result
         except Exception as e:
             doLog("error", result, True)
             return None
@@ -99,8 +109,13 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
 
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            sleep(5)
+            result = pod_get_remote_capabilities(podUid, nb)
+
         try:
-            return result['result']
+            return result
         except Exception as e:
             doLog("error", result, True)
             return None
@@ -110,8 +125,13 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
 
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            sleep(5)
+            result = pod_status(podUid, lastlimit)
+
         try:
-            return result['result']
+            return result
         except Exception as e:
             doLog("error", result, True)
             return None
@@ -121,8 +141,13 @@ class SensiboClientAPI(object):
         if(result == None):
             return None
 
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            sleep(5)
+            result = pod_get_past(podUid, days)
+
         try:
-            return result['result']
+            return result
         except Exception as e:
             doLog("error", result, True)
             return None
@@ -136,7 +161,17 @@ class SensiboClientAPI(object):
         result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="pod")
         if(result == None):
             return None
-        return result['result'][0]['pod']['location']['latLon']
+
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            sleep(5)
+            result = pod_location(podUid)
+
+        try:
+            return result
+        except Exception as e:
+            doLog("error", result, True)
+            return None
 
 def calcAT(temp, humid, country, feelslike):
     if(feelslike != None and country == 'None'):
@@ -464,13 +499,16 @@ def doHistoricalMeasurements(mydb, days = 1):
 
     for podUID in uidList:
         historicalMeasurements = client.pod_get_past(podUID, days)
-
         if(historicalMeasurements == None):
             continue
+
+        historicalMeasurements = historicalMeasurements['result']
 
         pod_measurement40 = client.pod_all_stats(podUID, 40)
         if(pod_measurement40 == None):
             continue
+
+        historicalMeasurements = historicalMeasurements['result']
 
         rc = -1
         for i in range(len(historicalMeasurements['temperature']) - 1, 0, -1):
@@ -530,7 +568,7 @@ def doHistoricalMeasurements(mydb, days = 1):
 
 def getLastCommands(mydb, nb = 5):
     for podUID in uidList:
-        lastCommands = client.pod_status(podUID, nb)
+        lastCommands = client.pod_status(podUID, nb)['result']
         if(lastCommands == None):
             continue
 
@@ -983,6 +1021,7 @@ def getLatLon(podUID):
     if(latLon == None):
         return None
 
+    latLon = latLon['result'][0]['pod']['location']['latLon']
     _lat = latLon[0]
     _lon = latLon[1]
 
@@ -1173,7 +1212,9 @@ if __name__ == "__main__":
     to_zone = tz.tzlocal()
 
     client = SensiboClientAPI(apikey)
-    devices = client.devices()
+    result = client.devices()
+    devices = {x['room']['name']: x['id'] for x in result['result']}
+
     if(devices == None):
         doLog("error", "Unable to get a list of devices, check your internet connection and apikey and try again.")
         exit(1)
@@ -1254,8 +1295,10 @@ if __name__ == "__main__":
 
         for podUID in uidList:
             remoteCapabilities = client.pod_get_remote_capabilities(podUID)
-            doLog("debug", podUID)
-            doLog("debug", remoteCapabilities)
+            if(remoteCapabilities == None):
+                continue
+
+            remoteCapabilities = remoteCapabilities['result']
             if(remoteCapabilities == None or remoteCapabilities == []):
                 continue
 
@@ -1287,6 +1330,9 @@ if __name__ == "__main__":
             days = 1
 
         doHistoricalMeasurements(mydb, days)
+        calcCost(mydb)
+        getCurrentWeather(mydb, podUID)
+
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
@@ -1297,8 +1343,6 @@ if __name__ == "__main__":
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
-    calcCost(mydb)
-    getCurrentWeather(mydb, podUID)
     mydb.close()
 
     loops = 0
@@ -1314,7 +1358,7 @@ if __name__ == "__main__":
                 if(pod_measurement == None):
                     continue
 
-                pod_measurement = pod_measurement[0]
+                pod_measurement = pod_measurement['result'][0]
                 ac_state = pod_measurement['device']['acState']
                 measurements = pod_measurement['device']['measurements']
 
@@ -1401,7 +1445,7 @@ if __name__ == "__main__":
 
             timeToWait = secondsAgo + random.randint(10, 20)
 
-            doLog("debug", "Closing connection to MariaDB");
+            doLog("debug", "Closing connection to MariaDB")
             mydb.close()
             doLog("debug", "Sleeping for %d seconds..." % timeToWait)
             time.sleep(timeToWait)
