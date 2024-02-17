@@ -296,7 +296,7 @@ def doLog(logType, line, doStackTrace = False):
             log.error(full_stack())
 
 def getAmps():
-    if(costCurrentPort == None)
+    if(costCurrentPort == None):
         return 0
 
     with serial.Serial() as ser:
