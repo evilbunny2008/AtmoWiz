@@ -1307,6 +1307,16 @@ if __name__ == "__main__":
         calcCost(mydb)
         getCurrentWeather(mydb, podUID)
 
+        # Upgrade the database
+
+        cursor = mydb.cursor()
+        query = "SHOW COLUMNS FROM `sensibo` LIKE 'amps'"
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if(not row):
+            query = "ALTER TABLE `sensibo` ADD `amps` FLOAT NOT NULL DEFAULT '0' AFTER `cost`"
+            cursor.execute(query)
+
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
