@@ -295,64 +295,6 @@ def doLog(logType, line, doStackTrace = False):
                 print ('\33[90m' + full_stack() + '\033[0m')
             log.error(full_stack())
 
-def costFactor(mode, targetTemperature, temperature):
-    mf = 1
-    if(mode == 'cool' or mode == 'dry'):
-        if(targetTemperature >= 26):
-          mf = 1.1
-        elif(targetTemperature >= 25):
-          mf = 1.2
-        elif(targetTemperature >= 24):
-          mf = 1.3
-        elif(targetTemperature >= 23):
-          mf = 1.4
-        elif(targetTemperature >= 22):
-          mf = 1.5
-        elif(targetTemperature >= 21):
-          mf = 1.6
-        elif(targetTemperature >= 20):
-          mf = 1.7
-        elif(targetTemperature >= 19):
-          mf = 1.8
-        elif(targetTemperature >= 18):
-          mf = 1.9
-        else:
-          mf = 2
-
-    if(mode == 'heat'):
-        if(targetTemperature <= 21):
-          mf = 1.1
-        elif(targetTemperature <= 22):
-          mf = 1.2
-        elif(targetTemperature <= 23):
-          mf = 1.3
-        elif(targetTemperature <= 24):
-          mf = 1.4
-        elif(targetTemperature <= 25):
-          mf = 1.5
-        elif(targetTemperature <= 26):
-          mf = 1.6
-        elif(targetTemperature <= 27):
-          mf = 1.7
-        elif(targetTemperature <= 28):
-          mf = 1.8
-        elif(targetTemperature <= 29):
-          mf = 1.9
-        else:
-          mf = 2
-
-    if(mode == 'heat'):
-        if(targetTemperature - temperature <= 0):
-            return 0.25 * mf
-        return (1.035 - (1 / (1 + (targetTemperature - temperature))) ** 2) * mf
-
-    if(mode == 'cool' or mode == 'dry'):
-        if(temperature - targetTemperature <= 0):
-            return 0.25 * mf
-        return (1.035 - (1 / (1 + (temperature - targetTemperature))) ** 2) * mf
-
-    return 1
-
 def getAmps():
     if(costCurrentPort == None)
         return 0
@@ -368,6 +310,19 @@ def getAmps():
         return amps
 
     return 0
+
+def costFactor(mode, targetTemperature, temperature):
+    if(mode == 'heat'):
+        if(targetTemperature - temperature <= 0):
+            return 0.25
+        return (1.035 - (1 / (1 + (targetTemperature - temperature))) ** 2)
+
+    if(mode == 'cool' or mode == 'dry'):
+        if(temperature - targetTemperature <= 0):
+            return 0.25
+        return (1.035 - (1 / (1 + (temperature - targetTemperature))) ** 2)
+
+    return 1
 
 def calcCost(mydb):
     doLog("info", "Running cost calc...")

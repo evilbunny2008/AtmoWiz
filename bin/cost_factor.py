@@ -1,17 +1,10 @@
 #!/usr/bin/python3
 
-import serial
-import xmltodict
-import json
+import MySQLdb
+import pandas as pd
 
-with serial.Serial() as ser:
-    ser.baudrate = 57600
-    ser.port = '/dev/ttyUSB1'
-    ser.open()
+mydb = MySQLdb.connect('localhost', 'sensibo', 'uMrSzMH5MRHLF4iz', 'sensibo')
 
-    line = ser.readline()
-    print(line)
-#	line = str(line, 'ascii').strip()
-#        line = xmltodict.parse(line)
-#        amps = (round((int(line['msg']['ch1']['watts']) - 199) / 230, 2))
-
+query = "SELECT temperature, humidity, feelslike, mode, targetTemperature, fanLevel, amps FROM `sensibo` WHERE amps != 0"
+result_df = pd.read_sql(query, mydb)
+print(result_df)
