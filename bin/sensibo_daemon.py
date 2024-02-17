@@ -11,10 +11,12 @@ import os
 import pwd
 import random
 import requests
+import serial
 import shutil
 import sys
 import time
 import traceback
+import xmltodict
 from datetime import datetime
 from dateutil import tz
 from requests.auth import HTTPBasicAuth
@@ -27,7 +29,7 @@ _SERVER = 'https://home.sensibo.com/api/v2'
 
 _sqlquery1 = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing, changes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 _sqlquery2 = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
-_sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+_sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, amps) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
 _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
@@ -351,6 +353,22 @@ def costFactor(mode, targetTemperature, temperature):
 
     return 1
 
+def getAmps():
+    if(costCurrentPort == None)
+        return 0
+
+    with serial.Serial() as ser:
+        ser.baudrate = 57600
+        ser.port = costCurrentPort
+        ser.open()
+        line = str(ser.readline(), 'ascii').strip()
+        line = xmltodict.parse(line)
+        amps = (round((int(line['msg']['ch1']['watts']) - 199) / 230, 2))
+        ser.close()
+        return amps
+
+    return 0
+
 def calcCost(mydb):
     doLog("info", "Running cost calc...")
 
@@ -508,7 +526,7 @@ def doHistoricalMeasurements(mydb, days = 1):
         if(pod_measurement40 == None):
             continue
 
-        historicalMeasurements = historicalMeasurements['result']
+        pod_measurement40 = pod_measurement40['result']
 
         rc = -1
         for i in range(len(historicalMeasurements['temperature']) - 1, 0, -1):
@@ -561,7 +579,7 @@ def doHistoricalMeasurements(mydb, days = 1):
             doLog("debug", historicalMeasurements['humidity'][i])
 
             at = calcAT(temp, humid, country, feelslike)
-            values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing)
+            values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, 0)
             doLog("debug", _sqlquery3 % values)
             cursor.execute(_sqlquery3, values)
             mydb.commit()
@@ -1114,6 +1132,7 @@ if __name__ == "__main__":
     metLocation = configParser.get('sensibo', 'metLocation', fallback = '')
     OWMapikey = configParser.get('sensibo', 'OWMapikey', fallback = '')
     doOpenMeteo = configParser.getboolean('sensibo', 'doOpenMeteo', fallback = True)
+    costCurrentPort = configParser.get('sensibo', 'costCurrentPort', fallback = None)
 
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
     database = configParser.get('mariadb', 'database', fallback = 'sensibo')
@@ -1394,7 +1413,7 @@ if __name__ == "__main__":
                     values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                               at, measurements['rssi'], ac_state['on'],
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
-                              ac_state['swing'], ac_state['horizontalSwing'])
+                              ac_state['swing'], ac_state['horizontalSwing'], getAmps())
                     doLog("debug", _sqlquery3 % values)
                     cursor.execute(_sqlquery3, values)
                     mydb.commit()
