@@ -1074,7 +1074,7 @@ if __name__ == "__main__":
     bomURL = configParser.get('sensibo', 'bomURL', fallback = '')
     metLocation = configParser.get('sensibo', 'metLocation', fallback = '')
     OWMapikey = configParser.get('sensibo', 'OWMapikey', fallback = '')
-    doOpenMeteo = configParser.getboolean('sensibo', 'doOpenMeteo', fallback = False)
+    doOpenMeteo = configParser.getboolean('sensibo', 'doOpenMeteo', fallback = True)
 
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
     database = configParser.get('mariadb', 'database', fallback = 'sensibo')
