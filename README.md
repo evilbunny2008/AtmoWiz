@@ -19,7 +19,7 @@ Issues and feature requests can be filed [here](https://github.com/evilbunny2008
 * [Graphs by CanvasJS.com](https://canvasjs.com/)  
 * [Arrow Icons](https://svgsilh.com/00bcd4/image/34285.html)
 * [Flaticon Icons](https://www.flaticon.com)
-* [Multiple Sites Provide Observations](https://github.com/evilbunny2008/sensibo-python-sdk/wiki/Sources-of-Weather-Observations)
+* [Multiple Sites Provide Free Observations](https://github.com/evilbunny2008/sensibo-python-sdk/wiki/Sources-of-Weather-Observations)
 
 # Screen Shots
 
