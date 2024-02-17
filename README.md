@@ -23,6 +23,7 @@ Issues and feature requests can be filed [here](https://github.com/evilbunny2008
 
 # Screen Shots
 
+![Screen Shot0](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss0.png)
 ![Screen Shot1](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss1.png)
 ![Screen Shot2](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss2.png)
 ![Screen Shot3](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss3.png)
@@ -30,3 +31,5 @@ Issues and feature requests can be filed [here](https://github.com/evilbunny2008
 ![Screen Shot5](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss5.png)
 ![Screen Shot6](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss6.png)
 ![Screen Shot7](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss7.png)
+![Screen Shot8](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss8.png)
+![Screen Shot9](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss9.png)

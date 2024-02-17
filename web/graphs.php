@@ -873,13 +873,22 @@ td
 		echo "<td style='cursor: pointer;' title='".$drow['created']."'>".$drow['created']."</td>\n";
 
 		$days = "";
-		for($v = 0; $v < 7; $v++)
+		if($drow['daysOfWeek'] == 31)
 		{
-			if($drow['daysOfWeek'] & 2 ** $v)
+			$days = "Mon-Fri";
+		} else if($drow['daysOfWeek'] == 127) {
+			$days = "Mon-Sun";
+		} else if($drow['daysOfWeek'] == 96) {
+			$days = "Sat-Sun";
+		} else {
+			for($v = 0; $v < 7; $v++)
 			{
-				if($days != "")
-					$days .= ", ";
-				$days .= date("D", mktime(0, 0, 0, 0, $v + 6, 0));
+				if($drow['daysOfWeek'] & 2 ** $v)
+				{
+					if($days != "")
+						$days .= ", ";
+					$days .= date("D", mktime(0, 0, 0, 0, $v + 6, 0));
+				}
 			}
 		}
 
