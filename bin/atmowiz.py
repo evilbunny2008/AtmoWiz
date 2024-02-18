@@ -1203,7 +1203,7 @@ if __name__ == "__main__":
         groupList = os.getgroups()
         mygroups = []
         for group in groupList:
-             mygroups.append(grp.getgrgid(uid)[0])
+             mygroups.append(grp.getgrgid(group)[0])
         mygrouplist = ' '.join(mygroups)
         doLog("info", "Groups: %s" % mygrouplist)
     except Exception as e:
