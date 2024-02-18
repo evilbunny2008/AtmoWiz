@@ -1064,7 +1064,7 @@ def updateDatabase(mydb):
         query = "SHOW COLUMNS FROM `sensibo` LIKE 'amps'"
         cursor.execute(query)
         row = cursor.fetchone()
-        if(not row):
+        if(row):
             query = "ALTER TABLE `sensibo` DROP `amps`"
             cursor.execute(query)
 
