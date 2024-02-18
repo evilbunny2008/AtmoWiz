@@ -299,15 +299,21 @@ def getAmps():
     if(costCurrentPort == None):
         return 0
 
-    with serial.Serial() as ser:
-        ser.baudrate = 57600
-        ser.port = costCurrentPort
-        ser.open()
-        line = str(ser.readline(), 'ascii').strip()
-        line = xmltodict.parse(line)
-        amps = (round((int(line['msg']['ch1']['watts']) - 199) / 230, 2))
-        ser.close()
-        return amps
+    line = ""
+    try:
+        with serial.Serial() as ser:
+            ser.baudrate = 57600
+            ser.port = costCurrentPort
+            ser.open()
+            line = ser.readline()
+            line = str(line, 'ascii').strip()
+            line = xmltodict.parse(line)
+            amps = (round((int(line['msg']['ch1']['watts']) - 199) / 230, 2))
+            ser.close()
+            return amps
+    except Exception as e:
+        doLog("error", line)
+        doLog("error", e, True)
 
     return 0
 
