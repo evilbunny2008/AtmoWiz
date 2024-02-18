@@ -81,7 +81,7 @@ class SensiboClientAPI(object):
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
-            sleep(5)
+            time.sleep(5)
             result = devices()
 
         try:
@@ -97,7 +97,7 @@ class SensiboClientAPI(object):
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
-            sleep(5)
+            time.sleep(5)
             result = pod_all_stats(podUid, nb)
 
         try:
@@ -113,7 +113,7 @@ class SensiboClientAPI(object):
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
-            sleep(5)
+            time.sleep(5)
             result = pod_get_remote_capabilities(podUid, nb)
 
         try:
@@ -129,7 +129,7 @@ class SensiboClientAPI(object):
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
-            sleep(5)
+            time.sleep(5)
             result = pod_status(podUid, lastlimit)
 
         try:
@@ -145,7 +145,7 @@ class SensiboClientAPI(object):
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
-            sleep(5)
+            time.sleep(5)
             result = pod_get_past(podUid, days)
 
         try:
@@ -166,7 +166,7 @@ class SensiboClientAPI(object):
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
-            sleep(5)
+            time.sleep(5)
             result = pod_location(podUid)
 
         try:

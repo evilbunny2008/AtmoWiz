@@ -1,11 +1,11 @@
 # Intro
-Sensibo client python code based on the [Sensibo Python SDK](https://github.com/Sensibo/AtmoWiz/) and [Pull Requests Authors](https://github.com/Sensibo/AtmoWiz/pulls)
+AtmoWiz is a set of scripts, both in python and php, to graph and control your aircon or heat pump by accessing and utilising data returned by the Sensibo API.
 
-Client script is a basic script to interogate the Sensibo API, can toggle the AC on/off, set the target temperature and so on.
+The Sensibo client python code based on the [Sensibo Python SDK](https://github.com/Sensibo/sensibo-python-sdk/) and [Pull Requests Authors](https://github.com/Sensibo/sensibo-python-sdk/pulls). The client script is a basic script to interogate the Sensibo API, can toggle the AC on/off, set the target temperature and so on.
 
-Daemon script is a python daemon script which can download all the data exposed by the API and store it in a local database. sensibo.conf can be copied to /etc and chmod 600 to protect the apikey and database password.
+The AtmoWiz Daemon script is a python script which downloads data exposed by the API and store it in a local database. sensibo.conf can be copied to /etc and chmod 600 to protect the apikey and database password.
 
-The PHP scripts are used to display the data as a line graphs and can turn your AC on and off.
+The AtmoWiz PHP scripts are used to display the data as a line graphs and can turn your AC on and off, either by manual intervention or by setting a time or condition based setting to automatically turn your aircon on and off or change modes.
 
 [Click here](https://github.com/evilbunny2008/AtmoWiz/wiki) to jump to the installation instructions on the wiki.
 
@@ -16,7 +16,7 @@ Issues and feature requests can be filed [here](https://github.com/evilbunny2008
 # Credits
 
 * [favicon.svg came from svgrepo.com](https://www.svgrepo.com/svg/268208/cooling-cooler)
-* [Graphs by CanvasJS.com](https://canvasjs.com/)  
+* [Graphs by CanvasJS.com](https://canvasjs.com/)
 * [Arrow Icons](https://svgsilh.com/00bcd4/image/34285.html)
 * [Flaticon Icons](https://www.flaticon.com)
 * [Multiple Sites Provide Free Observations](https://github.com/evilbunny2008/AtmoWiz/wiki/Sources-of-Weather-Observations)
