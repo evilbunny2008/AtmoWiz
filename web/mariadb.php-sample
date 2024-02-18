@@ -19,7 +19,7 @@
 	session_start();
 
 	mysqli_report(MYSQLI_REPORT_OFF);
-	$link = @mysqli_connect('localhost', 'sensibo', $dbpass, 'sensibo');
+	$link = @mysqli_connect('localhost', 'atmowiz', $dbpass, 'atmowiz');
 	if(!isset($link))
 		$error = "DB error occured, check your settings in mariadb.php and try again";
 

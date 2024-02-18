@@ -29,7 +29,7 @@ _SERVER = 'https://home.sensibo.com/api/v2'
 
 _sqlquery1 = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing, changes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 _sqlquery2 = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
-_sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, amps) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+_sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, watts) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
 _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
@@ -295,7 +295,7 @@ def doLog(logType, line, doStackTrace = False):
                 print ('\33[90m' + full_stack() + '\033[0m')
             log.error(full_stack())
 
-def getAmps():
+def getWatts():
     if(costCurrentPort == None):
         return 0
 
@@ -308,9 +308,9 @@ def getAmps():
             line = ser.readline()
             line = str(line, 'ascii').strip()
             line = xmltodict.parse(line)
-            amps = (round((int(line['msg']['ch1']['watts']) - 199) / 230, 2))
+            watts = int(line['msg']['ch1']['watts'])
             ser.close()
-            return amps
+            return watts
     except Exception as e:
         doLog("error", line)
         doLog("error", e, True)
@@ -1049,6 +1049,29 @@ def getOpenMeteo(mydb, podUID):
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
+def updateDatabase(mydb):
+    try:
+        # Upgrade the database
+
+        cursor = mydb.cursor()
+        query = "SHOW COLUMNS FROM `sensibo` LIKE 'watts'"
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if(not row):
+            query = "ALTER TABLE `sensibo` ADD `watts` FLOAT NOT NULL DEFAULT '0' AFTER `cost`"
+            cursor.execute(query)
+
+        query = "SHOW COLUMNS FROM `sensibo` LIKE 'amps'"
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if(not row):
+            query = "ALTER TABLE `sensibo` DROP `amps`"
+            cursor.execute(query)
+
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+
 if __name__ == "__main__":
     os.system("")
     log = logging.getLogger('AtmoWiz Daemon')
@@ -1202,6 +1225,7 @@ if __name__ == "__main__":
 
     try:
         mydb = MySQLdb.connect(hostname, username, password, database)
+        updateDatabase(mydb)
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
@@ -1314,16 +1338,6 @@ if __name__ == "__main__":
         calcCost(mydb)
         getCurrentWeather(mydb, podUID)
 
-        # Upgrade the database
-
-        cursor = mydb.cursor()
-        query = "SHOW COLUMNS FROM `sensibo` LIKE 'amps'"
-        cursor.execute(query)
-        row = cursor.fetchone()
-        if(not row):
-            query = "ALTER TABLE `sensibo` ADD `amps` FLOAT NOT NULL DEFAULT '0' AFTER `cost`"
-            cursor.execute(query)
-
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
@@ -1385,7 +1399,7 @@ if __name__ == "__main__":
                     values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                               at, measurements['rssi'], ac_state['on'],
                               ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
-                              ac_state['swing'], ac_state['horizontalSwing'], getAmps())
+                              ac_state['swing'], ac_state['horizontalSwing'], getWatts())
                     doLog("debug", _sqlquery3 % values)
                     cursor.execute(_sqlquery3, values)
                     mydb.commit()
