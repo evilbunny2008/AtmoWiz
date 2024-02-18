@@ -1,12 +1,9 @@
-CREATE DATABASE IF NOT EXISTS `sensibo`;
-CREATE USER IF NOT EXISTS `sensibo`@`localhost` IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON `sensibo`.* TO `sensibo`@`localhost`;
-USE `sensibo`;
+CREATE DATABASE IF NOT EXISTS `atmowiz`;
+CREATE USER IF NOT EXISTS `atmowiz`@`localhost` IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON `atmowiz`.* TO `atmowiz`@`localhost`;
+USE `atmowiz`;
 
 START TRANSACTION;
-
-CREATE DATABASE IF NOT EXISTS `sensibo`;
-USE `sensibo`;
 
 CREATE TABLE IF NOT EXISTS `commands` (
   `whentime` datetime NOT NULL,

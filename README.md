@@ -1,5 +1,5 @@
 # Intro
-Sensibo client python code based on the [Sensibo Python SDK](https://github.com/Sensibo/sensibo-python-sdk/) and [Pull Requests Authors](https://github.com/Sensibo/sensibo-python-sdk/pulls)
+Sensibo client python code based on the [Sensibo Python SDK](https://github.com/Sensibo/AtmoWiz/) and [Pull Requests Authors](https://github.com/Sensibo/AtmoWiz/pulls)
 
 Client script is a basic script to interogate the Sensibo API, can toggle the AC on/off, set the target temperature and so on.
 
@@ -7,11 +7,11 @@ Daemon script is a python daemon script which can download all the data exposed 
 
 The PHP scripts are used to display the data as a line graphs and can turn your AC on and off.
 
-[Click here](https://github.com/evilbunny2008/sensibo-python-sdk/wiki) to jump to the installation instructions on the wiki.
+[Click here](https://github.com/evilbunny2008/AtmoWiz/wiki) to jump to the installation instructions on the wiki.
 
 # Issues and Feature Requests
 
-Issues and feature requests can be filed [here](https://github.com/evilbunny2008/sensibo-python-sdk/issues)
+Issues and feature requests can be filed [here](https://github.com/evilbunny2008/AtmoWiz/issues)
 
 # Credits
 
@@ -19,17 +19,17 @@ Issues and feature requests can be filed [here](https://github.com/evilbunny2008
 * [Graphs by CanvasJS.com](https://canvasjs.com/)  
 * [Arrow Icons](https://svgsilh.com/00bcd4/image/34285.html)
 * [Flaticon Icons](https://www.flaticon.com)
-* [Multiple Sites Provide Free Observations](https://github.com/evilbunny2008/sensibo-python-sdk/wiki/Sources-of-Weather-Observations)
+* [Multiple Sites Provide Free Observations](https://github.com/evilbunny2008/AtmoWiz/wiki/Sources-of-Weather-Observations)
 
 # Screen Shots
 
-![Screen Shot0](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss0.png)
-![Screen Shot1](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss1.png)
-![Screen Shot2](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss2.png)
-![Screen Shot3](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss3.png)
-![Screen Shot4](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss4.png)
-![Screen Shot5](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss5.png)
-![Screen Shot6](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss6.png)
-![Screen Shot7](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss7.png)
-![Screen Shot8](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss8.png)
-![Screen Shot9](https://raw.githubusercontent.com/evilbunny2008/sensibo-python-sdk/master/screenshots/ss9.png)
+![Screen Shot0](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss0.png)
+![Screen Shot1](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss1.png)
+![Screen Shot2](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss2.png)
+![Screen Shot3](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss3.png)
+![Screen Shot4](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss4.png)
+![Screen Shot5](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss5.png)
+![Screen Shot6](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss6.png)
+![Screen Shot7](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss7.png)
+![Screen Shot8](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss8.png)
+![Screen Shot9](https://raw.githubusercontent.com/evilbunny2008/AtmoWiz/master/screenshots/ss9.png)

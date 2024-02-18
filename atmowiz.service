@@ -2,14 +2,14 @@
 #
 
 [Unit]
-Description=Sensibo Daemon
-Documentation=https://github.com/evilbunny2008/sensibo-python-sdk/
+Description=AtmoWiz Daemon
+Documentation=https://github.com/evilbunny2008/AtmoWiz/
 
 Requires=network.target time-sync.target mariadb.service
 After=network.target time-sync.target mariadb.service
 
 [Service]
-ExecStart=/usr/bin/sensibo_daemon.py
+ExecStart=/usr/bin/atmowiz.py
 Restart=always
 RestartSec=5s
 StandardOutput=journal

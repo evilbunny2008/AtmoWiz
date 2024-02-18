@@ -178,7 +178,7 @@ span.password {
     </div>
   </form>
 <footer id="footer">
-  <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/sensibo-python-sdk'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
+  <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/AtmoWiz'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
 </footer>
 </body>
 </html>

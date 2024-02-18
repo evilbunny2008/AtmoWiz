@@ -252,7 +252,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>Sensibo Data Plotting</title>
+<title>AtmoWiz</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.svg">
@@ -582,7 +582,7 @@ td
 </section>
 <div style='height: 32px;width: 100%'></div>
 <footer id="footer">
-  <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/sensibo-python-sdk'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
+  <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/AtmoWiz'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
 </footer>
 
 <?php

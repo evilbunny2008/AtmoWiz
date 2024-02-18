@@ -1051,8 +1051,8 @@ def getOpenMeteo(mydb, podUID):
 
 if __name__ == "__main__":
     os.system("")
-    log = logging.getLogger('Sensibo Daemon')
-    log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='Sensibo Daemon'))
+    log = logging.getLogger('AtmoWiz Daemon')
+    log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='AtmoWiz Daemon'))
     log.setLevel(logging.DEBUG)
     doLog("info", "Daemon started....")
     if(_INVOCATION_ID):
@@ -1065,8 +1065,8 @@ if __name__ == "__main__":
         exit(1)
 
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
-    parser.add_argument('-c', '--config', type = str, default='/etc/sensibo.conf',
-                        help='Path to config file, /etc/sensibo.conf is the default')
+    parser.add_argument('-c', '--config', type = str, default='/etc/atmowiz.conf',
+                        help='Path to config file, /etc/atmowiz.conf is the default')
     parser.add_argument('--reCalcCost', action='store_true', help='Recalc the cost of running the aircon after updating power prices')
     parser.add_argument('--reCalcFL', action='store_true', help='Recalc the feels like temperature')
     args = parser.parse_args()
@@ -1084,20 +1084,21 @@ if __name__ == "__main__":
     apikey = configParser.get('sensibo', 'apikey', fallback = 'apikey')
     days = configParser.getint('sensibo', 'days', fallback = 1)
 
-    weatherapikey = configParser.get('sensibo', 'weatherapikey', fallback = '')
-    inigoURL = configParser.get('sensibo', 'inigoURL', fallback = '')
-    urad_URL = configParser.get('sensibo', 'urad_URL', fallback = '')
-    urad_userid = configParser.get('sensibo', 'urad_userid', fallback = '')
-    urad_hash = configParser.get('sensibo', 'urad_hash', fallback = '')
-    bomURL = configParser.get('sensibo', 'bomURL', fallback = '')
-    metLocation = configParser.get('sensibo', 'metLocation', fallback = '')
-    OWMapikey = configParser.get('sensibo', 'OWMapikey', fallback = '')
-    doOpenMeteo = configParser.getboolean('sensibo', 'doOpenMeteo', fallback = True)
-    costCurrentPort = configParser.get('sensibo', 'costCurrentPort', fallback = None)
+    weatherapikey = configParser.get('observations', 'weatherapikey', fallback = '')
+    inigoURL = configParser.get('observations', 'inigoURL', fallback = '')
+    urad_URL = configParser.get('observations', 'urad_URL', fallback = '')
+    urad_userid = configParser.get('observations', 'urad_userid', fallback = '')
+    urad_hash = configParser.get('observations', 'urad_hash', fallback = '')
+    bomURL = configParser.get('observations', 'bomURL', fallback = '')
+    metLocation = configParser.get('observations', 'metLocation', fallback = '')
+    OWMapikey = configParser.get('observations', 'OWMapikey', fallback = '')
+    doOpenMeteo = configParser.getboolean('observations', 'doOpenMeteo', fallback = True)
+
+    costCurrentPort = configParser.get('power', 'costCurrentPort', fallback = None)
 
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
-    database = configParser.get('mariadb', 'database', fallback = 'sensibo')
-    username = configParser.get('mariadb', 'username', fallback = 'sensibo')
+    database = configParser.get('mariadb', 'database', fallback = 'atmowiz')
+    username = configParser.get('mariadb', 'username', fallback = 'atmowiz')
     password = configParser.get('mariadb', 'password', fallback = 'password')
 
     uid = configParser.getint('system', 'uid', fallback = 0)
