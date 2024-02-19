@@ -314,6 +314,7 @@ def getWatts():
     except Exception as e:
         doLog("error", line)
         doLog("error", e, True)
+        return getWatts()
 
     return 0
 

@@ -194,7 +194,7 @@
 			mysqli_free_result($res);
 
 			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4)));
-			$redis->expire(md5($query), 3600);
+			$redis->expire(md5($query), 86400);
 		}
 
 		$rc = $wt = $cost = 0;
@@ -233,7 +233,7 @@
 
 			mysqli_free_result($res);
 			$redis->set(md5($query), serialize($dataPoints5));
-			$redis->expire(md5($query), 3600);
+			$redis->expire(md5($query), 86400);
 		}
 	} else {
 		if($redis->exists(md5($query)))
@@ -282,7 +282,7 @@
 			mysqli_free_result($res);
 
 			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4)));
-			$redis->expire(md5($query), 3600);
+			$redis->expire(md5($query), 86400);
 		}
 	}
 
@@ -326,7 +326,7 @@
 
 			mysqli_free_result($res);
 			$redis->set(md5($query), serialize($dataPoints5));
-			$redis->expire(md5($query), 3600);
+			$redis->expire(md5($query), 86400);
 		}
 	} else if($period != 31536000000) {
 		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
@@ -350,7 +350,7 @@
 
 			$dataPoints5[] = array('x' => doubleval($startTS + $period), 'y' => null);
 			$redis->set(md5($query), serialize($dataPoints5));
-			$redis->expire(md5($query), 3600);
+			$redis->expire(md5($query), 86400);
 		}
 	}
 
@@ -359,21 +359,23 @@
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
 	{
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:50px;' onClick='showSettings(); return false;' src='wand.png' />\n";
-		$commands .= "<img style='width:50px;' onClick='showTimeSettings(); return false;' src='watch.png' />\n";
-		$commands .= "<img style='width:50px;' onClick='settings(); return false;' src='settings.png' />\n";
+		$commands .= "<img style='width:40px;' onClick='showSettings(); return false;' src='wand.png' title='Show Climate Settings' />\n";
+		$commands .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='watch.png' title='Show Time Based Settings' />\n";
+		$commands .= "<img style='width:40px;' onClick='settings(); return false;' src='settings.png' title='Show AirCon Settings' />\n";
 
 		if($ac == "on")
-			$commands .= "<img id='onoff' style='width:50px;' onClick='toggleAC(); return false;' src='on.png' />\n";
+			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='on.png' title='Turn AirCon Off' />\n";
 		else
-			$commands .= "<img id='onoff' style='width:50px;' onClick='toggleAC(); return false;' src='off.png' />\n";
+			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' />\n";
 
-		$commands .= "<img style='width:50px;' onClick='logout(); return false;' src='exit.png' />\n";
+		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
+		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
 
 		$commands .= "</li>\n";
 	} else {
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' />\n";
+		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
+		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
 		$commands .= "</li>\n";
 	}
 

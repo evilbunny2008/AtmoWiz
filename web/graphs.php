@@ -582,7 +582,7 @@ td
 </section>
 <div style='height: 32px;width: 100%'></div>
 <footer id="footer">
-  <div id="footer-content"><a target='_blank' href='https://github.com/evilbunny2008/AtmoWiz'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
+  <div id="footer-content"><a target='_blank' href='https://AtmoWiz.com'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
 </footer>
 
 <?php
@@ -846,7 +846,7 @@ td
       <span onclick="document.getElementById('id04').style.display='none'" class="close">&times;</span>
     </div>
     <div class="container">
-	<h1>Climate Settings</h1>
+	<h1>Time Based Settings</h1>
 	<br/>
 	<table>
 	<tr>
@@ -927,7 +927,7 @@ td
       <span onclick="cancelAddUpdateTime(); return false;" class="close">&times;</span>
     </div>
     <div class="container">
-	<h1 style='text-align: center;'>Climate Settings</h1><br/>
+	<h1 style='text-align: center;'>Time Based Settings</h1><br/>
 	<input id="created5" type="hidden" name="created5" />
 	<input id="startTS5" type="hidden" name="startTS" />
 	<input id="podUID5" type="hidden" name="podUID5" />
@@ -1908,6 +1908,11 @@ function newTimeSetting()
 function showTimeSettings()
 {
 	modal4.style.display = "block";
+}
+
+function help()
+{
+	window.open("https://github.com/evilbunny2008/AtmoWiz/wiki", "_blank").focus();;
 }
 
 DataLoop();
