@@ -248,6 +248,28 @@
 		if(!mysqli_query($link, $query))
 			$error = sprintf("Error message: %s\n", mysqli_error($link));
 	}
+
+	if(isset($_REQUEST['podUID8']) && !empty($_REQUEST['podUID8']) && $_SESSION['rw'] && (!isset($_REQUEST['action']) || empty($_REQUEST['action'])))
+	{
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID8']);
+		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
+		$seconds = substr($_REQUEST['timer'], 0, 2) * 3600 + substr($_REQUEST['timer'], 3, 2) * 60;
+
+		$query = "INSERT INTO timers (uid, whentime, turnOnOff, seconds) VALUES ('${row['uid']}', NOW(), '$turnOnOff', '$seconds')";
+		if(!mysqli_query($link, $query))
+			$error = sprintf("Error message: %s\n", mysqli_error($link));
+	}
+
+	if(isset($_REQUEST['action']) && $_REQUEST['action'] == "delete" && isset($_REQUEST['podUID8']) && !empty($_REQUEST['podUID8']) && isset($_REQUEST['whentime']) && !empty($_REQUEST['whentime']) && $_SESSION['rw'])
+	{
+		$whentime = mysqli_real_escape_string($link, $_REQUEST['whentime']);
+		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID8']);
+
+		$query = "DELETE FROM timers WHERE uid='${row['uid']}' AND whentime='$whentime'";
+		if(!mysqli_query($link, $query))
+			$error = sprintf("Error message: %s\n", mysqli_error($link));
+	}
+
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -259,6 +281,8 @@
 <link rel="stylesheet" href="clocklet.min.css">
 <script src="canvasjs.min.js"></script>
 <script src="clocklet.js"></script>
+<link href="time-pick.css" rel="stylesheet">
+<script src="time-pick.js"></script>
 <style>
 *
 {
@@ -349,17 +373,7 @@ body
   box-sizing: border-box;
 }
 
-.myInputs2
-{
-  width: 100%;
-  padding: 12px 12px;
-  margin: 8px 8px;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-.myInputs5
+.myInputs2, .myInputs5, .myInputs8
 {
   width: 100%;
   padding: 12px 12px;
@@ -459,6 +473,15 @@ span.psw
 #id06 .modal-content
 {
   width: 500px;
+  padding-top: 0px;
+  margin-top: 0px;
+  padding-bottom: 50px;
+  margin-bottom: 50px;
+}
+
+#id07 .modal-content
+{
+  width: 800px;
   padding-top: 0px;
   margin-top: 0px;
   padding-bottom: 50px;
@@ -1049,7 +1072,74 @@ td
     </div>
   </form>
 </div>
+<div id="id07" class="modal">
+  <form class="modal-content animate" action="graphs.php" method="post">
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id07').style.display='none'" class="close">&times;</span>
+    </div>
+    <div class="container">
+	<h1>Timers</h1>
+	<br/>
+	<table>
+	<tr>
+		<th>Created</th>
+		<th>Second(s) Delay</th>
+		<th>Turn On/Off</th>
+		<th>Delete</th>
+	</tr>
+<?php
+	$query = "SELECT * FROM timers WHERE uid='${row['uid']}'";
+	$res = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($res))
+	{
+		echo "<tr>";
+		echo "<td style='cursor: pointer;' title='".$drow['whentime']."'>".$drow['whentime']."</td>\n";
+
+		echo "<td>".$drow['seconds']."</td>\n";
+		echo "<td>".$drow['turnOnOff']."</td>\n";
+
+		echo "<td onClick=\"deleteTimer('".$drow['whentime']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>\n";
+		echo "</tr>\n";
+	}
+?>
+	</table><br/><br/>
+	<b onClick="newTimer(); return false;" style="cursor: pointer;color: #085f24;">Add Timer</b>
+    </div>
+  </form>
+</div>
+<div id="id08" class="modal">
+  <form class="modal-content animate" action="graphs.php" method="post">
+    <div class="imgcontainer">
+      <span onclick="cancelAddTimer(); return false;" class="close">&times;</span>
+    </div>
+    <div class="container">
+	<h1>New Timer</h1>
+	<br/>
+	<input id="startTS8" type="hidden" name="startTS" />
+	<input id="podUID8" type="hidden" name="podUID8" />
+	<label for="timer8">Set a Time:</label>
+	<input type="text" id="timer8" name="timer" class="myInputs2" value="00:20" />
+	<label for="turnOnOff8"><b>Turn On/Off:</b></label>
+	<select class="myInputs2" id="turnOnOff8" name="turnOnOff">
+<?php
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'turnOnOff'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	<button type="submit">Add</button>
+    </div>
+  </form>
+</div>
 <script>
+
+tp.attach({target:document.getElementById("timer8"),"24":true});
 
 var timePeriod = "<?=$timePeriod?>";
 var period = <?=$period?>;
@@ -1058,11 +1148,13 @@ var currtime = "";
 document.getElementById("podUID1").value = uid;
 document.getElementById("podUID2").value = uid;
 document.getElementById("podUID5").value = uid;
+document.getElementById("podUID8").value = uid;
 
 var startTS = <?=$startTS?>;
 document.getElementById("startTS1").value = startTS;
 document.getElementById("startTS2").value = startTS;
 document.getElementById("startTS5").value = startTS;
+document.getElementById("startTS8").value = startTS;
 
 var modal1 = document.getElementById('id01');
 var modal2 = document.getElementById('id02');
@@ -1070,6 +1162,8 @@ var modal3 = document.getElementById('id03');
 var modal4 = document.getElementById('id04');
 var modal5 = document.getElementById('id05');
 var modal6 = document.getElementById('id06');
+var modal7 = document.getElementById('id07');
+var modal8 = document.getElementById('id08');
 
 var chart1 = new CanvasJS.Chart("chartContainer",
 {
@@ -1871,6 +1965,12 @@ function cancelAddUpdateTime()
 	modal4.style.display = "block";
 }
 
+function cancelAddTimer()
+{
+	modal8.style.display = "none";
+	modal7.style.display = "block";
+}
+
 function deleteSetting(created, uid)
 {
 	if(confirm("Are you sure you want to delete this setting?"))
@@ -1881,6 +1981,12 @@ function deleteTimeSetting(created, uid)
 {
 	if(confirm("Are you sure you want to delete this setting?"))
 		window.location = 'graphs.php?action=delete&created=' + created + '&podUID5=' + uid;
+}
+
+function deleteTimer(created, uid)
+{
+	if(confirm("Are you sure you want to delete this timer?"))
+		window.location = 'graphs.php?action=delete&whentime=' + created + '&podUID8=' + uid;
 }
 
 function newTimeSetting()
@@ -1908,6 +2014,17 @@ function newTimeSetting()
 function showTimeSettings()
 {
 	modal4.style.display = "block";
+}
+
+function showTimers()
+{
+	modal7.style.display = "block";
+}
+
+function newTimer()
+{
+	modal7.style.display = "none";
+	modal8.style.display = "block";
 }
 
 function help()
@@ -1938,6 +2055,12 @@ populateSelect("5");
 		echo "function delayLoading()\n";
 		echo "{\n";
 		echo "\tmodal4.style.display = 'block';\n";
+		echo "}\n\n";
+		echo "setTimeout('delayLoading()', 250);\n";
+	} else if(isset($_REQUEST['podUID8']) && !empty($_REQUEST['podUID8']) && $_SESSION['rw']) {
+		echo "function delayLoading()\n";
+		echo "{\n";
+		echo "\tmodal7.style.display = 'block';\n";
 		echo "}\n\n";
 		echo "setTimeout('delayLoading()', 250);\n";
 	}

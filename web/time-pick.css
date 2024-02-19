@@ -1,0 +1,59 @@
+/* (A) WRAPPER */
+#tp-wrap * {
+  font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+}
+#tp-wrap *::selection {
+  background: transparent;
+}
+#tp-wrap {
+  width: 100vw; height: 100vh;
+  position: fixed; top: 0; left: 0; z-index: 999;
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.3s;
+}
+#tp-wrap.show {
+  opacity: 1; visibility: visible;
+}
+
+/* (B) BOX */
+#tp-box {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  display: flex; flex-wrap: wrap;
+  border: 1px solid #000;
+  background: #2d2d2d;
+}
+
+/* (C) HR/MIN/AM/PM */
+.tp-cell {
+  width: 33.3%; padding: 0 15px;
+  text-align: center;
+}
+.tp-up, .tp-down {
+  padding: 10px 0;
+  color: #e01717;
+  font-size: 32px; font-weight: 700;
+  cursor: pointer;
+}
+.tp-val {
+  width: 100%; padding: 10px 0;
+  text-align: center; font-size: 22px;
+  background: #fff;
+}
+
+/* (D) CLOSE & SET BUTTON */
+#tp-close, #tp-set {
+  width: 50%; padding: 15px 0; border: 0;
+  font-size: 18px; font-weight: 700;
+  color: #fff; cursor: pointer;
+}
+#tp-close { background: #951a1a; }
+#tp-set { background: #1339a7; }
+
+/* (E) 24-HOUR MODIFY */
+#tp-wrap.tp-24 #tp-ap { display: none; }
+#tp-wrap.tp-24 #tp-hr, #tp-wrap.tp-24 #tp-min { width: 50%; }

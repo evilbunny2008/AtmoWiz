@@ -716,16 +716,47 @@ def checkSettings(mydb):
                 #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
 
                 if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                    doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    doLog("info", "Rule 9 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
                     return
                 elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                    doLog("info", "Rule 2 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    doLog("info", "Rule 10 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
                     return
                 elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
-                    doLog("info", "Rule 3 hit, %s is %s keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
+                    doLog("info", "Rule 11 hit, %s is %s keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
                     return
                 elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
-                    doLog("info", "Rule 4 hit, %s is %s keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
+                    doLog("info", "Rule 12 hit, %s is %s keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
+                    return
+
+                #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+
+            query = "SELECT whentime, turnOnOff FROM timers WHERE uid=%s AND UNIX_TIMESTAMP(whentime) + seconds < UNIX_TIMESTAMP(NOW())"
+            values = (podUID, )
+            doLog("debug", query % values)
+            cursor.execute(query, values)
+            result = cursor.fetchall()
+            for (whentime, turnOnOff) in result:
+                query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                values = (podUID, )
+                doLog("debug", query % values)
+                cursor.execute(query, values)
+                (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
+
+                if(turnOnOff == "On" and airconon == 0):
+                    doLog("info", "Rule 13 hit for %s, turning aircon on..." % (podUID, ))
+                    query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
+                    values = (whentime, podUID)
+                    doLog("debug", query % values)
+                    cursor.execute(query, values)
+                    mydb.commit()
+                    return
+                elif(turnOnOff == "Off" and airconon == 1):
+                    doLog("info", "Rule 14 hit for %s, turning aircon off..." % (podUID, ))
+                    query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
+                    values = (whentime, podUID)
+                    doLog("debug", query % values)
+                    cursor.execute(query, values)
+                    mydb.commit()
                     return
 
                 #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
@@ -1053,21 +1084,36 @@ def getOpenMeteo(mydb, podUID):
 def updateDatabase(mydb):
     try:
         # Upgrade the database
-
         cursor = mydb.cursor()
+
+        query = "SHOW TABLE STATUS WHERE Name = 'timers'"
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if(not row):
+            doLog("info", "Creating timers table...")
+            query = "CREATE TABLE `timers` (`whentime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `uid` VARCHAR(8) NOT NULL, `seconds` SMALLINT(5) NOT NULL DEFAULT '1200', `turnOnOff` ENUM('On','Off') NOT NULL DEFAULT 'On') ENGINE = InnoDB"
+            cursor.execute(query)
+            query = "ALTER TABLE `timers` ADD PRIMARY KEY(`whentime`, `uid`)"
+            cursor.execute(query)
+            mydb.commit()
+
         query = "SHOW COLUMNS FROM `sensibo` LIKE 'watts'"
         cursor.execute(query)
         row = cursor.fetchone()
         if(not row):
+            doLog("info", "Creating watts column...")
             query = "ALTER TABLE `sensibo` ADD `watts` FLOAT NOT NULL DEFAULT '0' AFTER `cost`"
             cursor.execute(query)
+            mydb.commit()
 
         query = "SHOW COLUMNS FROM `sensibo` LIKE 'amps'"
         cursor.execute(query)
         row = cursor.fetchone()
         if(row):
+            doLog("info", "Dropping amps column...")
             query = "ALTER TABLE `sensibo` DROP `amps`"
             cursor.execute(query)
+            mydb.commit()
 
     except Exception as e:
         doLog("error", "There was a problem, error was %s" % e, True)

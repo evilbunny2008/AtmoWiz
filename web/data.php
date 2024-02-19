@@ -359,10 +359,13 @@
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
 	{
 		$commands .= "<li style='text-align:center'>";
+		$commands .= "<img style='width:40px;' onClick='showTimers(); return false;' src='hourglass.png' title='Timer' />\n";
 		$commands .= "<img style='width:40px;' onClick='showSettings(); return false;' src='wand.png' title='Show Climate Settings' />\n";
 		$commands .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='watch.png' title='Show Time Based Settings' />\n";
 		$commands .= "<img style='width:40px;' onClick='settings(); return false;' src='settings.png' title='Show AirCon Settings' />\n";
+		$commands .= "</li>\n";
 
+		$commands .= "<li style='text-align:center'>";
 		if($ac == "on")
 			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='on.png' title='Turn AirCon Off' />\n";
 		else
