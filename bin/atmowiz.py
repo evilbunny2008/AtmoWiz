@@ -742,16 +742,18 @@ def checkSettings(mydb):
                 cursor.execute(query, values)
                 (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
 
-                if(turnOnOff == "On" and airconon == 0):
-                    doLog("info", "Rule 13 hit for %s, turning aircon on..." % (podUID, ))
+                if(turnOnOff == "On"):
+                    if(airconon == 0):
+                        doLog("info", "Rule 13 hit for %s, turning aircon on..." % (podUID, ))
                     query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
                     values = (whentime, podUID)
                     doLog("debug", query % values)
                     cursor.execute(query, values)
                     mydb.commit()
                     return
-                elif(turnOnOff == "Off" and airconon == 1):
-                    doLog("info", "Rule 14 hit for %s, turning aircon off..." % (podUID, ))
+                elif(turnOnOff == "Off"):
+                    if(airconon == 1):
+                        doLog("info", "Rule 14 hit for %s, turning aircon off..." % (podUID, ))
                     query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
                     values = (whentime, podUID)
                     doLog("debug", query % values)

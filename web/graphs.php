@@ -1080,28 +1080,7 @@ td
     <div class="container">
 	<h1>Timers</h1>
 	<br/>
-	<table>
-	<tr>
-		<th>Created</th>
-		<th>Second(s) Delay</th>
-		<th>Turn On/Off</th>
-		<th>Delete</th>
-	</tr>
-<?php
-	$query = "SELECT * FROM timers WHERE uid='${row['uid']}'";
-	$res = mysqli_query($link, $query);
-	while($drow = mysqli_fetch_assoc($res))
-	{
-		echo "<tr>";
-		echo "<td style='cursor: pointer;' title='".$drow['whentime']."'>".$drow['whentime']."</td>\n";
-
-		echo "<td>".$drow['seconds']."</td>\n";
-		echo "<td>".$drow['turnOnOff']."</td>\n";
-
-		echo "<td onClick=\"deleteTimer('".$drow['whentime']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>\n";
-		echo "</tr>\n";
-	}
-?>
+	<table id="timerTable">
 	</table><br/><br/>
 	<b onClick="newTimer(); return false;" style="cursor: pointer;color: #085f24;">Add Timer</b>
     </div>
@@ -1533,9 +1512,34 @@ async function DataLoop()
 		startTS = now - period;
 		document.getElementById("startTS1").value = startTS;
 		document.getElementById("startTS2").value = startTS;
+		document.getElementById("startTS5").value = startTS;
+		document.getElementById("startTS8").value = startTS;
 	}
 
 	startDataLoop(false);
+	timerTable();
+}
+
+async function timerTable()
+{
+	try
+	{
+		var url = "timers.php?time=" + new Date().getTime();
+		url += "&uid=" + uid;
+		const response = await fetch(url);
+		const ret = await response.json();
+
+		if(ret['status'] != 200)
+		{
+			alert(ret['error']);
+			return;
+		}
+
+		content = ret['content'];
+		document.getElementById("timerTable").innerHTML = content;
+	} catch (e) {
+		console.log(e)
+	}
 }
 
 async function startDataLoop(force)
@@ -1569,6 +1573,8 @@ console.log("Update should have happened.");
 		startTS = content['startTS'];
 		document.getElementById("startTS1").value = startTS;
 		document.getElementById("startTS2").value = startTS;
+		document.getElementById("startTS5").value = startTS;
+		document.getElementById("startTS8").value = startTS;
 
 		document.getElementById("commands").innerHTML = content['commands'];
 		uid = content['uid'];
@@ -1719,6 +1725,8 @@ async function changeTP(value)
 	startTS = new Date().getTime() - period;
 	document.getElementById("startTS1").value = startTS;
 	document.getElementById("startTS2").value = startTS;
+	document.getElementById("startTS5").value = startTS;
+	document.getElementById("startTS8").value = startTS;
 	startDataLoop(true);
 }
 
@@ -1727,6 +1735,8 @@ function prevDay()
 	startTS -= period;
 	document.getElementById("startTS1").value = startTS;
 	document.getElementById("startTS2").value = startTS;
+	document.getElementById("startTS5").value = startTS;
+	document.getElementById("startTS8").value = startTS;
 	startDataLoop(true);
 }
 
@@ -1735,6 +1745,8 @@ function nextDay()
 	startTS += period;
 	document.getElementById("startTS1").value = startTS;
 	document.getElementById("startTS2").value = startTS;
+	document.getElementById("startTS5").value = startTS;
+	document.getElementById("startTS8").value = startTS;
 	startDataLoop(true);
 }
 
