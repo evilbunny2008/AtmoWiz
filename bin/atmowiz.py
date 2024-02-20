@@ -14,6 +14,7 @@ import requests
 import serial
 import shutil
 import sys
+import threading
 import time
 import traceback
 import xmltodict
@@ -773,26 +774,46 @@ def checkSettings(mydb):
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
 
-def getCurrentWeather(mydb, podUID):
+def getObservations():
+    while True:
+        try:
+            doLog("info", "getObservations(%s)" % podUID)
+            mydb = MySQLdb.connect(hostname, username, password, database)
+
+            if(weatherapikey != ''):
+                getWeatherAPI(mydb, podUID)
+
+            if(OWMapikey != ''):
+                getOpenWeatherMap(mydb, podUID)
+
+            if(inigoURL != ''):
+                getInigoData(mydb)
+
+            if(bomURL != ''):
+                getBOM(mydb)
+
+            if(metLocation != ''):
+                getMetService(mydb)
+
+            if(doOpenMeteo):
+                getOpenMeteo(mydb, podUID)
+
+            mydb.close()
+
+            updateTime = 15
+            if(inigoURL != ''):
+                updateTime = 5
+            time.sleep(updateTime * 60)
+
+        except Exception as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            pass
+
+def getCurrentWeather(podUID):
     doLog("info", "Getting observation...")
 
-    if(weatherapikey != ''):
-        getWeatherAPI(mydb, podUID)
-
-    if(OWMapikey != ''):
-        getOpenWeatherMap(mydb, podUID)
-
-    if(inigoURL != ''):
-        getInigoData(mydb)
-
-    if(bomURL != ''):
-        getBOM(mydb)
-
-    if(metLocation != ''):
-        getMetService(mydb)
-
-    if(doOpenMeteo):
-        getOpenMeteo(mydb, podUID)
+    my_thread = threading.Thread(target=getObservations)
+    my_thread.start()
 
 def getOpenWeatherMap(mydb, podUID):
     if(OWMapikey == ''):
@@ -1385,7 +1406,6 @@ if __name__ == "__main__":
 
         doHistoricalMeasurements(mydb, days)
         calcCost(mydb)
-        getCurrentWeather(mydb, podUID)
 
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
@@ -1400,6 +1420,8 @@ if __name__ == "__main__":
     mydb.close()
 
     loops = 0
+
+    getCurrentWeather(podUID)
 
     while True:
         try:
@@ -1477,17 +1499,6 @@ if __name__ == "__main__":
             checkSettings(mydb)
 
             loops += 1
-
-            if(inigoURL != ''):
-                if(loops % 3 == 0):
-                    getCurrentWeather(mydb, podUID)
-            elif(bomURL != ''):
-                if(loops % 20 == 0):
-                    getCurrentWeather(mydb, podUID)
-            else:
-                if(loops % 10 == 0):
-                    getCurrentWeather(mydb, podUID)
-
             if(loops >= 40):
                 loops = 0
                 doHistoricalMeasurements(mydb, 1)

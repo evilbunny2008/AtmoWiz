@@ -1,5 +1,6 @@
 <?php
 	$error = null;
+	$timePeriod = "day";
 	$period = 86400000;
 	$startTS = time() * 1000 - $period;
 	$row = array('uid' => '');
@@ -478,7 +479,7 @@ function deleteSetting(created, uid)
 }
 </script>
 <div id="id03" class="modal">
-  <form class="modal-content animate" action="graphForms.php" method="post">
+  <form class="modal-content animate" id="climateSettingsForm"action="graphForms.php" method="post">
     <div class="imgcontainer">
       <span onclick="cancelAddUpdate(); return false;" class="close">&times;</span>
     </div>
@@ -629,7 +630,33 @@ function deleteSetting(created, uid)
   </form>
 </div>
 <script>
+document.forms['climateSettingsForm'].addEventListener('submit', (event) =>
+{
+	event.preventDefault();
+	document.getElementById("submitAddUpdate2").setAttribute('disabled', true);
+	// TODO do something here to show user that form is being submitted
+        var formData = new FormData(event.target);
+	formData.append("podUID2", uid);
 
+	fetch(event.target.action,
+	{
+		method: 'POST',
+		body: formData
+	}).then((response) => {
+		if(!response.ok)
+		{
+			throw new Error(`HTTP error! Status: ${response.status} ${response.statusText} ${response.url}`);
+		}
+
+		climateSettings();
+		modal3.style.display = 'none';
+		modal2.style.display = 'block';
+		document.getElementById("submitAddUpdate2").removeAttribute('disabled');
+	}).catch((error) => {
+		alert(error);
+		document.getElementById("submitAddUpdate2").removeAttribute('disabled');
+	});
+});
 </script>
 <div id="id04" class="modal">
   <form class="modal-content animate" action="graphForms.php" method="post">
