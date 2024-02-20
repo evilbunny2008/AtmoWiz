@@ -1406,6 +1406,7 @@ if __name__ == "__main__":
 
         doHistoricalMeasurements(mydb, days)
         calcCost(mydb)
+        checkSettings(mydb)
 
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
