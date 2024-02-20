@@ -856,7 +856,7 @@ def getOpenWeatherMap(mydb, podUID):
             doLog("debug", "Skipping observation as we already have it")
             return
 
-        aqi = uradmonitor()
+        aqi = getAQI()
         values = (whentime, temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
         doLog("debug", query % values)
@@ -898,7 +898,7 @@ def getMetService(mydb):
             doLog("debug", "Skipping observation as we already have it")
             return
 
-        aqi = uradmonitor()
+        aqi = getAQI()
         values = (whentime, temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
         doLog("debug", query % values)
@@ -940,7 +940,7 @@ def getBOM(mydb):
                 doLog("debug", "Skipping observation as we already have it")
                 continue
 
-            aqi = uradmonitor()
+            aqi = getAQI()
             fl = calcAT(float(temp), float(humid), country, None)
             values = (whentime, temp, fl, humid, pressure, aqi)
             query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
@@ -951,6 +951,11 @@ def getBOM(mydb):
     except Exception as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
+
+def getAQI():
+    if(urad_userid != '' and urad_hash != ''):
+        return uradmonitor()
+    return openmeteoaqi()
 
 def uradmonitor():
     if(urad_userid != '' and urad_hash != ''):
@@ -991,7 +996,7 @@ def getInigoData(mydb):
             doLog("debug", "Skipping observation as we already have it")
             return
 
-        aqi = uradmonitor()
+        aqi = getAQI()
         values = (whentime, temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
         doLog("debug", query % values)
@@ -1028,7 +1033,7 @@ def getWeatherAPI(mydb, podUID):
             pressure = str(result['current']['pressure_in'])
         humid = str(result['current']['humidity'])
         if(urad_userid != '' and urad_hash != ''):
-            aqi = uradmonitor()
+            aqi = getAQI()
         else:
             aqi = str(result['current']['air_quality']['us-epa-index'])
 
@@ -1063,6 +1068,22 @@ def getLatLon(podUID):
     _lat = latLon[0]
     _lon = latLon[1]
 
+def openmeteoaqi():
+    doLog("info", "Getting Open-Meteo observation...")
+
+    if(_lat == 0 and _lon == 0):
+        getLatLon(podUID)
+
+    url = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=%f&longitude=%f&current=us_aqi&timeformat=unixtime" % (_lat, _lon)
+
+    try:
+        response = requests.get(url, timeout = 10)
+        response.raise_for_status()
+        result = response.json()
+        current = result['current']['us_aqi']
+        return current
+
+
 def getOpenMeteo(mydb, podUID):
     if(not doOpenMeteo):
         doLog("error", "Open-Meteo not set, skipping weather lookup...")
@@ -1096,7 +1117,7 @@ def getOpenMeteo(mydb, podUID):
             doLog("debug", "Skipping observation as we already have it")
             return
 
-        aqi = uradmonitor()
+        aqi = getAQI()
 
         values = (whentime, temp, fl, humid, pressure, aqi)
         query = "INSERT INTO weather (whentime, temperature, feelsLike, humidity, pressure, aqi) VALUES (%s, %s, %s, %s, %s, %s)"
