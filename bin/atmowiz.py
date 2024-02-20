@@ -716,16 +716,16 @@ def checkSettings(mydb):
                 #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
 
                 if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                    doLog("info", "Rule 9 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    doLog("info", "Rule 9 hit, %s is %s turning aircon on to..." % (mode, turnOnOff))
                     return
                 elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                    doLog("info", "Rule 10 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                    doLog("info", "Rule 10 hit, %s is %s turning aircon off to..." % (mode, turnOnOff))
                     return
                 elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
-                    doLog("info", "Rule 11 hit, %s is %s keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
+                    doLog("info", "Rule 11 hit, keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing...")
                     return
                 elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
-                    doLog("info", "Rule 12 hit, %s is %s keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing..." % (i, dict[i]))
+                    doLog("info", "Rule 12 hit, keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing...")
                     return
 
                 #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)

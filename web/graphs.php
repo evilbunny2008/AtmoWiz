@@ -152,6 +152,12 @@ button:hover
   opacity: 0.8;
 }
 
+button:disabled
+{
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
 .imgcontainer
 {
   text-align: center;
@@ -365,7 +371,7 @@ td
 //	https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_login_form_modal
 ?>
 <div id="id01" class="modal">
-  <form class="modal-content animate" action="graphForms.php" method="post">
+  <form class="modal-content animate" id="id01" action="graphForms.php" method="post">
     <div class="imgcontainer">
       <span onclick="document.getElementById('id01').style.display='none'" class="close">&times;</span>
     </div>
@@ -397,10 +403,38 @@ td
 	<label for="horizontalSwing1"><b>Horizontal Swing:</b></label>
 	<select id="horizontalSwing1" name="horizontalSwing">
 	</select>
-	<button type="submit">Update</button>
+	<button type="submit" id="submitAddUpdate1">Update</button>
     </div>
   </form>
 </div>
+<script>
+document.forms['id01'].addEventListener('submit', (event) =>
+{
+	event.preventDefault();
+	document.getElementById("submitAddUpdate1").setAttribute('disabled', true);
+	// TODO do something here to show user that form is being submitted
+        var formData = new FormData(event.target);
+	formData.append("podUID1", uid);
+
+	fetch(event.target.action,
+	{
+		method: 'POST',
+		body: formData
+	}).then((response) => {
+		if(!response.ok)
+		{
+			throw new Error(`HTTP error! Status: ${response.status} ${response.statusText} ${response.url}`);
+		}
+
+		timeSettings();
+		document.getElementById("submitAddUpdate1").removeAttribute('disabled');
+		modal1.style.display = 'none';
+	}).catch((error) => {
+		alert(error);
+		document.getElementById("submitAddUpdate1").removeAttribute('disabled');
+	});
+});
+</script>
 <div id="id02" class="modal">
   <form class="modal-content animate" action="graphForms.php" method="post">
     <div class="imgcontainer">
@@ -594,6 +628,9 @@ function deleteSetting(created, uid)
     </div>
   </form>
 </div>
+<script>
+
+</script>
 <div id="id04" class="modal">
   <form class="modal-content animate" action="graphForms.php" method="post">
     <div class="imgcontainer">
@@ -753,7 +790,7 @@ function deleteTimeSetting(created, uid)
 document.forms['id05'].addEventListener('submit', (event) =>
 {
 	event.preventDefault();
-	document.getElementById("submitAddUpdate5").setAttribute("disabled", "disabled");
+	document.getElementById("submitAddUpdate5").setAttribute('disabled', true);
 	// TODO do something here to show user that form is being submitted
         var formData = new FormData(event.target);
 	formData.append("podUID5", uid);
@@ -771,10 +808,10 @@ document.forms['id05'].addEventListener('submit', (event) =>
 		timeSettings();
 		modal5.style.display = 'none';
 		modal4.style.display = 'block';
-		document.getElementById("submitAddUpdate5").removeAttribute("disabled");
+		document.getElementById("submitAddUpdate5").removeAttribute('disabled');
 	}).catch((error) => {
 		alert(error);
-		document.getElementById("submitAddUpdate5").removeAttribute("disabled");
+		document.getElementById("submitAddUpdate5").removeAttribute('disabled');
 	});
 });
 </script>
@@ -840,7 +877,7 @@ tp.attach({target:document.getElementById("timer8"),"24":true});
 document.forms['AddTimer8'].addEventListener('submit', (event) =>
 {
 	event.preventDefault();
-	document.getElementById("submit8").setAttribute("disabled", "disabled");
+	document.getElementById("submit8").setAttribute('disabled', true);
 	// TODO do something here to show user that form is being submitted
         var formData = new FormData(event.target);
 	formData.append("podUID8", uid);
@@ -858,10 +895,10 @@ document.forms['AddTimer8'].addEventListener('submit', (event) =>
 		timerTable();
 		modal8.style.display = 'none';
 		modal7.style.display = 'block';
-		document.getElementById("submit8").removeAttribute("disabled");
+		document.getElementById("submit8").removeAttribute('disabled');
 	}).catch((error) => {
 		alert(error);
-		document.getElementById("submit8").removeAttribute("disabled");
+		document.getElementById("submit8").removeAttribute('disabled');
 	});
 });
 
