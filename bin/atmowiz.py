@@ -1083,6 +1083,9 @@ def openmeteoaqi():
         current = result['current']['us_aqi']
         return current
 
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
 
 def getOpenMeteo(mydb, podUID):
     if(not doOpenMeteo):
