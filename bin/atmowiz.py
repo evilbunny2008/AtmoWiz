@@ -1093,7 +1093,7 @@ def updateDatabase(mydb):
         row = cursor.fetchone()
         if(not row):
             doLog("info", "Creating timers table...")
-            query = "CREATE TABLE `timers` (`whentime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `uid` VARCHAR(8) NOT NULL, `seconds` SMALLINT(5) NOT NULL DEFAULT '1200', `turnOnOff` ENUM('On','Off') NOT NULL DEFAULT 'On') ENGINE = InnoDB"
+            query = "CREATE TABLE `timers` (`whentime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `uid` VARCHAR(8) NOT NULL, `seconds` MEDIUMINT(5) NOT NULL DEFAULT '1200', `turnOnOff` ENUM('On','Off') NOT NULL DEFAULT 'On') ENGINE = InnoDB"
             cursor.execute(query)
             query = "ALTER TABLE `timers` ADD PRIMARY KEY(`whentime`, `uid`)"
             cursor.execute(query)

@@ -20,166 +20,9 @@
 		exit;
 	}
 
-	function changeState($podUID, $changes)
-	{
-		global $apikey;
-
-		if(!$_SESSION['rw'])
-			return json_encode(array('ret' => "You don't have permission."));
-
-		$url = "https://home.sensibo.com/api/v2/pods/$podUID/acStates?apiKey=".$apikey;
-		$body = json_encode(array('acState' => $changes));
-
-		$opts = array('http' => array('method' => "POST", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 5));
-		$context = stream_context_create($opts);
-		$ret = @file_get_contents($url, false, $context);
-
-		$statusheader = explode(" ", $http_response_header['0'], 3)['1'];
-		if($statusheader == "200")
-			return 200;
-		else
-			return json_encode(array('headers' => $http_response_header, 'ret' => $ret, 'url' => $url, 'body' => $body));
-	}
-
 	$query = "SELECT * FROM commands ORDER BY whentime DESC LIMIT 1";
 	$res = mysqli_query($link, $query);
 	$row = mysqli_fetch_assoc($res);
-
-	if(isset($_REQUEST['startTS']) && !empty($_REQUEST['startTS']))
-		$startTS = doubleval($_REQUEST['startTS']);
-
-	if(isset($_REQUEST['period']) && !empty($_REQUEST['period']))
-		$period = doubleval($_REQUEST['period']);
-
-	$timePeriod = "day";
-	if($period == 604800000)
-		$timePeriod = "week";
-	if($period == 2592000000)
-		$timePeriod = "month";
-	if($period == 31536000000)
-		$timePeriod = "year";
-
-	if(isset($_REQUEST['podUID1']) && !empty($_REQUEST['podUID1']) && $_SESSION['rw'])
-	{
-		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID1']);
-
-		$changes = array();
-
-		if(isset($_REQUEST['mode']))
-		{
-			if($row['mode'] != $_REQUEST['mode'])
-			{
-				$row['mode'] = mysqli_real_escape_string($link, $_REQUEST['mode']);
-				$changes['mode'] = $row['mode'];
-			}
-		}
-
-		if(isset($_REQUEST['targetTemperature']))
-		{
-			if($row['targetTemperature'] != $_REQUEST['targetTemperature'])
-			{
-				$row['targetTemperature'] = intval($_REQUEST['targetTemperature']);
-				$changes['targetTemperature'] = $row['targetTemperature'];
-			}
-		}
-
-		if(isset($_REQUEST['fanLevel']))
-		{
-			if($row['fanLevel'] != $_REQUEST['fanLevel'])
-			{
-				$row['fanLevel'] = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
-				$changes['fanLevel'] = $row['fanLevel'];
-			}
-		}
-
-		if(isset($_REQUEST['swing']))
-		{
-			if($row['swing'] != $_REQUEST['swing'])
-			{
-				$row['swing'] = mysqli_real_escape_string($link, $_REQUEST['swing']);
-				$changes['swing'] = $row['swing'];
-			}
-		}
-
-		if(isset($_REQUEST['horizontalSwing']))
-		{
-			if($row['horizontalSwing'] != $_REQUEST['horizontalSwing'])
-			{
-				$row['horizontalSwing'] = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
-				$changes['horizontalSwing'] = $row['horizontalSwing'];
-			}
-		}
-
-		if($changes != array())
-		{
-			$ret = changeState($row['uid'], $changes);
-			if($ret != 200)
-			{
-				$error = $ret;
-			}
-		}
-	}
-
-	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && (!isset($_REQUEST['created2']) || empty($_REQUEST['created2'])) && $_SESSION['rw'] && (!isset($_REQUEST['action']) || empty($_REQUEST['action'])))
-	{
-		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
-		$onOff = mysqli_real_escape_string($link, $_REQUEST['onOff']);
-		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
-		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
-		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
-		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
-		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
-		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
-		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
-		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
-		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
-		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
-		$enabled = 0;
-		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
-			$enabled = 1;
-
-		$query = "INSERT INTO settings (uid, created, onOff, targetType, targetOp, targetValue, startTime, endTime, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing, enabled) VALUES ".
-			 "('${row['uid']}', NOW(), '$onOff', '$targetType', '$targetOp', '$targetValue', '$startTime', '$endTime', '$turnOnOff', '$targetTemperature', '$mode', '$fanLevel', '$swing', '$horizontalSwing', '$enabled')";
-		if(!mysqli_query($link, $query))
-			$error = sprintf("Error message: %s\n", mysqli_error($link));
-	}
-
-	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && isset($_REQUEST['created2']) && !empty($_REQUEST['created2']) && $_SESSION['rw'])
-	{
-		$created = mysqli_real_escape_string($link, $_REQUEST['created2']);
-		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
-		$onOff = mysqli_real_escape_string($link, $_REQUEST['onOff']);
-		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
-		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
-		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
-		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
-		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
-		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
-		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
-		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
-		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
-		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
-		$enabled = 0;
-		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
-			$enabled = 1;
-
-		$query = "UPDATE settings SET onOff='$onOff', targetType='$targetType', targetOp='$targetOp', targetValue='$targetValue', startTime='$startTime', endTime='$endTime', turnOnOff='$turnOnOff', ".
-			 "targetTemperature='$targetTemperature', mode='$mode', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='${row['uid']}' AND created='$created'";
-		if(!mysqli_query($link, $query))
-			$error = sprintf("Error message: %s\n", mysqli_error($link));
-	}
-
-	if(isset($_REQUEST['action']) && $_REQUEST['action'] == "delete" && isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && isset($_REQUEST['created']) && !empty($_REQUEST['created']) && $_SESSION['rw'])
-	{
-		$created = mysqli_real_escape_string($link, $_REQUEST['created']);
-		$row['uid'] = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
-
-		$query = "DELETE FROM settings WHERE uid='${row['uid']}' AND created='$created'";
-		if(!mysqli_query($link, $query))
-			$error = sprintf("Error message: %s\n", mysqli_error($link));
-	}
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -527,8 +370,6 @@ td
       <span onclick="document.getElementById('id01').style.display='none'" class="close">&times;</span>
     </div>
     <div class="container">
-	<input id="startTS1" type="hidden" name="startTS" />
-	<input id="podUID1" type="hidden" name="podUID1" value="<?=$row['uid']?>" />
 	<label for="mode1"><b>Mode:</b></label>
 	<select id="mode1" name="mode" onChange="populateSelect('1'); return false;">
 <?php
@@ -568,58 +409,40 @@ td
     <div class="container">
 	<h1>Climate Settings</h1>
 	<br/>
-	<table>
-	<tr>
-		<th>Created</th>
-		<th>If On/Off</th>
-		<th>Target Type</th>
-		<th>Target Op</th>
-		<th>Target Value</th>
-		<th>Start Time</th>
-		<th>End Time</th>
-		<th>Turn On/Off</th>
-		<th>Mode</th>
-		<th>Target Temp</th>
-		<th>Enabled</th>
-		<th>Edit</th>
-		<th>Delete</th>
-	</tr>
-<?php
-	$query = "SELECT * FROM settings WHERE uid='${row['uid']}'";
-	$res = mysqli_query($link, $query);
-	while($drow = mysqli_fetch_assoc($res))
-	{
-		echo "<tr>";
-		echo "<td style='cursor: pointer;' title='".$drow['created']."'>".$drow['created']."</td>";
-		echo "<td>".$drow['onOff']."</td>";
-		echo "<td>".$drow['targetType']."</td>";
-		echo "<td>".htmlentities($drow['targetOp'])."</td>";
-		echo "<td>".$drow['targetValue']."</td>";
-		echo "<td>".substr($drow['startTime'],0,5)."</td>";
-		echo "<td>".substr($drow['endTime'],0,5)."</td>";
-		echo "<td>".$drow['turnOnOff']."</td>";
-		echo "<td>".$drow['mode']."</td>";
-		echo "<td>".$drow['targetTemperature']."</td>";
-		echo "<td>";
-		if($drow['enabled'])
-			echo "True";
-		else
-			echo "False";
-		echo "</td>";
-
-		echo "<td onClick=\"editSetting('".$drow['created']."', '".$drow['uid']."', '".$drow['onOff']."', '".$drow['targetType']."', '".$drow['targetOp']."', '".$drow['targetValue']."', '";
-		echo substr($drow['startTime'],0,5)."', '".substr($drow['endTime'],0,5)."', '".$drow['turnOnOff']."', '".$drow['targetTemperature']."', '".$drow['mode']."', '".$drow['fanLevel']."', '".$drow['swing']."', '";
-		echo $drow['horizontalSwing']."', '".$drow['enabled']."'";
-		echo "); return false;\" style=\"cursor: pointer; color: #085f24;\">Edit</td>";
-		echo "<td onClick=\"deleteSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>";
-		echo "</tr>\n";
-	}
-?>
+	<table id="climateSettings">
 	</table><br/><br/>
 	<b onClick="newSetting(); return false;" style="cursor: pointer;color: #085f24;">Add Climate Setting</b>
     </div>
   </form>
 </div>
+<script>
+function deleteSetting(created, uid)
+{
+	if(confirm("Are you sure you want to delete this setting?"))
+	{
+		const formData = new FormData();
+		formData.append("action", "delete");
+		formData.append("created", created);
+		formData.append("podUID2", uid);
+
+		const req = new Request("graphForms.php", { method: 'POST', body: formData });
+
+		fetch(req)
+		.then((response) =>
+		{
+			if(!response.ok)
+			{
+				throw new Error(`HTTP error! Status: ${response.status} ${response.statusText} ${response.url}`);
+			}
+
+			climateSettings();
+		}).catch((error) => {
+			climateSettings();
+			alert(error);
+		});
+	}
+}
+</script>
 <div id="id03" class="modal">
   <form class="modal-content animate" action="graphForms.php" method="post">
     <div class="imgcontainer">
@@ -628,8 +451,6 @@ td
     <div class="container">
 	<h1 style='text-align: center;'>Climate Settings</h1><br/>
 	<input id="created2" type="hidden" name="created2" />
-	<input id="startTS2" type="hidden" name="startTS" />
-	<input id="podUID2" type="hidden" name="podUID2" />
 	<label for="onOff2" style="width:200px;"><b>If On/Off:</b></label>
 	<select class="myInputs2" style='width:300px;right:0px;float:right;' id="onOff2" name="onOff">
 <?php
@@ -781,89 +602,48 @@ td
     <div class="container">
 	<h1>Time Based Settings</h1>
 	<br/>
-	<table>
-	<tr>
-		<th>Created</th>
-		<th>Day(s)</th>
-		<th>Start Time</th>
-		<th>End Time</th>
-		<th>Turn On/Off</th>
-		<th>Mode</th>
-		<th>Target Temp</th>
-		<th>Fan Level</th>
-		<th>Swing</th>
-		<th>Hor. Swing</th>
-		<th>Enabled</th>
-		<th>Edit</th>
-		<th>Delete</th>
-	</tr>
-<?php
-	$query = "SELECT * FROM timesettings WHERE uid='${row['uid']}'";
-	$res = mysqli_query($link, $query);
-	while($drow = mysqli_fetch_assoc($res))
-	{
-		echo "<tr>";
-		echo "<td style='cursor: pointer;' title='".$drow['created']."'>".$drow['created']."</td>\n";
-
-		$days = "";
-		if($drow['daysOfWeek'] == 31)
-		{
-			$days = "Mon-Fri";
-		} else if($drow['daysOfWeek'] == 127) {
-			$days = "Mon-Sun";
-		} else if($drow['daysOfWeek'] == 96) {
-			$days = "Sat-Sun";
-		} else {
-			for($v = 0; $v < 7; $v++)
-			{
-				if($drow['daysOfWeek'] & 2 ** $v)
-				{
-					if($days != "")
-						$days .= ", ";
-					$days .= date("D", mktime(0, 0, 0, 0, $v + 6, 0));
-				}
-			}
-		}
-
-		echo "<td style='cursor: pointer;' title='$days'>$days</td>\n";
-		echo "<td>".substr($drow['startTime'],0,5)."</td>\n";
-		echo "<td>".substr($drow['endTime'],0,5)."</td>\n";
-		echo "<td>".$drow['turnOnOff']."</td>\n";
-		echo "<td>".$drow['mode']."</td>\n";
-		echo "<td>".$drow['targetTemperature']."</td>\n";
-		echo "<td>".$drow['fanLevel']."</td>\n";
-		echo "<td>".$drow['swing']."</td>\n";
-		echo "<td>".$drow['horizontalSwing']."</td>\n";
-		echo "<td>";
-		if($drow['enabled'])
-			echo "True";
-		else
-			echo "False";
-		echo "</td>\n";
-
-		echo "<td onClick=\"editTimeSetting('".$drow['created']."', '".$drow['uid']."', '".$drow['daysOfWeek']."', '";
-		echo substr($drow['startTime'],0,5)."', '".substr($drow['endTime'],0,5)."', '".$drow['turnOnOff']."', '".$drow['mode']."', '".$drow['targetTemperature']."', '";
-		echo $drow['fanLevel']."', '".$drow['swing']."', '".$drow['horizontalSwing']."', '".$drow['enabled']."'";
-		echo "); return false;\" style=\"cursor: pointer; color: #085f24;\">Edit</td>\n";
-		echo "<td onClick=\"deleteTimeSetting('".$drow['created']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>\n";
-		echo "</tr>\n";
-	}
-?>
+	<table id="timeSettings">
 	</table><br/><br/>
 	<b onClick="newTimeSetting(); return false;" style="cursor: pointer;color: #085f24;">Add Climate Setting</b>
     </div>
   </form>
 </div>
+<script>
+function deleteTimeSetting(created, uid)
+{
+	if(confirm("Are you sure you want to delete this setting?"))
+	{
+		const formData = new FormData();
+		formData.append("action", "delete");
+		formData.append("created", created);
+		formData.append("podUID5", uid);
+
+		const req = new Request("graphForms.php", { method: 'POST', body: formData });
+
+		fetch(req)
+		.then((response) =>
+		{
+			if(!response.ok)
+			{
+				throw new Error(`HTTP error! Status: ${response.status} ${response.statusText} ${response.url}`);
+			}
+
+			timeSettings();
+		}).catch((error) => {
+			timeSettings();
+			alert(error);
+		});
+	}
+}
+</script>
 <div id="id05" class="modal">
-  <form class="modal-content animate" action="graphForms.php" method="post">
+  <form class="modal-content animate" action="graphForms.php" id="id05" method="post">
     <div class="imgcontainer">
       <span onclick="cancelAddUpdateTime(); return false;" class="close">&times;</span>
     </div>
     <div class="container">
 	<h1 style='text-align: center;'>Time Based Settings</h1><br/>
 	<input id="created5" type="hidden" name="created5" />
-	<input id="startTS5" type="hidden" name="startTS" />
-	<input id="podUID5" type="hidden" name="podUID5" />
 	<label for="dayOfWeek5"><b>Day(s) of the Week:</b></label><br/>
 	<select class="myInputs5" id="days5" name="days[]" size="7" multiple="multiple" required>
 <?php
@@ -969,13 +749,42 @@ td
     </div>
   </form>
 </div>
+<script>
+document.forms['id05'].addEventListener('submit', (event) =>
+{
+	event.preventDefault();
+	document.getElementById("submitAddUpdate5").setAttribute("disabled", "disabled");
+	// TODO do something here to show user that form is being submitted
+        var formData = new FormData(event.target);
+	formData.append("podUID5", uid);
+
+	fetch(event.target.action,
+	{
+		method: 'POST',
+		body: formData
+	}).then((response) => {
+		if(!response.ok)
+		{
+			throw new Error(`HTTP error! Status: ${response.status} ${response.statusText} ${response.url}`);
+		}
+
+		timeSettings();
+		modal5.style.display = 'none';
+		modal4.style.display = 'block';
+		document.getElementById("submitAddUpdate5").removeAttribute("disabled");
+	}).catch((error) => {
+		alert(error);
+		document.getElementById("submitAddUpdate5").removeAttribute("disabled");
+	});
+});
+</script>
 <div id="id06" class="modal">
   <form class="modal-content animate" action="graphForms.php" method="post">
     <div class="imgcontainer">
       <span onclick="document.getElementById('id06').style.display='none'" class="close">&times;</span>
     </div>
     <div class="container">
-	<h1>Error!</h1>
+	<h1 style='text-align: center;'>Error!</h1>
 	<b>
 	<div id='errorMessage' style='text-align:center;color:red;font-size:xx-large;'>&nbsp;</div>
 	</b>
@@ -988,11 +797,11 @@ td
       <span onclick="document.getElementById('id07').style.display='none'" class="close">&times;</span>
     </div>
     <div class="container">
-	<h1>Timers</h1>
+	<h1 style='text-align: center;'>Timers</h1>
 	<br/>
 	<table id="timerTable">
 	</table><br/><br/>
-	<b onClick="newTimer(); return false;" style="cursor: pointer;color: #085f24;">Add Timer</b>
+	<div style='text-align:center;'><b onClick="newTimer(); return false;" style="cursor: pointer;color: #085f24;">Add Timer</b></div>
     </div>
   </form>
 </div>
@@ -1004,8 +813,6 @@ td
     <div class="container">
 	<h1>New Timer</h1>
 	<br/>
-	<input id="startTS8" type="hidden" name="startTS" />
-	<input id="podUID8" type="hidden" name="podUID8" />
 	<label for="timer8">Set a Time:</label>
 	<input type="text" id="timer8" name="timer" class="myInputs2" value="00:20" />
 	<label for="turnOnOff8"><b>Turn On/Off:</b></label>
@@ -1035,10 +842,13 @@ document.forms['AddTimer8'].addEventListener('submit', (event) =>
 	event.preventDefault();
 	document.getElementById("submit8").setAttribute("disabled", "disabled");
 	// TODO do something here to show user that form is being submitted
+        var formData = new FormData(event.target);
+	formData.append("podUID8", uid);
+
 	fetch(event.target.action,
 	{
 		method: 'POST',
-		body: new FormData(event.target)
+		body: formData
 	}).then((response) => {
 		if(!response.ok)
 		{
@@ -1086,16 +896,8 @@ var timePeriod = "<?=$timePeriod?>";
 var period = <?=$period?>;
 var uid = "<?=$row['uid']?>";
 var currtime = "";
-document.getElementById("podUID1").value = uid;
-document.getElementById("podUID2").value = uid;
-document.getElementById("podUID5").value = uid;
-document.getElementById("podUID8").value = uid;
 
 var startTS = <?=$startTS?>;
-document.getElementById("startTS1").value = startTS;
-document.getElementById("startTS2").value = startTS;
-document.getElementById("startTS5").value = startTS;
-document.getElementById("startTS8").value = startTS;
 
 var modal1 = document.getElementById('id01');
 var modal2 = document.getElementById('id02');
@@ -1334,11 +1136,12 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		click: function(e)
 		{
 			if(timePeriod == "month")
-				tperiod = 86400000;
+				period = 86400000;
 			if(timePeriod == "year")
-				tperiod = 604800000;
+				period = 604800000;
 
-			window.location = 'graphs.php?startTS=' + e.dataPoint.x + '&period=' + tperiod + '&uid=' + uid;
+			startTS = e.dataPoint.x;
+			startDataLoop(true)
 		},
        	}],
 });
@@ -1470,16 +1273,35 @@ async function DataLoop()
 
 	now = new Date().getTime();
 	if(startTS >= now - 87300000 && startTS <= now - 85500000)
-	{
 		startTS = now - period;
-		document.getElementById("startTS1").value = startTS;
-		document.getElementById("startTS2").value = startTS;
-		document.getElementById("startTS5").value = startTS;
-		document.getElementById("startTS8").value = startTS;
-	}
 
 	startDataLoop(false);
 	timerTable();
+	climateSettings();
+	timeSettings();
+}
+
+async function timeSettings()
+{
+	try
+	{
+		var url = "timeSettings.php?time=" + new Date().getTime();
+		url += "&uid=" + uid;
+
+		const response = await fetch(url);
+		const ret = await response.json();
+
+		if(ret['status'] != 200)
+		{
+			alert(ret['error']);
+			return;
+		}
+
+		content = ret['content'];
+		document.getElementById("timeSettings").innerHTML = content;
+	} catch (e) {
+		console.log(e)
+	}
 }
 
 async function timerTable()
@@ -1499,6 +1321,28 @@ async function timerTable()
 
 		content = ret['content'];
 		document.getElementById("timerTable").innerHTML = content;
+	} catch (e) {
+		console.log(e)
+	}
+}
+
+async function climateSettings()
+{
+	try
+	{
+		var url = "climateSettings.php?time=" + new Date().getTime();
+		url += "&uid=" + uid;
+		const response = await fetch(url);
+		const ret = await response.json();
+
+		if(ret['status'] != 200)
+		{
+			alert(ret['error']);
+			return;
+		}
+
+		content = ret['content'];
+		document.getElementById("climateSettings").innerHTML = content;
 	} catch (e) {
 		console.log(e)
 	}
@@ -1533,16 +1377,9 @@ console.log("Update should have happened.");
 
 		currtime = content['currtime'];
 		startTS = content['startTS'];
-		document.getElementById("startTS1").value = startTS;
-		document.getElementById("startTS2").value = startTS;
-		document.getElementById("startTS5").value = startTS;
-		document.getElementById("startTS8").value = startTS;
 
 		document.getElementById("commands").innerHTML = content['commands'];
 		uid = content['uid'];
-		document.getElementById("podUID1").value = uid;
-		document.getElementById("podUID2").value = uid;
-		document.getElementById("podUID5").value = uid;
 
 		if(timePeriod == "day")
 		{
@@ -1685,30 +1522,18 @@ async function changeTP(value)
 		period = 31536000000;
 
 	startTS = new Date().getTime() - period;
-	document.getElementById("startTS1").value = startTS;
-	document.getElementById("startTS2").value = startTS;
-	document.getElementById("startTS5").value = startTS;
-	document.getElementById("startTS8").value = startTS;
 	startDataLoop(true);
 }
 
 function prevDay()
 {
 	startTS -= period;
-	document.getElementById("startTS1").value = startTS;
-	document.getElementById("startTS2").value = startTS;
-	document.getElementById("startTS5").value = startTS;
-	document.getElementById("startTS8").value = startTS;
 	startDataLoop(true);
 }
 
 function nextDay()
 {
 	startTS += period;
-	document.getElementById("startTS1").value = startTS;
-	document.getElementById("startTS2").value = startTS;
-	document.getElementById("startTS5").value = startTS;
-	document.getElementById("startTS8").value = startTS;
 	startDataLoop(true);
 }
 
@@ -1945,18 +1770,6 @@ function cancelAddTimer()
 	modal7.style.display = "block";
 }
 
-function deleteSetting(created, uid)
-{
-	if(confirm("Are you sure you want to delete this setting?"))
-		window.location = 'graphs.php?action=delete&created=' + created + '&podUID2=' + uid;
-}
-
-function deleteTimeSetting(created, uid)
-{
-	if(confirm("Are you sure you want to delete this setting?"))
-		window.location = 'graphs.php?action=delete&created=' + created + '&podUID5=' + uid;
-}
-
 function newTimeSetting()
 {
 	document.getElementById("created5").value = "";
@@ -2006,27 +1819,6 @@ populateSelect("2");
 populateSelect("5");
 
 <?php
-	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && $_SESSION['rw'])
-	{
-		echo "function delayLoading()\n";
-		echo "{\n";
-		echo "\tmodal2.style.display = 'block';\n";
-		echo "}\n\n";
-		echo "setTimeout('delayLoading()', 250);\n";
-	} else if(isset($_REQUEST['podUID1']) && !empty($_REQUEST['podUID1']) && $_SESSION['rw']) {
-		echo "function delayLoading()\n";
-		echo "{\n";
-		echo "\tmodal1.style.display = 'block';\n";
-		echo "}\n\n";
-		echo "setTimeout('delayLoading()', 250);\n";
-	} else if(isset($_REQUEST['podUID5']) && !empty($_REQUEST['podUID5']) && $_SESSION['rw']) {
-		echo "function delayLoading()\n";
-		echo "{\n";
-		echo "\tmodal4.style.display = 'block';\n";
-		echo "}\n\n";
-		echo "setTimeout('delayLoading()', 250);\n";
-	}
-
 	if($error != null)
 	{
 		echo "function errorLoading()\n";
