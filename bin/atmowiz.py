@@ -803,7 +803,11 @@ def getObservations():
             updateTime = 15
             if(inigoURL != ''):
                 updateTime = 5
-            time.sleep(updateTime * 60)
+
+            ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + updateTime * 60 + 45
+
+            doLog("info", "Sleeping Obs thread for %d seconds..." % ttime)
+            time.sleep(ttime)
 
         except Exception as e:
             doLog("error", "There was a problem, error was %s" % e, True)
