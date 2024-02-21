@@ -119,7 +119,7 @@
 
 	if($period == 86400000)
 	{
-		$query = "SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, ".
+		$query = "SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes, DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, ".
 				"temperature, humidity, feelslike, rssi, airconon FROM sensibo ".
 				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
 	}
@@ -197,9 +197,8 @@
 			$redis->expire(md5($query), 86400);
 		}
 
-		$rc = $wt = $cost = 0;
-		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 86400) * 86400000 as whentime, sum(cost) as cost FROM sensibo ".
-				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) as whentime, round(sum(cost), 2) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%v') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
 			$dataPoints5 = unserialize($redis->get(md5($query)));
@@ -207,27 +206,13 @@
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
 			{
-				if(++$rc == 7)
+				if($row !== False && doubleval($row['whentime']) > 0)
 				{
-					if($wt > 0)
-						$dataPoints5[] = array('x' => $wt, 'y' => round($cost, 2));
-					$rc = $wt = $cost = 0;
-				} else {
-					if($row !== False && doubleval($row['whentime']) > 0)
-					{
-						if($wt == 0)
-						{
-							$wt = doubleval($row['whentime']);
-							$wt = mktime(0, 0, 0, date("m", $wt / 1000), date("d", $wt / 1000), date("Y", $wt / 1000)) * 1000;
-						}
-
-						$cost += floatval($row['cost']);
-					}
+					$wt = floor(doubleval($row['whentime']) / 604800) * 604800000;
+					$wt = mktime(0, 0, 0, date("m", $wt / 1000), date("d", $wt / 1000), date("Y", $wt / 1000)) * 1000;
+					$dataPoints5[] = array('x' => $wt, 'y' => floatval($row['cost']));
 				}
 			}
-
-			if($wt > 0)
-				$dataPoints5[] = array('x' => $wt, 'y' => round($cost, 2));
 
 			$dataPoints5[] = array('x' => $startTS + $period, 'y' => null);
 
@@ -330,7 +315,7 @@
 		}
 	} else if($period != 31536000000) {
 		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
-				"UNIX_TIMESTAMP(whentime) * 1000 >= floor($startTS / 3600000) * 3600000 + 3600000 AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 >= floor($startTS / 3600000) * 3600000 - 3600000 AND ".
 				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC LIMIT 500";
 		if($redis->exists(md5($query)))
 		{
@@ -371,12 +356,14 @@
 		else
 			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' />\n";
 
+		$commands .= "<img style='width:40px;' onClick='today(); return false;' src='tick.png' title='Jump to Today' />\n";
 		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
 		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
 
 		$commands .= "</li>\n";
 	} else {
 		$commands .= "<li style='text-align:center'>";
+		$commands .= "<img style='width:40px;' onClick='today(); return false;' src='tick.png' title='Jump to Today' />\n";
 		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
 		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
 		$commands .= "</li>\n";

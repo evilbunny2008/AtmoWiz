@@ -1200,9 +1200,16 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		click: function(e)
 		{
 			if(timePeriod == "month")
+			{
+				timePeriod = "day";
 				period = 86400000;
-			if(timePeriod == "year")
+			} else if(timePeriod == "year") {
+				timePeriod = "week";
 				period = 604800000;
+			} else {
+				timePeriod = "day";
+				period = 86400000;
+			}
 
 			startTS = e.dataPoint.x;
 			startDataLoop(true)
@@ -1585,6 +1592,14 @@ async function changeTP(value)
 	if(value == 'year')
 		period = 31536000000;
 
+	startTS = new Date().getTime() - period;
+	startDataLoop(true);
+}
+
+function today()
+{
+	timePeriod = "day";
+	period = 86400000;
 	startTS = new Date().getTime() - period;
 	startDataLoop(true);
 }

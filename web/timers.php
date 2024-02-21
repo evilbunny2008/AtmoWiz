@@ -13,14 +13,14 @@
 
 	$table = "<tr><th>Created</th><th>Second(s) Delay</th><th>Turn On/Off</th><th>Delete</th></tr>\n";
 
-	$query = "SELECT * FROM timers WHERE uid='$uid'";
+	$query = "SELECT *, UNIX_TIMESTAMP(whentime) + seconds - UNIX_TIMESTAMP(NOW()) as sec FROM timers WHERE uid='$uid'";
 	$res = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($res))
 	{
 		$table .= "<tr>";
 		$table .= "<td style='cursor: pointer;' title='".$drow['whentime']."'>".$drow['whentime']."</td>\n";
 
-		$table .= "<td>".$drow['seconds']."</td>\n";
+		$table .= "<td>".$drow['sec']."</td>\n";
 		$table .= "<td>".$drow['turnOnOff']."</td>\n";
 
 		$table .= "<td onClick=\"deleteTimer('".$drow['whentime']."', '".$drow['uid']."'); return false;\" style=\"cursor: pointer;color: #085f24;\">Delete</td>\n";

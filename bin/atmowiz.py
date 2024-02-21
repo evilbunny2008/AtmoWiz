@@ -604,7 +604,6 @@ def getLastCommands(mydb, nb = 5):
                     doLog("debug", _sqlquery1 % values)
                     cursor.execute(_sqlquery1, values)
                     mydb.commit()
-                    exit(0)
 
     mydb.commit()
 
@@ -1545,4 +1544,4 @@ if __name__ == "__main__":
             time.sleep(timeToWait)
         except Exception as e:
             doLog("error", "There was a problem, error was %s" % e, True)
-            exit(1)
+            pass
