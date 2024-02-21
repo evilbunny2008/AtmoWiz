@@ -1596,11 +1596,11 @@ async function changeTP(value)
 	startDataLoop(true);
 }
 
-function today()
+function showDay(timestamp)
 {
 	timePeriod = "day";
 	period = 86400000;
-	startTS = new Date().getTime() - period;
+	startTS = timestamp;
 	startDataLoop(true);
 }
 

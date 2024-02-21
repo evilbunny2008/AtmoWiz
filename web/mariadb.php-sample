@@ -9,12 +9,13 @@
 	$ropassword = "user";
 
 	// https://www.w3schools.com/colors/colors_names.asp
+	// https://colordesigner.io/color-name-finder
 
-	$tempColour = "#9BBB58";
-	$humidColour = "#C0504E";
-	$FLColour = "#4F81BC";
-	$wifiColour = "#4F81BC";
-	$costColour = "#4F81BC";
+	$tempColour = "Olivedrab";
+	$humidColour = "Indianred";
+	$FLColour = "Steelblue";
+	$wifiColour = "Steelblue";
+	$costColour = "Steelblue";
 
 	session_start();
 
@@ -28,3 +29,8 @@
 
 	$redis = new Redis();
 	$redis->connect('127.0.0.1');
+
+	$systemTz = trim(file_get_contents("/etc/timezone"));
+	if($systemTz == 'Etc/UTC')
+		$systemTz = 'UTC';
+	date_default_timezone_set($systemTz);

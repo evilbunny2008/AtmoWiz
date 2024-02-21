@@ -315,12 +315,12 @@
 		}
 	} else if($period != 31536000000) {
 		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
-				"UNIX_TIMESTAMP(whentime) * 1000 >= floor($startTS / 3600000) * 3600000 - 3600000 AND ".
+				"UNIX_TIMESTAMP(whentime) * 1000 >= floor($startTS / 3600000) * 3600000 + 3600000 AND ".
 				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC LIMIT 500";
-		if($redis->exists(md5($query)))
-		{
-			$dataPoints5 = unserialize($redis->get(md5($query)));
-		} else {
+//		if($redis->exists(md5($query)))
+//		{
+//			$dataPoints5 = unserialize($redis->get(md5($query)));
+//		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
 			{
@@ -334,9 +334,9 @@
 			mysqli_free_result($res);
 
 			$dataPoints5[] = array('x' => doubleval($startTS + $period), 'y' => null);
-			$redis->set(md5($query), serialize($dataPoints5));
-			$redis->expire(md5($query), 86400);
-		}
+//			$redis->set(md5($query), serialize($dataPoints5));
+//			$redis->expire(md5($query), 86400);
+//		}
 	}
 
 	$commands = '';
@@ -356,14 +356,14 @@
 		else
 			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' />\n";
 
-		$commands .= "<img style='width:40px;' onClick='today(); return false;' src='tick.png' title='Jump to Today' />\n";
+		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Today' />\n";
 		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
 		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
 
 		$commands .= "</li>\n";
 	} else {
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:40px;' onClick='today(); return false;' src='tick.png' title='Jump to Today' />\n";
+		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Today' />\n";
 		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
 		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
 		$commands .= "</li>\n";
@@ -430,7 +430,7 @@
 			$commands .= ", ".$row['aqi']." AQI</li>\n";
 	}
 
-	$query = "SELECT *, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM ".
+	$query = "SELECT *, ROUND(UNIX_TIMESTAMP(whentime) / 86400) * 86400 as wtsec, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM ".
 				"commands WHERE uid='$uid' AND changes!='' AND changes!='[]' ORDER BY whentime DESC";
 	$date = $lastdate = '';
 
@@ -438,6 +438,8 @@
 	while($row = mysqli_fetch_assoc($res))
 	{
 		$date = $row["wtdate"];
+		$wtsec = mktime(0, 0, 0, date("m", $row["wtsec"]), date("d", $row["wtsec"]), date("Y", $row["wtsec"])) * 1000;
+
 		$who = $row['who'];
 		$who2 = getWho($row["reason"]);
 
@@ -449,7 +451,7 @@
 		if($date != $lastdate)
 		{
 			$commands .= "<li>&nbsp;</li>\n";
-			$commands .= "<li style='text-align:center;'><u><b>$date</b></u></li>\n";
+			$commands .= "<li style='text-align:center;cursor:pointer;' onClick='showDay(\"$wtsec\"); return false;'><u><b>$date</b></u></li>\n";
 			$lastdate = $date;
 		}
 

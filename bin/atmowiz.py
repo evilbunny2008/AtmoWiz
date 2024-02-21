@@ -11,13 +11,11 @@ import os
 import pwd
 import random
 import requests
-import serial
 import shutil
 import sys
 import threading
 import time
 import traceback
-import xmltodict
 from datetime import datetime
 from dateutil import tz
 from requests.auth import HTTPBasicAuth
@@ -299,6 +297,9 @@ def doLog(logType, line, doStackTrace = False):
 def getWatts():
     if(costCurrentPort == None):
         return 0
+
+    import serial
+    import xmltodict
 
     line = ""
     try:
