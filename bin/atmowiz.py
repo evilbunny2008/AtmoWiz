@@ -803,7 +803,11 @@ def getObservations():
             if(inigoURL != ''):
                 updateTime = 5
 
-            ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + updateTime * 60 + 45
+            ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 45
+            while(ttime <= 0):
+                ttime += updateTime * 60
+            while(ttime >= updateTime * 60):
+                ttime -= updateTime * 60
 
             doLog("info", "Sleeping Obs thread for %d seconds..." % ttime)
             time.sleep(ttime)
