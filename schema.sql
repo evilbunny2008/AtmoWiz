@@ -8,7 +8,7 @@ START TRANSACTION;
 CREATE TABLE IF NOT EXISTS `commands` (
   `whentime` datetime NOT NULL,
   `uid` varchar(8) NOT NULL,
-  `reason` varchar(20) NOT NULL,
+  `reason` varchar(30) NOT NULL,
   `who` varchar(30) NOT NULL,
   `status` enum('Success','Failed') NOT NULL DEFAULT 'Success',
   `airconon` tinyint(1) NOT NULL,
