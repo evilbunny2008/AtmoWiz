@@ -1001,6 +1001,8 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
 				else if(entry.dataSeries.name == "Feels Like [°C]")
 					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Power Usage [W]")
+					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";

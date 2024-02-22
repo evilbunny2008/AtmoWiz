@@ -107,12 +107,14 @@
 		$dataPoints3[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 		$dataPoints4[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 		$dataPoints5[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints6[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 	} else {
 		$dataPoints1[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints3[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints4[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints5[] = array('x' => mktime(date("H", $startTS / 1000), 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints6[] = array('x' => doubleval($startTS), 'y' => null);
 	}
 
 	$query = "";
@@ -120,21 +122,21 @@
 	if($period == 86400000)
 	{
 		$query = "SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes, DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, ".
-				"temperature, humidity, feelslike, rssi, airconon FROM sensibo ".
+				"temperature, humidity, feelslike, rssi, airconon, watts FROM sensibo ".
 				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
 	}
 
 	if($period == 604800000)
 	{
 		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, ".
-				"temperature, humidity, feelslike, rssi, airconon FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
+				"temperature, humidity, feelslike, rssi, airconon, watts FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
 				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
 	}
 
 	if($period == 2592000000)
 	{
 		$query = "SELECT * FROM ( SELECT @row := @row +1 AS rownum, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
-				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon FROM ( SELECT @row :=0) r, sensibo ".
+				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon, watts FROM ( SELECT @row :=0) r, sensibo ".
 				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC".
 				") ranked WHERE rownum % 15 = 0";
 	}
@@ -150,6 +152,7 @@
 			$dataPoints2 = $arr['1'];
 			$dataPoints3 = $arr['2'];
 			$dataPoints4 = $arr['3'];
+			$dataPoints6 = $arr['4'];
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
@@ -168,8 +171,8 @@
 				for($i = 0; $i <= $rc; $i += 64)
 				{
 					$query2 = "SELECT row.whentimes, row.airconon, ROUND(AVG(row.temperature), 1) AS temperature, ROUND(AVG(row.humidity), 1) AS humidity, ROUND(AVG(row.feelslike), 1) AS feelslike, ".
-							" AVG(row.rssi) AS rssi FROM (SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes, airconon, temperature, humidity, feelslike, rssi FROM sensibo ".
-							"WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%' LIMIT $i, 64) row";
+							" AVG(row.rssi) AS rssi, ROUND(AVG(row.watts), 1) as watts FROM (SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes, airconon, temperature, humidity, ".
+							"feelslike, rssi FROM sensibo WHERE uid='$uid' and whentime LIKE '${row['wtdate']}%' LIMIT $i, 64) row";
 					if($redis->exists(md5($query2)))
 					{
 						$row2 = unserialize($redis->get(md5($query2)));
@@ -187,6 +190,7 @@
 						$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['humidity']));
 						$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => round(floatval($row2['feelslike']) * 10.0) / 10.0);
 						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['rssi']));
+						$dataPoints6[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['watts']));
 					}
 				}
 			}
@@ -228,13 +232,14 @@
 			$dataPoints2 = $arr['1'];
 			$dataPoints3 = $arr['2'];
 			$dataPoints4 = $arr['3'];
+			$dataPoints6 = $arr['4'];
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
 			{
 				if($period == 86400000)
 				{
-					$query1 = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') <= 2 LIMIT 1";
+					$query1 = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') <= 2 AND changes LIKE \"%'on'%\" LIMIT 1";
 					$dres = mysqli_query($link, $query1);
 					if(mysqli_num_rows($dres) > 0)
 					{
@@ -262,6 +267,7 @@
 				$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['humidity']));
 				$dataPoints3[] = array('x' => doubleval($row['whentimes']), 'y' => round(floatval($row['feelslike']) * 10.0) / 10.0);
 				$dataPoints4[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['rssi']));
+				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['watts']));
 			}
 
 			mysqli_free_result($res);
@@ -317,10 +323,10 @@
 		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
 				"UNIX_TIMESTAMP(whentime) * 1000 >= floor($startTS / 3600000) * 3600000 + 3600000 AND ".
 				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC LIMIT 500";
-//		if($redis->exists(md5($query)))
-//		{
-//			$dataPoints5 = unserialize($redis->get(md5($query)));
-//		} else {
+		if($redis->exists(md5($query)))
+		{
+			$dataPoints5 = unserialize($redis->get(md5($query)));
+		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
 			{
@@ -334,9 +340,9 @@
 			mysqli_free_result($res);
 
 			$dataPoints5[] = array('x' => doubleval($startTS + $period), 'y' => null);
-//			$redis->set(md5($query), serialize($dataPoints5));
-//			$redis->expire(md5($query), 86400);
-//		}
+			$redis->set(md5($query), serialize($dataPoints5));
+			$redis->expire(md5($query), 86400);
+		}
 	}
 
 	$commands = '';
@@ -482,6 +488,6 @@
 	mysqli_free_result($res);
 
 	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3,
-					'dataPoints4' => $dataPoints4, 'dataPoints5' => $dataPoints5, 'commands' => $commands,
-					'currtime' => $currtime, 'startTS' => $startTS);
+					'dataPoints4' => $dataPoints4, 'dataPoints5' => $dataPoints5, 'dataPoints6' => $dataPoints6,
+					'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS);
 	echo json_encode(array('status' => 200, 'content' => $data));

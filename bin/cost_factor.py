@@ -3,14 +3,15 @@
 import configparser
 import MySQLdb
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+import seaborn as sns
 
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn import datasets, linear_model
+
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import OrdinalEncoder
+from sklearn.metrics import mean_squared_error, r2_score
 
 configParser = configparser.ConfigParser(allow_no_value = True)
 configParser.read("/etc/atmowiz.conf")
@@ -21,7 +22,7 @@ password = configParser.get('mariadb', 'password', fallback = 'password')
 
 mydb = MySQLdb.connect(hostname, username, password, database)
 
-query = "SELECT temperature, humidity, mode, targetTemperature, fanLevel, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0"
+query = "SELECT temperature, humidity, mode, targetTemperature, fanLevel, watts, abs(temperature - targetTemperature) as tdiff FROM `sensibo` WHERE airconon = 1 AND watts != 0"
 df = pd.read_sql(query, mydb)
 print(df)
 
@@ -31,7 +32,7 @@ df[categorical_cols] = enc.fit_transform(df[categorical_cols])
 print(df.head())
 print(df['mode'].unique())
 print(df.shape)
-X = df[["temperature", "humidity", "mode", "targetTemperature", "fanLevel"]]
+X = df[["temperature", "humidity", "mode", "tdiff", "fanLevel"]]
 Y = df["watts"]
 model = LinearRegression()
 model.fit(X, Y)
@@ -39,17 +40,7 @@ print(model.predict(X))
 print('Intercept: ', model.intercept_)
 print('Coefficients array: ', model.coef_)
 
-print(df.describe())
-print(df.dtypes)
+sns.set_theme(style="ticks")
 
-plt.style.use('default')
-plt.style.use('ggplot')
-
-fig, ax = plt.subplots(figsize=(7, 3.5))
-ax.plot(X, Y, color='k', label='Regression model')
-ax.scatter(X, Y, edgecolor='k', facecolor='grey', alpha=0.7, label='Sample data')
-fig.savefig("../web/out.png")
-
-#sns.pairplot(data = df, height = 2)
-#fig = sns.lmplot(data=df).get_figure()
-#fig.savefig("../web/out.png")
+lmplot = sns.lmplot(data=df, x="tdiff", y="watts")
+lmplot.fig.savefig("../web/out.png")
