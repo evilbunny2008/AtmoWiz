@@ -39,6 +39,17 @@ print(model.predict(X))
 print('Intercept: ', model.intercept_)
 print('Coefficients array: ', model.coef_)
 
+print(df.describe())
+print(df.dtypes)
+
+plt.style.use('default')
+plt.style.use('ggplot')
+
+fig, ax = plt.subplots(figsize=(7, 3.5))
+ax.plot(X, Y, color='k', label='Regression model')
+ax.scatter(X, Y, edgecolor='k', facecolor='grey', alpha=0.7, label='Sample data')
+fig.savefig("../web/out.png")
+
 #sns.pairplot(data = df, height = 2)
-ax1 = sns.displot(X, hist=False, color="r", label="Actual Value")
-sns.displot(Y, hist=False, color="b", label="Fitted Values" , ax=ax1)
+#fig = sns.lmplot(data=df).get_figure()
+#fig.savefig("../web/out.png")
