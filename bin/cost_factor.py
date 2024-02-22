@@ -3,6 +3,9 @@
 import configparser
 import MySQLdb
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
@@ -29,7 +32,13 @@ print(df.head())
 print(df['mode'].unique())
 print(df.shape)
 X = df[["temperature", "humidity", "mode", "targetTemperature", "fanLevel"]]
-y = df["watts"]
+Y = df["watts"]
 model = LinearRegression()
-model.fit(X, y)
+model.fit(X, Y)
 print(model.predict(X))
+print('Intercept: ', model.intercept_)
+print('Coefficients array: ', model.coef_)
+
+#sns.pairplot(data = df, height = 2)
+ax1 = sns.displot(X, hist=False, color="r", label="Actual Value")
+sns.displot(Y, hist=False, color="b", label="Fitted Values" , ax=ax1)
