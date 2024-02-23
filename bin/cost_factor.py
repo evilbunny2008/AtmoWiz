@@ -2,9 +2,12 @@
 
 import configparser
 import MySQLdb
-import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import plotly.graph_objs as go
+import plotly.io as pio
+from sklearn.linear_model import LinearRegression
 import statsmodels.formula.api as smf
 
 configParser = configparser.ConfigParser(allow_no_value = True)
@@ -21,27 +24,16 @@ df = pd.read_sql(query, mydb)
 
 df.reset_index(drop=True, inplace=True)
 
-print(df.columns)
-print(df.head())
+X = df[["targetTemperature", "tempDiff"]]
+Y = df["watts"]
 
-model = smf.ols(formula='watts ~ targetTemperature + tempDiff', data=df)
-results_formula = model.fit()
-print(results_formula.params)
-results_formula.params
+model = LinearRegression()
+model.fit(X, Y)
+print(model.predict(X))
+print('Intercept: ', model.intercept_)
+print('Coefficients array: ', model.coef_)
 
-x_surf, y_surf = np.meshgrid(np.linspace(df.targetTemperature.min(), df.targetTemperature.max(), 50),np.linspace(df.tempDiff.min(), df.tempDiff.max(), 50))
-onlyX = pd.DataFrame({'targetTemperature': x_surf.ravel(), 'tempDiff': y_surf.ravel()})
-fittedY=results_formula.predict(exog=onlyX)
-
-fittedY=np.array(fittedY)
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(df['targetTemperature'], df['tempDiff'], df['watts'], c='red', marker='o', alpha=0.5)
-ax.plot_surface(x_surf,y_surf,fittedY.reshape(x_surf.shape), color='b', alpha=0.3)
-ax.set_zlabel('watts')
-ax.set_xlabel('targetTemperature')
-ax.set_ylabel('tempDiff')
-
-plt.title("Watts Vs tempDiff Vs temperature")
-plt.savefig("../web/out.png")
+fig = go.Figure()
+fig.add_trace(go.Scatter3d(x=df['targetTemperature'], y=df['tempDiff'], z=df['watts'], mode='markers', marker=dict(size=12, color=df['watts'], colorscale='Viridis', opacity=0.8), name='Target Temperature Vs Temperature Difference Vs Watts'))
+fig.update_layout(scene=dict(xaxis=dict(title='Target Temperature'), yaxis=dict(title='Temperature Difference'), zaxis=dict(title='Watts')), margin=dict(l=0, r=0, b=0, t=0))
+pio.write_html(fig, '/root/AtmoWiz/web/test.html')
