@@ -38,16 +38,6 @@
 		return "Unknown";
 	}
 
-	function setSystemTz()
-	{
-		$systemTz = trim(file_get_contents("/etc/timezone"));
-		if($systemTz == 'Etc/UTC')
-			$systemTz = 'UTC';
-		date_default_timezone_set($systemTz);
-	}
-
-	setSystemTz();
-
 	if($error != null)
 		reportError($error);
 
@@ -85,7 +75,7 @@
 	else
 		$period = 86400000;
 
-
+	$humidityOrWatts = 'watts';
 	$query = "SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW()) as tzoffset";
 	$res = mysqli_query($link, $query);
 	$tzoffset = mysqli_fetch_assoc($res)['tzoffset'];
@@ -184,7 +174,7 @@
 					if($row2 !== False && doubleval($row2['whentimes']) > 0)
 					{
 						$dataPoints1[] = array('x' => doubleval($row2['whentimes']), 'y' => floatval($row2['temperature']));
-						$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['humidity']));
+						$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2[$humidityOrWatts]));
 						$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => round(floatval($row2['feelslike']) * 10.0) / 10.0);
 						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['rssi']));
 					}
@@ -259,7 +249,7 @@
 				} else
 					$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
 
-				$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['humidity']));
+				$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row[$humidityOrWatts]));
 				$dataPoints3[] = array('x' => doubleval($row['whentimes']), 'y' => round(floatval($row['feelslike']) * 10.0) / 10.0);
 				$dataPoints4[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['rssi']));
 			}

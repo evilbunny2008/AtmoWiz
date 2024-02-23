@@ -1240,6 +1240,12 @@ if __name__ == "__main__":
     fankw = configParser.getfloat('cost', 'fankw', fallback = 0.050)
     offkw = configParser.getfloat('cost', 'offkw', fallback = 0.012)
 
+    if(offkw < 0.001):
+        offkw = 0.001
+
+    if(fankw < 0.001):
+        fankw = 0.001
+
     if(weatherapikey != ''):
         doOpenMeteo = False
 

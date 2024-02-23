@@ -1044,14 +1044,14 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	data:
 	[
 		{
-			type: "spline",
+			type: "line",
 			name: "Feels Like [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
 			color: "<?=$FLColour?>",
 		},{
-			type: "spline",
+			type: "line",
 			axisYType: "secondary",
 			name: "Humidity [%]",
 			xValueType: "dateTime",
@@ -1059,7 +1059,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			showInLegend: true,
 			color: "<?=$humidColour?>",
 		},{
-			type: "spline",
+			type: "line",
 			name: "Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
@@ -1121,7 +1121,7 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 	},
 	data:
 	[{
-		type: "spline",
+		type: "line",
 		name: "Signal Strength [dBm]",
 		xValueType: "dateTime",
 		markerSize: 0,
