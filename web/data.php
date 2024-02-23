@@ -75,7 +75,7 @@
 	else
 		$period = 86400000;
 
-	$humidityOrWatts = 'watts';
+	$humidityOrWatts = 'humidity';
 	$query = "SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW()) as tzoffset";
 	$res = mysqli_query($link, $query);
 	$tzoffset = mysqli_fetch_assoc($res)['tzoffset'];
