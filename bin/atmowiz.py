@@ -328,7 +328,7 @@ def calcWatts(mode, targetTemperature, temperature):
 
     if(mode == 'cool' or mode == 'dry'):
         # print (f"((({cool} * 1000) / {EER}) - 1000) + (-42.35150780269007 * {targetTemperature}) + 79.15692291734648 * ({temperature} - {targetTemperature}) / 1000")
-        return (cool * 1000 / EER - 1000 + (-42.35150780269007 * targetTemperature) + 79.15692291734648 * (temperature - targetTemperature)) / 1000
+        return (cool * 1000 / EER - 1000 + -42.83076121510051 * targetTemperature + 129.95832636202184 * (temperature - targetTemperature)) / 1000
 
     return 1
 
@@ -800,10 +800,11 @@ def getObservations():
             mydb.close()
 
             updateTime = 15
+            ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 120
             if(inigoURL != ''):
                 updateTime = 5
+                ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 45
 
-            ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 45
             while(ttime <= 0):
                 ttime += updateTime * 60
             while(ttime >= updateTime * 60):

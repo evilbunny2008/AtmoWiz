@@ -41,6 +41,7 @@
 	{
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID1']);
 
+		$row = mysqli_fetch_assoc(mysqli_query($link, "SELECT * FROM commands ORDER BY whentime DESC"));
 		$changes = array();
 
 		if(isset($_REQUEST['mode']))

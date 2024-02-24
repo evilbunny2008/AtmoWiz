@@ -33,23 +33,23 @@ password = configParser.get('mariadb', 'password', fallback = 'password')
 db_uri = "mysql://%s:%s@%s/%s" % (username, password, hostname, database)
 engine = create_engine(db_uri)
 
-query = "SELECT targetTemperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='cool'"
+query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='cool'"
 df = pd.read_sql(query, engine)
 
-X = df[["targetTemperature", "tempDiff"]]
+X = df[["temperature", "tempDiff"]]
 y = df["watts"]
 
-#X.columns = ['targetTemperature', 'tempDiff']
+#X.columns = ['temperature', 'tempDiff']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 model = LinearRegression()
-#model.feature_names_in_ = None
-model.fit(X_train, y_train)
+#model.fit(X_train, y_train)
+model.fit(X, y)
 model.feature_names_in_ = None
 
-y_pred = model.predict(X_test)
+y_pred = model.predict(X)
 
-mse = mean_squared_error(y_test, y_pred)
+#mse = mean_squared_error(y_test, y_pred)
 #print("Mean Squared Error:", mse)
 
 new_data_point = [[float(sys.argv[1]), float(sys.argv[2])]]
@@ -57,8 +57,8 @@ predicted_watts = model.predict(new_data_point)
 print("Predicted Watts: %f" % (predicted_watts, ))
 
 intercept = model.intercept_
-coef_target_temp = model.coef_[0]  # Coefficient for targetTemperature (beta_1)
-coef_temp_diff = model.coef_[1]  # Coefficient for TemperatureDifference (beta_2)
+coef_target_temp = model.coef_[0]
+coef_temp_diff = model.coef_[1]
 
 def predict_watts(target_temp, temp_diff):
     pred_watts = intercept + coef_target_temp * target_temp + coef_temp_diff * temp_diff
@@ -90,7 +90,7 @@ ax.plot_surface(xx, yy, zz, alpha=0.5)
 
 fig.savefig('/root/AtmoWiz/web/out.png')
 
-fig = px.scatter_3d(df, x='targetTemperature', y='tempDiff', z='watts', size_max=12, color='watts', opacity=0.8)
+fig = px.scatter_3d(df, x='temperature', y='tempDiff', z='watts', size_max=12, color='watts', opacity=0.8)
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
 fig.update_layout(scene=dict(xaxis=dict(title='Target Temperature'), yaxis=dict(title='Temperature Difference'), zaxis=dict(title='Watts')))
 fig.update_layout(title=dict(text="Target Temperature Vs Temperature Difference Vs Watts", font=dict(size=18), xanchor='left', yanchor='top'))
