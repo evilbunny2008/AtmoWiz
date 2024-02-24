@@ -13,15 +13,32 @@ import plotly.io as pio
 
 import sys
 
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression, Lasso, Ridge, ElasticNet, HuberRegressor
+from sklearn.svm import SVR
 
 from sqlalchemy import create_engine
 
 import warnings
 
-warnings.filterwarnings("ignore", message="X has feature names, but LinearRegression was fitted without feature names", category=UserWarning)
+def predict_watts(target_temp, temp_diff):
+    pred_watts = intercept + coef_target_temp * target_temp + coef_temp_diff * temp_diff
+    print ("intercept + coef_target_temp * target_temp + coef_temp_diff * temp_diff")
+    print (f"{pred_watts} = {intercept} + {coef_target_temp} * {target_temp} + {coef_temp_diff} * {temp_diff}")
+    return pred_watts
+
+
+regressors = {}
+regressors['LinearRegression'] = LinearRegression()
+regressors['Lasso'] = Lasso()
+regressors['Ridge'] = Ridge()
+regressors['ElasticNet'] = ElasticNet()
+regressors['HuberRegressor'] = HuberRegressor()
+regressors['RandomForestRegressor'] = RandomForestRegressor()
+regressors['SVR'] = SVR()
+
+for k in regressors:
+    warnings.filterwarnings("ignore", message=f"X has feature names, but {k} was fitted without feature names", category=UserWarning)
 
 configParser = configparser.ConfigParser(allow_no_value = True)
 configParser.read("/etc/atmowiz.conf")
@@ -35,42 +52,36 @@ engine = create_engine(db_uri)
 
 query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='cool'"
 df = pd.read_sql(query, engine)
+df.to_csv('/root/AtmoWiz/web/data.csv')
 
 X = df[["temperature", "tempDiff"]]
 y = df["watts"]
 
-#X.columns = ['temperature', 'tempDiff']
+for k in regressors:
+    print (f"Trying {k}...")
 
-#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-model = LinearRegression()
-#model.fit(X_train, y_train)
-model.fit(X, y)
-model.feature_names_in_ = None
+    model = regressors[k]
+    model.fit(X, y)
+    model.feature_names_in_ = None
 
-y_pred = model.predict(X)
+    y_pred = model.predict(X)
 
-#mse = mean_squared_error(y_test, y_pred)
-#print("Mean Squared Error:", mse)
+    new_data_point = [[float(sys.argv[1]), float(sys.argv[2])]]
+    predicted_watts = model.predict(new_data_point)
+    print("Predicted Watts: %f" % (predicted_watts, ))
 
-new_data_point = [[float(sys.argv[1]), float(sys.argv[2])]]
-predicted_watts = model.predict(new_data_point)
-print("Predicted Watts: %f" % (predicted_watts, ))
-
-intercept = model.intercept_
-coef_target_temp = model.coef_[0]
-coef_temp_diff = model.coef_[1]
-
-def predict_watts(target_temp, temp_diff):
-    pred_watts = intercept + coef_target_temp * target_temp + coef_temp_diff * temp_diff
-    print ("intercept + coef_target_temp * target_temp + coef_temp_diff * temp_diff")
-    print (f"{pred_watts} = {intercept} + {coef_target_temp} * {target_temp} + {coef_temp_diff} * {temp_diff}")
-    return pred_watts
-
-predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
-print("Predicted Watts:", predicted_watts)
-
-
-
+#    intercept = model.intercept_
+#    if(k == 'SVR'):
+#        coef_target_temp = model.coef0[0]
+#        coef_temp_diff = model.coef0[1]
+#    else:
+#        coef_target_temp = model.coef_[0]
+#        coef_temp_diff = model.coef_[1]
+#
+#    predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
+#    print("Predicted Watts:", predicted_watts)
+#
+#exit(0)
 
 
 

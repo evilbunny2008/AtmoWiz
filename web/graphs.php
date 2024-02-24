@@ -355,12 +355,13 @@ td
   </nav>
   <article style="width:calc(100% - 350px);">
     <div class="child" style='left:40%;'><img onClick="prevDay(); return false;" style='height:40px;' src='left.png' /></div>
+    <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='right.png' /></div>
     <div id="chartContainer" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
     <div style="height:calc(100vh / 3 * 2 - 52px); width:100%; background:#fff;">
       <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
       <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
     </div>
-    <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='right.png' /></div>
+    <div id="chartContainer4" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
   </article>
 </section>
 <div style='height: 32px;width: 100%'></div>
@@ -1219,10 +1220,97 @@ var chart3 = new CanvasJS.Chart("costContainer",
        	}],
 });
 
+var chart4 = new CanvasJS.Chart("chartContainer4",
+{
+	animationEnabled: true,
+	exportEnabled: true,
+	zoomEnabled: true,
+	title:
+	{
+		text: "Power Vs Ambient Temp"
+	},
+	toolTip:
+	{
+		contentFormatter: function(e)
+		{
+			var content = "";
+			if(timePeriod == "year" || timePeriod == "month")
+				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM") + "</br>------------";
+			else
+				content += CanvasJS.formatDate(e.entries[0].dataPoint.x, "D MMM, h:mmTT") + "</br>------------";
+
+			for(var i = 0; i < e.entries.length; i++)
+			{
+				var entry = e.entries[i];
+
+				if(entry.dataSeries.name == "Temperature [°C]")
+					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Power [W]")
+					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
+
+				if(entry.dataPoint.markerType == 'cross')
+					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
+			}
+			return content;
+		},
+		shared: true,
+	},
+	axisX:
+	{
+		title: "Time",
+		interval: 1,
+		intervalType: "hour",
+		valueFormatString: "D MMM, hTT",
+		labelAngle: -20,
+	},
+	axisY:
+	{
+		title: "Temperature [°C]",
+		titleFontColor: "<?=$tempColour?>",
+		lineColor: "<?=$tempColour?>",
+		labelFontColor: "<?=$tempColour?>",
+		tickColor: "<?=$tempColour?>",
+	},
+	axisY2:
+	{
+		title: "Power [W]",
+		titleFontColor: "<?=$humidColour?>",
+		lineColor: "<?=$humidColour?>",
+		labelFontColor: "<?=$humidColour?>",
+		tickColor: "<?=$humidColour?>",
+	},
+	legend:
+	{
+		cursor: "pointer",
+		dockInsidePlotArea: true,
+		itemclick: toggleDataSeries
+	},
+	data:
+	[
+		{
+			type: "line",
+			name: "Temperature [°C]",
+			xValueType: "dateTime",
+			markerSize: 0,
+			showInLegend: true,
+			color: "<?=$FLColour?>",
+		},{
+			type: "line",
+			axisYType: "secondary",
+			name: "Power [W]",
+			xValueType: "dateTime",
+			markerSize: 0,
+			showInLegend: true,
+			color: "<?=$humidColour?>",
+		}
+	],
+});
+
 var charts = [];
 charts.push(chart1);
 charts.push(chart2);
 charts.push(chart3);
+charts.push(chart4);
 
 syncCharts(charts, true, true, true);
 
@@ -1507,6 +1595,8 @@ console.log("Update should have happened.");
 		chart1.options.data[2].dataPoints = content['dataPoints1'];
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
 		chart3.options.data[0].dataPoints = content['dataPoints5'];
+		chart4.options.data[0].dataPoints = content['dataPoints7'];
+		chart4.options.data[1].dataPoints = content['dataPoints6'];
 
 		for(var i = 0; i < charts.length; i++)
 			charts[i].render();

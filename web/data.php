@@ -19,8 +19,8 @@
 
 		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
 		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
-		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(),
-						'dataPoints4' => array(), 'dataPoints5' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
+		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(), 'dataPoints4' => array(),
+			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
 		echo json_encode(array('status' => 200, 'content' => $data));
 		exit;
 	}
@@ -46,6 +46,8 @@
 	$dataPoints3 = array();
 	$dataPoints4 = array();
 	$dataPoints5 = array();
+	$dataPoints6 = array();
+	$dataPoints7 = array();
 
 	$airconon = '';
 	$uid = '';
@@ -97,12 +99,16 @@
 		$dataPoints3[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 		$dataPoints4[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 		$dataPoints5[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints6[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints7[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 	} else {
 		$dataPoints1[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints3[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints4[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints5[] = array('x' => doubleval($startTS), 'y' => null);
+		$dataPoints6[] = array('x' => doubleval($startTS), 'y' => null);
+		$dataPoints7[] = array('x' => doubleval($startTS), 'y' => null);
 	}
 
 	$query = "";
@@ -140,6 +146,7 @@
 			$dataPoints2 = $arr['1'];
 			$dataPoints3 = $arr['2'];
 			$dataPoints4 = $arr['3'];
+			$dataPoints6 = $arr['4'];
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
@@ -177,13 +184,14 @@
 						$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2[$humidityOrWatts]));
 						$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => round(floatval($row2['feelslike']) * 10.0) / 10.0);
 						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['rssi']));
+						$dataPoints6[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['watts']));
 					}
 				}
 			}
 
 			mysqli_free_result($res);
 
-			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4)));
+			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6)));
 			$redis->expire(md5($query), 86400);
 		}
 
@@ -210,6 +218,13 @@
 			$redis->set(md5($query), serialize($dataPoints5));
 			$redis->expire(md5($query), 86400);
 		}
+
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
+		$res = mysqli_query($link, $query);
+		while($row = mysqli_fetch_assoc($res))
+		{
+			$dataPoints7[] = array('x' => doubleval($row['whentimes']) * 1000, 'y' => floatval($row['temperature']));
+		}
 	} else {
 		if($redis->exists(md5($query)))
 		{
@@ -218,6 +233,7 @@
 			$dataPoints2 = $arr['1'];
 			$dataPoints3 = $arr['2'];
 			$dataPoints4 = $arr['3'];
+			$dataPoints6 = $arr['4'];
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
@@ -252,11 +268,12 @@
 				$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row[$humidityOrWatts]));
 				$dataPoints3[] = array('x' => doubleval($row['whentimes']), 'y' => round(floatval($row['feelslike']) * 10.0) / 10.0);
 				$dataPoints4[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['rssi']));
+				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['watts']));
 			}
 
 			mysqli_free_result($res);
 
-			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4)));
+			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6)));
 			$redis->expire(md5($query), 86400);
 		}
 	}
@@ -303,6 +320,13 @@
 			$redis->set(md5($query), serialize($dataPoints5));
 			$redis->expire(md5($query), 86400);
 		}
+
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
+		$res = mysqli_query($link, $query);
+		while($row = mysqli_fetch_assoc($res))
+		{
+			$dataPoints7[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
+		}
 	} else if($period != 31536000000) {
 		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
 				"UNIX_TIMESTAMP(whentime) * 1000 >= floor($startTS / 3600000) * 3600000 + 3600000 AND ".
@@ -326,6 +350,13 @@
 			$dataPoints5[] = array('x' => doubleval($startTS + $period), 'y' => null);
 			$redis->set(md5($query), serialize($dataPoints5));
 			$redis->expire(md5($query), 86400);
+		}
+
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
+		$res = mysqli_query($link, $query);
+		while($row = mysqli_fetch_assoc($res))
+		{
+			$dataPoints7[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
 		}
 	}
 
@@ -471,7 +502,7 @@
 
 	mysqli_free_result($res);
 
-	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3,
-					'dataPoints4' => $dataPoints4, 'dataPoints5' => $dataPoints5,
+	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4,
+					'dataPoints5' => $dataPoints5, 'dataPoints6' => $dataPoints6, 'dataPoints7' => $dataPoints7,
 					'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS);
 	echo json_encode(array('status' => 200, 'content' => $data));
