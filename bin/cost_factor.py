@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import configparser
-import MySQLdb
 
 import matplotlib.pyplot as plt
 
@@ -12,14 +11,17 @@ import plotly.express as px
 import plotly.graph_objs as go
 import plotly.io as pio
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVR
-
-#from sklearn.linear_model import LinearRegression
-#import statsmodels.formula.api as smf
-
 import sys
 
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+from sqlalchemy import create_engine
+
+import warnings
+
+warnings.filterwarnings("ignore", message="X has feature names, but LinearRegression was fitted without feature names", category=UserWarning)
 
 configParser = configparser.ConfigParser(allow_no_value = True)
 configParser.read("/etc/atmowiz.conf")
@@ -28,25 +30,36 @@ database = configParser.get('mariadb', 'database', fallback = 'atmowiz')
 username = configParser.get('mariadb', 'username', fallback = 'atmowiz')
 password = configParser.get('mariadb', 'password', fallback = 'password')
 
-mydb = MySQLdb.connect(hostname, username, password, database)
+db_uri = "mysql://%s:%s@%s/%s" % (username, password, hostname, database)
+engine = create_engine(db_uri)
 
-query = "SELECT watts, targetTemperature, (temperature - targetTemperature) as tempDiff FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='cool'"
-df = pd.read_sql(query, mydb)
-
-df.reset_index(drop=True, inplace=True)
+query = "SELECT targetTemperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='cool'"
+df = pd.read_sql(query, engine)
 
 X = df[["targetTemperature", "tempDiff"]]
-Y = df["watts"]
+y = df["watts"]
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-model = SVR(kernel='linear')
-model.fit(X, Y)
+#X.columns = ['targetTemperature', 'tempDiff']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = LinearRegression()
+#model.feature_names_in_ = None
+model.fit(X_train, y_train)
+model.feature_names_in_ = None
+
+y_pred = model.predict(X_test)
+
+mse = mean_squared_error(y_test, y_pred)
+print("Mean Squared Error:", mse)
+
+new_data_point = [[float(sys.argv[1]), float(sys.argv[2])]]
+predicted_watts = model.predict(new_data_point)
+print("Predicted Watts: %f" % (predicted_watts, ))
 
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(X.iloc[:, 0], X.iloc[:, 1], Y)  # Accessing DataFrame columns correctly
+ax.scatter(X.iloc[:, 0], X.iloc[:, 1], y)
 ax.set_xlabel('Target Temperature')
 ax.set_ylabel('Temperature Difference')
 ax.set_zlabel('Watts')
@@ -58,24 +71,7 @@ zz = np.array([model.predict([[a, b]])[0] for a, b in zip(xx.ravel(), yy.ravel()
 zz = zz.reshape(xx.shape)
 ax.plot_surface(xx, yy, zz, alpha=0.5)
 
-intercept = model.intercept_[0]
-coef_1, coef_2 = model.coef_[0]
-
-def predict_watts(target_temp, temp_diff):
-    return intercept + coef_1 * target_temp + coef_2 * temp_diff
-
-print("Intercept:", intercept)
-print("Coefficient for Target Temperature:", coef_1)
-print("Coefficient for Temperature Difference:", coef_2)
-
-target_temp = float(sys.argv[1])
-temp_diff = float(sys.argv[2])
-predicted_watts = predict_watts(target_temp, temp_diff)
-print("Predicted Watts:", predicted_watts)
-
-#plt.savefig('/root/AtmoWiz/web/out.png')
-
-#print(model.predict(X))
+fig.savefig('/root/AtmoWiz/web/out.png')
 
 fig = px.scatter_3d(df, x='targetTemperature', y='tempDiff', z='watts', size_max=12, color='watts', opacity=0.8)
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
