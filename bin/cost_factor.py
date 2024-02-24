@@ -50,11 +50,28 @@ model.feature_names_in_ = None
 y_pred = model.predict(X_test)
 
 mse = mean_squared_error(y_test, y_pred)
-print("Mean Squared Error:", mse)
+#print("Mean Squared Error:", mse)
 
 new_data_point = [[float(sys.argv[1]), float(sys.argv[2])]]
 predicted_watts = model.predict(new_data_point)
 print("Predicted Watts: %f" % (predicted_watts, ))
+
+intercept = model.intercept_
+coef_target_temp = model.coef_[0]  # Coefficient for targetTemperature (beta_1)
+coef_temp_diff = model.coef_[1]  # Coefficient for TemperatureDifference (beta_2)
+
+def predict_watts(target_temp, temp_diff):
+    pred_watts = intercept + coef_target_temp * target_temp + coef_temp_diff * temp_diff
+    print ("intercept + coef_target_temp * target_temp + coef_temp_diff * temp_diff")
+    print (f"{pred_watts} = {intercept} + {coef_target_temp} * {target_temp} + {coef_temp_diff} * {temp_diff}")
+    return pred_watts
+
+predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
+print("Predicted Watts:", predicted_watts)
+
+
+
+
 
 
 fig = plt.figure()

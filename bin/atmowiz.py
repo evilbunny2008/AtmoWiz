@@ -320,16 +320,15 @@ def getWatts():
 
     return 0
 
-def costFactor(mode, targetTemperature, temperature):
+def calcWatts(mode, targetTemperature, temperature):
     if(mode == 'heat'):
         if(targetTemperature - temperature <= 0):
             return 0.25
         return (1.035 - (1 / (1 + (targetTemperature - temperature))) ** 2)
 
     if(mode == 'cool' or mode == 'dry'):
-        if(temperature - targetTemperature <= 0):
-            return 0.25
-        return (1.035 - (1 / (1 + (temperature - targetTemperature))) ** 2)
+        # print (f"((({cool} * 1000) / {EER}) - 1000) + (-42.35150780269007 * {targetTemperature}) + 79.15692291734648 * ({temperature} - {targetTemperature}) / 1000")
+        return (cool * 1000 / EER - 1000 + (-42.35150780269007 * targetTemperature) + 79.15692291734648 * (temperature - targetTemperature)) / 1000
 
     return 1
 
@@ -343,20 +342,20 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry')"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
+            kw = calcWatts(mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
-                cost = cool / EER * offpeak * 90.0 / 3600.0
+                cost = kw * offpeak * (90 / 3600)
             else:
-                cost = cool / EER * offpeak * 90.0 / 3600.0
+                cost = kw * offpeak * (90 / 3600)
                 if(hod >= 7 and hod < 9):
-                    cost = cool / EER * peak * 90.0 / 3600.0
+                    cost = kw * peak * (90 / 3600)
                 if(hod >= 9 and hod < 17):
-                    cost = cool / EER * shoulder * 90.0 / 3600.0
+                    cost = kw * shoulder * (90 / 3600)
                 if(hod >= 17 and hod < 20):
-                    cost = cool / EER * peak * 90.0 / 3600.0
+                    cost = kw * peak * (90 / 3600)
                 if(hod >= 20 and hod < 22):
-                    cost = cool / EER * shoulder * 90.0 / 3600.0
+                    cost = kw * shoulder * (90 / 3600)
 
-            cost *= costFactor(mode, targetTemperature, temperature)
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
@@ -367,17 +366,17 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             if(dow == 1 or dow == 7):
-                cost = heat / COP * offpeak * 90.0 / 3600.0
+                cost = heat / COP * offpeak * (90 / 3600)
             else:
-                cost = heat / COP * offpeak * 90.0 / 3600.0
+                cost = heat / COP * offpeak * (90 / 3600)
                 if(hod >= 7 and hod < 9):
-                    cost = heat / COP * peak * 90.0 / 3600.0
+                    cost = heat / COP * peak * (90 / 3600)
                 if(hod >= 9 and hod < 17):
-                    cost = heat / COP * shoulder * 90.0 / 3600.0
+                    cost = heat / COP * shoulder * (90 / 3600)
                 if(hod >= 17 and hod < 20):
-                    cost = heat / COP * peak * 90.0 / 3600.0
+                    cost = heat / COP * peak * (90 / 3600)
                 if(hod >= 20 and hod < 22):
-                    cost = heat / COP * shoulder * 90.0 / 3600.0
+                    cost = heat / COP * shoulder * (90 / 3600)
 
             cost *= costFactor(mode, targetTemperature, temperature)
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
@@ -390,17 +389,17 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             if(dow == 1 or dow == 7):
-                cost = fankw * offpeak * 90.0 / 3600.0
+                cost = fankw * offpeak * (90 / 3600)
             else:
-                cost = fankw * offpeak * 90.0 / 3600.0
+                cost = fankw * offpeak * (90 / 3600)
                 if(hod >= 7 and hod < 9):
-                    cost = fankw * peak * 90.0 / 3600.0
+                    cost = fankw * peak * (90 / 3600)
                 if(hod >= 9 and hod < 17):
-                    cost = fankw * shoulder * 90.0 / 3600.0
+                    cost = fankw * shoulder * (90 / 3600)
                 if(hod >= 17 and hod < 20):
-                    cost = fankw * peak * 90.0 / 3600.0
+                    cost = fankw * peak * (90 / 3600)
                 if(hod >= 20 and hod < 22):
-                    cost = fankw * shoulder * 90.0 / 3600.0
+                    cost = fankw * shoulder * (90 / 3600)
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
@@ -412,17 +411,17 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             if(dow == 1 or dow == 7):
-                cost = offkw * offpeak * 90.0 / 3600.0
+                cost = offkw * offpeak * (90 / 3600)
             else:
-                cost = offkw * offpeak * 90.0 / 3600.0
+                cost = offkw * offpeak * (90 / 3600)
                 if(hod >= 7 and hod < 9):
-                    cost = offkw * peak * 90.0 / 3600.0
+                    cost = offkw * peak * (90 / 3600)
                 if(hod >= 9 and hod < 17):
-                    cost = offkw * shoulder * 90.0 / 3600.0
+                    cost = offkw * shoulder * (90 / 3600)
                 if(hod >= 17 and hod < 20):
-                    cost = offkw * peak * 90.0 / 3600.0
+                    cost = offkw * peak * (90 / 3600)
                 if(hod >= 20 and hod < 22):
-                    cost = offkw * shoulder * 90.0 / 3600.0
+                    cost = offkw * shoulder * (90 / 3600)
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
