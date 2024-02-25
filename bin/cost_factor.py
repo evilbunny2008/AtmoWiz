@@ -13,9 +13,7 @@ import plotly.io as pio
 
 import sys
 
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression, Lasso, Ridge, ElasticNet, HuberRegressor
-from sklearn.svm import SVR
+from sklearn.linear_model import LinearRegression, Lasso, Ridge, HuberRegressor
 
 from sqlalchemy import create_engine
 
@@ -32,10 +30,7 @@ regressors = {}
 regressors['LinearRegression'] = LinearRegression()
 regressors['Lasso'] = Lasso()
 regressors['Ridge'] = Ridge()
-regressors['ElasticNet'] = ElasticNet()
 regressors['HuberRegressor'] = HuberRegressor()
-regressors['RandomForestRegressor'] = RandomForestRegressor()
-regressors['SVR'] = SVR()
 
 for k in regressors:
     warnings.filterwarnings("ignore", message=f"X has feature names, but {k} was fitted without feature names", category=UserWarning)
@@ -70,18 +65,14 @@ for k in regressors:
     predicted_watts = model.predict(new_data_point)
     print("Predicted Watts: %f" % (predicted_watts, ))
 
-#    intercept = model.intercept_
-#    if(k == 'SVR'):
-#        coef_target_temp = model.coef0[0]
-#        coef_temp_diff = model.coef0[1]
-#    else:
-#        coef_target_temp = model.coef_[0]
-#        coef_temp_diff = model.coef_[1]
-#
-#    predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
-#    print("Predicted Watts:", predicted_watts)
-#
-#exit(0)
+    intercept = model.intercept_
+    coef_target_temp = model.coef_[0]
+    coef_temp_diff = model.coef_[1]
+
+    predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
+    print("Predicted Watts:", predicted_watts)
+
+exit(0)
 
 
 
