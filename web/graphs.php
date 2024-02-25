@@ -361,7 +361,7 @@ td
       <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
       <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
     </div>
-    <div id="chartContainer4" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
+    <div id="chartContainer4" style="height: calc(100vh / 3 - 20px); width: 100%;display:none;"></div>
   </article>
 </section>
 <div style='height: 32px;width: 100%'></div>
@@ -1597,6 +1597,11 @@ console.log("Update should have happened.");
 		chart3.options.data[0].dataPoints = content['dataPoints5'];
 		chart4.options.data[0].dataPoints = content['dataPoints7'];
 		chart4.options.data[1].dataPoints = content['dataPoints6'];
+
+		if(content['showChart4'])
+			document.getElementById("chartContainer4").style.display = 'block';
+		else
+			document.getElementById("chartContainer4").style.display = 'none';
 
 		for(var i = 0; i < charts.length; i++)
 			charts[i].render();

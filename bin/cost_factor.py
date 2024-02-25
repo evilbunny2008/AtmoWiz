@@ -47,7 +47,7 @@ engine = create_engine(db_uri)
 
 query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='cool'"
 df = pd.read_sql(query, engine)
-df.to_csv('/root/AtmoWiz/web/data.csv')
+#df.to_csv('/root/AtmoWiz/web/data.csv')
 
 X = df[["temperature", "tempDiff"]]
 y = df["watts"]

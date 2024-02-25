@@ -1,5 +1,6 @@
 <?php
 	$error = null;
+	$showChart4 = false;
 	require_once('mariadb.php');
 
 	if(!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] != true)
@@ -20,7 +21,7 @@
 		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
 		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
 		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(), 'dataPoints4' => array(),
-			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(), 'commands' => $commands, 'currtime' => date("H:i"));
+			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(), 'commands' => $commands, 'currtime' => date("H:i"), 'showChart4' => $showChart4);
 		echo json_encode(array('status' => 200, 'content' => $data));
 		exit;
 	}
@@ -220,10 +221,19 @@
 		}
 
 		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
-		$res = mysqli_query($link, $query);
-		while($row = mysqli_fetch_assoc($res))
+		if($redis->exists(md5($query)))
 		{
-			$dataPoints7[] = array('x' => doubleval($row['whentimes']) * 1000, 'y' => floatval($row['temperature']));
+			$dataPoints7 = unserialize($redis->get(md5($query)));
+		} else {
+			$res = mysqli_query($link, $query);
+			while($row = mysqli_fetch_assoc($res))
+			{
+				$dataPoints7[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
+			}
+
+			mysqli_free_result($res);
+			$redis->set(md5($query), serialize($dataPoints7));
+			$redis->expire(md5($query), 86400);
 		}
 	} else {
 		if($redis->exists(md5($query)))
@@ -322,10 +332,19 @@
 		}
 
 		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
-		$res = mysqli_query($link, $query);
-		while($row = mysqli_fetch_assoc($res))
+		if($redis->exists(md5($query)))
 		{
-			$dataPoints7[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
+			$dataPoints7 = unserialize($redis->get(md5($query)));
+		} else {
+			$res = mysqli_query($link, $query);
+			while($row = mysqli_fetch_assoc($res))
+			{
+				$dataPoints7[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
+			}
+
+			mysqli_free_result($res);
+			$redis->set(md5($query), serialize($dataPoints7));
+			$redis->expire(md5($query), 86400);
 		}
 	} else if($period != 31536000000) {
 		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
@@ -353,10 +372,19 @@
 		}
 
 		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
-		$res = mysqli_query($link, $query);
-		while($row = mysqli_fetch_assoc($res))
+		if($redis->exists(md5($query)))
 		{
-			$dataPoints7[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
+			$dataPoints7 = unserialize($redis->get(md5($query)));
+		} else {
+			$res = mysqli_query($link, $query);
+			while($row = mysqli_fetch_assoc($res))
+			{
+				$dataPoints7[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
+			}
+
+			mysqli_free_result($res);
+			$redis->set(md5($query), serialize($dataPoints7));
+			$redis->expire(md5($query), 86400);
 		}
 	}
 
@@ -377,14 +405,14 @@
 		else
 			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' />\n";
 
-		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Today' />\n";
+		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' />\n";
 		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
 		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
 
 		$commands .= "</li>\n";
 	} else {
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Today' />\n";
+		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' />\n";
 		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
 		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
 		$commands .= "</li>\n";
@@ -502,7 +530,16 @@
 
 	mysqli_free_result($res);
 
+	for($i = 0; $i < sizeof($dataPoints6); $i++)
+	{
+		if($dataPoints6[$i]['y'] > 0)
+		{
+			$showChart4 = True;
+			break;
+		}
+	}
+
 	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4,
 					'dataPoints5' => $dataPoints5, 'dataPoints6' => $dataPoints6, 'dataPoints7' => $dataPoints7,
-					'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS);
+					'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS, 'showChart4' => $showChart4);
 	echo json_encode(array('status' => 200, 'content' => $data));

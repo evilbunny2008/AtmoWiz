@@ -16,6 +16,7 @@
 	$FLColour = "Steelblue";
 	$wifiColour = "Steelblue";
 	$costColour = "Steelblue";
+	$powerColour = "Steelblue";
 
 	session_start();
 
