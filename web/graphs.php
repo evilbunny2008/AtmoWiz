@@ -1986,7 +1986,7 @@ function newTimer()
 
 function help()
 {
-	window.open("https://github.com/evilbunny2008/AtmoWiz/wiki", "_blank").focus();;
+	window.open("https://github.com/evilbunny2008/AtmoWiz/wiki/Using-AtmoWiz", "_blank").focus();;
 }
 
 DataLoop();
