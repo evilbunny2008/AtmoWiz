@@ -2051,7 +2051,23 @@ function delayLoading()
 				element: document.querySelector('.card-demo8'),
 				intro: '<div style="overflow:hidden;width:250px"><img src="question-mark.png" style="float:left;margin-right:20px;" width="50px"><p>Click this icon to open more indepth help.</p></div>',
 				position: 'bottom'
-			}]
+			},
+			{
+				element: document.querySelector('.card-demo9'),
+				intro: '<div style="overflow:hidden;width:250px"><p>You can jump between time periods using this drop down.</p></div>',
+				position: 'bottom'
+			},
+			{
+				element: document.querySelector('.card-demo10'),
+				intro: '<div style="overflow:hidden;width:250px"><p>Current conditions shows values based on information reported by your Sensibo.</p></div>',
+				position: 'bottom'
+			},
+			{
+				element: document.querySelector('.card-demo11'),
+				intro: '<div style="overflow:hidden;width:250px"><p>Whether rain or shine, our Outdoor Conditions section ensures you\'re prepared for whatever nature has in store. With a glance, you\'ll have the insights you need.</p></div>',
+				position: 'bottom'
+			},
+		]
 		}).start();
 	} catch (e) {
 		console.log(e)

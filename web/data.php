@@ -437,8 +437,8 @@
 		mysqli_free_result($res);
 	}
 
-	$commands .= "<li><label for='timePeriod'>Time Period:</label>\n";
-	$commands .= "<select name='devices' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
+	$commands .= "<li class='card-demo9'><label for='timePeriod'>Time Period:</label>\n";
+	$commands .= "<select name='timePeriod' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
 	$commands .= "<option value='day'";
 	if($period == 86400000)
 		$commands .= " selected";
@@ -459,7 +459,7 @@
 
 	$commands .= "<li>&nbsp;</li>\n";
 
-	$commands .= "<li style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
+	$commands .= "<li class='card-demo10' style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
 	$commands .= "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
 	$commands .= "<li>&nbsp;</li>\n";
 
@@ -467,7 +467,7 @@
 	$row = mysqli_fetch_assoc(mysqli_query($link, $query));
 	if($row !== False)
 	{
-		$commands .= "<li style='text-align:center;'><u><b>Closest Weather Station</b></u></li>\n";
+		$commands .= "<li style='text-align:center;' class='card-demo11'><u><b>Closest Weather Station</b></u></li>\n";
 		if($row['pressure'] >= 800)
 			$pressure = $row['pressure'] . "hPa";
 		else
