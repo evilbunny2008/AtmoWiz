@@ -37,6 +37,8 @@
 <script src="clocklet.js"></script>
 <link href="time-pick.css" rel="stylesheet">
 <script src="time-pick.js"></script>
+<script src="intro.min.js"></script>
+<link href="introjs.min.css" rel="stylesheet">
 <style>
 *
 {
@@ -1720,6 +1722,7 @@ function logout()
 
 function settings()
 {
+	populateSelect('1');
 	modal1.style.display = "block";
 }
 
@@ -1993,6 +1996,69 @@ DataLoop();
 populateSelect("1");
 populateSelect("2");
 populateSelect("5");
+
+
+function delayLoading()
+{
+	try
+	{
+		introJs().setOptions(
+		{
+			showBullets: false,
+			dontShowAgain: true,
+			steps: [
+<?php
+	if($_SESSION['rw'])
+	{
+?>
+			{
+				element: document.querySelector('.card-demo1'),
+				intro: '<div style="overflow:hidden;width:250px"><img src="hourglass.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you set a simple timer to turn your aircon on or off</p></div>',
+				position: 'bottom'
+			},
+			{
+				element: document.querySelector('.card-demo2'),
+				intro: '<div style="overflow:hidden;width:250px"><img src="wand.png" style="float:left;margin-right:20px;" width="50px"><p>Our Climate Settings screen allows you to take charge based on real-time conditions</p></div>',
+				position: 'bottom'
+			},
+			{
+				element: document.querySelector('.card-demo3'),
+				intro: '<div style="overflow:hidden;width:250px"><img src="watch.png" style="float:left;margin-right:20px;" width="50px"><p>Similar to the Climate Settings screen, but focused on time intervals</p></div>',
+				position: 'bottom'
+			},
+			{
+				element: document.querySelector('.card-demo4'),
+				intro: '<div style="overflow:hidden;width:250px"><img src="settings.png" style="float:left;margin-right:20px;" width="50px"><p>Air Conditioner Settings screen allows you to adjust temperature and fan speed to and modes</p></div>',
+				position: 'bottom'
+			},
+			{
+				element: document.querySelector('.card-demo5'),
+				intro: '<div style="overflow:hidden;width:250px"><img src="on.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you turn your aircon on and off</p></div>',
+				position: 'bottom'
+			},
+<?php } ?>
+			{
+				element: document.querySelector('.card-demo6'),
+				intro: '<div style="overflow:hidden;width:250px"><img src="tick.png" style="float:left;margin-right:20px;" width="50px"><p>This jumps the display to the current date/time</p></div>',
+				position: 'bottom'
+			},
+			{
+				element: document.querySelector('.card-demo7'),
+				intro: '<div style="overflow:hidden;width:250px"><img src="exit.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you logout of the AtmoWiz interface</p></div>',
+				position: 'bottom'
+			},
+			{
+				element: document.querySelector('.card-demo8'),
+				intro: '<div style="overflow:hidden;width:250px"><img src="question-mark.png" style="float:left;margin-right:20px;" width="50px"><p>Click this icon to open more indepth help.</p></div>',
+				position: 'bottom'
+			}]
+		}).start();
+	} catch (e) {
+		console.log(e)
+	}
+}
+
+setTimeout(delayLoading, 500);
 
 <?php
 	if($error != null)

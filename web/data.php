@@ -393,28 +393,28 @@
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
 	{
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:40px;' onClick='showTimers(); return false;' src='hourglass.png' title='Timer' />\n";
-		$commands .= "<img style='width:40px;' onClick='showSettings(); return false;' src='wand.png' title='Show Climate Settings' />\n";
-		$commands .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='watch.png' title='Show Time Based Settings' />\n";
-		$commands .= "<img style='width:40px;' onClick='settings(); return false;' src='settings.png' title='Show AirCon Settings' />\n";
+		$commands .= "<img style='width:40px;' onClick='showTimers(); return false;' src='hourglass.png' title='Timer' class='card-demo1' />\n";
+		$commands .= "<img style='width:40px;' onClick='showSettings(); return false;' src='wand.png' title='Show Climate Settings' class='card-demo2' />\n";
+		$commands .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='watch.png' title='Show Time Based Settings' class='card-demo3' />\n";
+		$commands .= "<img style='width:40px;' onClick='settings(); return false;' src='settings.png' title='Show AirCon Settings' class='card-demo4' />\n";
 		$commands .= "</li>\n";
 
 		$commands .= "<li style='text-align:center'>";
 		if($ac == "on")
-			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='on.png' title='Turn AirCon Off' />\n";
+			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='on.png' title='Turn AirCon Off' class='card-demo5' />\n";
 		else
-			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' />\n";
+			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' class='card-demo5' />\n";
 
-		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' />\n";
-		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
-		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
+		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' class='card-demo6' />\n";
+		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' class='card-demo7' />\n";
+		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' class='card-demo8' />\n";
 
 		$commands .= "</li>\n";
 	} else {
 		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' />\n";
-		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' />\n";
-		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' />\n";
+		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' class='card-demo6' />\n";
+		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' class='card-demo7' />\n";
+		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' class='card-demo8' />\n";
 		$commands .= "</li>\n";
 	}
 
