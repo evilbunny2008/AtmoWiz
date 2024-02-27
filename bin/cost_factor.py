@@ -72,7 +72,7 @@ for k in regressors:
     predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
     print("Predicted Watts:", predicted_watts)
 
-exit(0)
+#exit(0)
 
 
 
@@ -96,4 +96,4 @@ fig = px.scatter_3d(df, x='temperature', y='tempDiff', z='watts', size_max=12, c
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
 fig.update_layout(scene=dict(xaxis=dict(title='Target Temperature'), yaxis=dict(title='Temperature Difference'), zaxis=dict(title='Watts')))
 fig.update_layout(title=dict(text="Target Temperature Vs Temperature Difference Vs Watts", font=dict(size=18), xanchor='left', yanchor='top'))
-pio.write_html(fig, '/root/AtmoWiz/web/test.html')
+pio.write_html(fig, '/root/AtmoWiz/web/out.html')

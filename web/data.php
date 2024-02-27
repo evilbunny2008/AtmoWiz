@@ -18,10 +18,12 @@
 			exit;
 		}
 
+		$commandHeader = "";
 		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
 		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
 		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(), 'dataPoints4' => array(),
-			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(), 'commands' => $commands, 'currtime' => date("H:i"), 'showChart4' => $showChart4);
+			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(),
+			'commandHeader' => $commandHeader, 'commands' => $commands, 'currtime' => date("H:i"), 'showChart4' => $showChart4);
 		echo json_encode(array('status' => 200, 'content' => $data));
 		exit;
 	}
@@ -388,100 +390,105 @@
 		}
 	}
 
-	$commands = '';
+	$commandHeader = '';
 
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
 	{
-		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:40px;' onClick='showTimers(); return false;' src='hourglass.png' title='Timer' class='card-demo1' />\n";
-		$commands .= "<img style='width:40px;' onClick='showSettings(); return false;' src='wand.png' title='Show Climate Settings' class='card-demo2' />\n";
-		$commands .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='watch.png' title='Show Time Based Settings' class='card-demo3' />\n";
-		$commands .= "<img style='width:40px;' onClick='settings(); return false;' src='settings.png' title='Show AirCon Settings' class='card-demo4' />\n";
-		$commands .= "</li>\n";
+		$commandHeader .= "<ul id='CommandHeader'>\n";
+		$commandHeader .= "<li style='text-align:center'>\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showTimers(); return false;' src='hourglass.png' title='Timer' class='card-demo1' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showSettings(); return false;' src='wand.png' title='Show Climate Settings' class='card-demo2' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='watch.png' title='Show Time Based Settings' class='card-demo3' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='settings(); return false;' src='settings.png' title='Show AirCon Settings' class='card-demo4' />\n";
+		$commandHeader .= "</li>\n";
 
-		$commands .= "<li style='text-align:center'>";
+		$commandHeader .= "<li style='text-align:center'>";
 		if($ac == "on")
-			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='on.png' title='Turn AirCon Off' class='card-demo5' />\n";
+			$commandHeader .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='on.png' title='Turn AirCon Off' class='card-demo5' />\n";
 		else
-			$commands .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' class='card-demo5' />\n";
+			$commandHeader .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' class='card-demo5' />\n";
 
-		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' class='card-demo6' />\n";
-		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' class='card-demo7' />\n";
-		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' class='card-demo8' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' class='card-demo6' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' class='card-demo7' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' class='card-demo8' />\n";
 
-		$commands .= "</li>\n";
+		$commandHeader .= "</li>\n";
 	} else {
-		$commands .= "<li style='text-align:center'>";
-		$commands .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' class='card-demo6' />\n";
-		$commands .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' class='card-demo7' />\n";
-		$commands .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' class='card-demo8' />\n";
-		$commands .= "</li>\n";
+		$commandHeader .= "<ul id='CommandHeader'>\n";
+		$commandHeader .= "<li style='text-align:center'>";
+		$commandHeader .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' class='card-demo6' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' class='card-demo7' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' class='card-demo8' />\n";
+		$commandHeader .= "</li>\n";
 	}
 
 	$query = "SELECT uid,name FROM devices ORDER BY name";
 	$res = mysqli_query($link, $query);
 	if(mysqli_num_rows($res) > 1)
 	{
-		$commands .= "<li><label for='devices'>Choose a Device:</label>\n";
-		$commands .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
+		$commandHeader .= "<li><label for='devices'>Choose a Device:</label>\n";
+		$commandHeader .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
 
 		while($row = mysqli_fetch_assoc($res))
 		{
-			$commands .= "<option value='".$row['uid']."'";
+			$commandHeader .= "<option value='".$row['uid']."'";
 			if($uid == $row['uid'])
-				$commands .= " selected";
-		$commands .= ">".$row['name']."</option>\n";
+				$commandHeader .= " selected";
+		$commandHeader .= ">".$row['name']."</option>\n";
 		}
-		$commands .= "</select></li>\n";
+		$commandHeader .= "</select></li>\n";
 
 		mysqli_free_result($res);
 	}
 
-	$commands .= "<li class='card-demo9'><label for='timePeriod'>Time Period:</label>\n";
-	$commands .= "<select name='timePeriod' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
-	$commands .= "<option value='day'";
+	$commandHeader .= "<li class='card-demo9'><label for='timePeriod'>Time Period:</label>\n";
+	$commandHeader .= "<select name='timePeriod' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
+	$commandHeader .= "<option value='day'";
 	if($period == 86400000)
-		$commands .= " selected";
-	$commands .= ">Day</option>";
-	$commands .= "<option value='week'";
+		$commandHeader .= " selected";
+	$commandHeader .= ">Day</option>";
+	$commandHeader .= "<option value='week'";
 	if($period == 604800000)
-		$commands .= " selected";
-	$commands .= ">Week</option>";
-	$commands .= "<option value='month'";
+		$commandHeader .= " selected";
+	$commandHeader .= ">Week</option>";
+	$commandHeader .= "<option value='month'";
 	if($period == 2592000000)
-		$commands .= " selected";
-	$commands .= ">Month</option>";
-	$commands .= "<option value='year'";
+		$commandHeader .= " selected";
+	$commandHeader .= ">Month</option>";
+	$commandHeader .= "<option value='year'";
 	if($period == 31536000000)
-		$commands .= " selected";
-	$commands .= ">Year</option>";
-	$commands .= "</select></li>\n";
+		$commandHeader .= " selected";
+	$commandHeader .= ">Year</option>";
+	$commandHeader .= "</select></li>\n";
 
-	$commands .= "<li>&nbsp;</li>\n";
+	$commandHeader .= "<li>&nbsp;</li>\n";
 
-	$commands .= "<li class='card-demo10' style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
-	$commands .= "<li><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
-	$commands .= "<li>&nbsp;</li>\n";
+	$commandHeader .= "<li class='card-demo10' style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
+	$commandHeader .= "<li class='card-demo10'><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
+	$commandHeader .= "<li class='card-demo10'>&nbsp;</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime FROM weather ORDER BY whentime DESC LIMIT 1";
 	$row = mysqli_fetch_assoc(mysqli_query($link, $query));
 	if($row !== False)
 	{
-		$commands .= "<li style='text-align:center;' class='card-demo11'><u><b>Closest Weather Station</b></u></li>\n";
+		$commandHeader .= "<li style='text-align:center;' class='card-demo11'><u><b>Closest Weather Station</b></u></li>\n";
 		if($row['pressure'] >= 800)
 			$pressure = $row['pressure'] . "hPa";
 		else
 			$pressure = $row['pressure'] . "in";
 
-		$commands .= "<li><b>".$row['wttime']."</b> -- ".$row['temperature']."°C, ".$row['humidity']."%, ".$pressure;
+		$commandHeader .= "<li class='card-demo11'><b>".$row['wttime']."</b> -- ".$row['temperature']."°C, ".$row['humidity']."%, ".$pressure;
 
 		if($row['aqi'] != -1)
-			$commands .= ", ".$row['aqi']." AQI</li>\n";
+			$commandHeader .= ", ".$row['aqi']." AQI</li>\n";
 	}
 
 	$query = "SELECT *, ROUND(UNIX_TIMESTAMP(whentime) / 86400) * 86400 as wtsec, DATE_FORMAT(whentime, '%a %d %b %Y') as wtdate, DATE_FORMAT(whentime, '%H:%i') as wttime FROM ".
 				"commands WHERE uid='$uid' AND changes!='' AND changes!='[]' ORDER BY whentime DESC";
 	$date = $lastdate = '';
+
+	$commandHeader .= "</ul>\n";
+	$commands = "<ul id='commands'>\n";
 
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
@@ -499,7 +506,9 @@
 
 		if($date != $lastdate)
 		{
-			$commands .= "<li>&nbsp;</li>\n";
+			if($commands != "<ul id='commands'>\n")
+				$commands .= "<li>&nbsp;</li>\n";
+
 			$commands .= "<li style='text-align:center;cursor:pointer;' onClick='showDay(\"$wtsec\"); return false;'><u><b>$date</b></u></li>\n";
 			$lastdate = $date;
 		}
@@ -528,6 +537,8 @@
 		}
 	}
 
+	$commands .= "</ul>\n";
+
 	mysqli_free_result($res);
 
 	for($i = 0; $i < sizeof($dataPoints6); $i++)
@@ -541,5 +552,5 @@
 
 	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4,
 					'dataPoints5' => $dataPoints5, 'dataPoints6' => $dataPoints6, 'dataPoints7' => $dataPoints7,
-					'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS, 'showChart4' => $showChart4);
+					'commandHeader' => $commandHeader, 'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS, 'showChart4' => $showChart4);
 	echo json_encode(array('status' => 200, 'content' => $data));

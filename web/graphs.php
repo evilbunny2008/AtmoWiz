@@ -351,20 +351,22 @@ td
 </head>
 <body>
 <section>
-  <nav style='overflow-x:hidden;overflow-y:scroll;height:calc(100vh - 32px);'>
-    <ul id='commands'>
-    </ul>
-  </nav>
-  <article style="width:calc(100% - 350px);">
+  <div style="display:flex;flex-direction:column;position:absolute;">
+    <nav id="commandHeader" style='flex:0 0 auto;height:250px;'>
+    </nav>
+    <nav id="commandList" style='flex:0 0 auto;overflow-x:hidden;overflow-y:scroll;height:calc(100vh - 282px);'>
+    </nav>
+  </div>
+  <div style="width:calc(100% - 375px);float:right;">
     <div class="child" style='left:40%;'><img onClick="prevDay(); return false;" style='height:40px;' src='left.png' /></div>
     <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='right.png' /></div>
     <div id="chartContainer" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
-    <div style="height:calc(100vh / 3 * 2 - 52px); width:100%; background:#fff;">
-      <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
-      <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 50px);"></div>
+    <div style="height:calc(100vh / 3 * 2 - 20px); width:100%; background:#fff;">
+      <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 20px);"></div>
+      <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 20px);"></div>
     </div>
     <div id="chartContainer4" style="height: calc(100vh / 3 - 20px); width: 100%;display:none;"></div>
-  </article>
+  </div>
 </section>
 <div style='height: 32px;width: 100%'></div>
 <footer id="footer">
@@ -1541,7 +1543,8 @@ console.log("Update should have happened.");
 		currtime = content['currtime'];
 		startTS = content['startTS'];
 
-		document.getElementById("commands").innerHTML = content['commands'];
+		document.getElementById("commandHeader").innerHTML = content['commandHeader'];
+		document.getElementById("commandList").innerHTML = content['commands'];
 		uid = content['uid'];
 
 		if(timePeriod == "day")
@@ -2005,7 +2008,7 @@ function delayLoading()
 		introJs().setOptions(
 		{
 			showBullets: false,
-			dontShowAgain: true,
+//			dontShowAgain: true,
 			steps: [
 <?php
 	if($_SESSION['rw'])
