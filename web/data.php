@@ -368,7 +368,7 @@
 
 			mysqli_free_result($res);
 
-			$dataPoints5[] = array('x' => doubleval($startTS + $period), 'y' => null);
+//			$dataPoints5[] = array('x' => doubleval(round($startTS / $period) * $period + $period), 'y' => null);
 			$redis->set(md5($query), serialize($dataPoints5));
 			$redis->expire(md5($query), 86400);
 		}

@@ -75,7 +75,10 @@ class SensiboClientAPI(object):
 
     def devices(self):
         result = self._get("/users/me/pods", fields="id,room")
-        if(result == None):
+        if(result == None or result['result'] == []):
+            return None
+
+        if(len(result) == 0):
             return None
 
         if(result['status'] == 429):
@@ -91,7 +94,10 @@ class SensiboClientAPI(object):
 
     def pod_all_stats(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,feelsLike")
-        if(result == None):
+        if(result == None or result['result'] == []):
+            return None
+
+        if(len(result) == 0):
             return None
 
         if(result['status'] == 429):
@@ -107,7 +113,10 @@ class SensiboClientAPI(object):
 
     def pod_get_remote_capabilities(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,remoteCapabilities,features")
-        if(result == None):
+        if(result == None or result['result'] == []):
+            return None
+
+        if(len(result) == 0):
             return None
 
         if(result['status'] == 429):
@@ -123,7 +132,10 @@ class SensiboClientAPI(object):
 
     def pod_status(self, podUid, lastlimit = 5):
         result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser,resultingAcState,changedProperties")
-        if(result == None):
+        if(result == None or result['result'] == []):
+            return None
+
+        if(len(result) == 0):
             return None
 
         if(result['status'] == 429):
@@ -139,7 +151,10 @@ class SensiboClientAPI(object):
 
     def pod_get_past(self, podUid, days = 1):
         result = self._get("/pods/%s/historicalMeasurements" % podUid, days = days, fields="status,reason,time,acState,causedByUser")
-        if(result == None):
+        if(result == None or result['result'] == []):
+            return None
+
+        if(len(result) == 0):
             return None
 
         if(result['status'] == 429):
@@ -160,7 +175,10 @@ class SensiboClientAPI(object):
 
     def pod_location(self, podUid):
         result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="pod")
-        if(result == None):
+        if(result == None or result['result'] == []):
+            return None
+
+        if(len(result) == 0):
             return None
 
         if(result['status'] == 429):

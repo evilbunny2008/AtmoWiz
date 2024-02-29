@@ -2077,7 +2077,7 @@ function delayLoading()
 	}
 }
 
-setTimeout(delayLoading, 500);
+setTimeout(delayLoading, 1500);
 
 <?php
 	if($error != null)
