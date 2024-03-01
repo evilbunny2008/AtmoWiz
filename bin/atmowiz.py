@@ -647,7 +647,59 @@ def updateEnum(mydb, table_name, field):
     cursor.execute(query)
     mydb.commit()
 
+def getObservations():
+    while True:
+        try:
+            doLog("info", "getObservations(%s)" % podUID)
+            mydb = MySQLdb.connect(hostname, username, password, database)
+
+            if(weatherapikey != ''):
+                getWeatherAPI(mydb, podUID)
+
+            if(OWMapikey != ''):
+                getOpenWeatherMap(mydb, podUID)
+
+            if(inigoURL != ''):
+                getInigoData(mydb)
+
+            if(bomURL != ''):
+                getBOM(mydb)
+
+            if(metLocation != ''):
+                getMetService(mydb)
+
+            if(doOpenMeteo):
+                getOpenMeteo(mydb, podUID)
+
+            mydb.close()
+
+            updateTime = 15
+            ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 120
+            if(inigoURL != ''):
+                updateTime = 5
+                ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 45
+
+            while(ttime <= 0):
+                ttime += updateTime * 60
+            while(ttime >= updateTime * 60):
+                ttime -= updateTime * 60
+
+            doLog("info", "Sleeping Obs thread for %d seconds..." % ttime)
+            time.sleep(ttime)
+
+        except Exception as e:
+            doLog("error", "There was a problem, error was %s" % e, True)
+            pass
+
+def getCurrentWeather(podUID):
+    doLog("info", "Getting observation...")
+
+    my_thread = threading.Thread(target=getObservations)
+    my_thread.start()
+
 def checkSettings(mydb):
+    return
+
     doLog("info", "Checking climate settings...")
     for podUID in uidList:
         try:
@@ -715,72 +767,6 @@ def checkSettings(mydb):
                     #else:
                     #    doLog("debug", "Rule X hit, %s is %s... %s(%s)..." % (i, dict[i], mode, turnOnOff))
 
-            query = "SELECT daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM timesettings WHERE uid=%s AND enabled=1 AND " + \
-                    "(TIME(NOW()) BETWEEN startTime AND endTime OR (endTime < startTime AND (TIME(NOW()) BETWEEN startTime AND '23:59:59' OR TIME(NOW()) BETWEEN '00:00:00' and endTime)))"
-            doLog("debug", query % podUID)
-            values = (podUID, )
-            #doLog("debug", query % values)
-            cursor.execute(query, values)
-            result = cursor.fetchall()
-            for(daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing) in result:
-                if(not daysOfWeek & 2 ** datetime.today().weekday()):
-                    continue
-
-                query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
-                values = (podUID, )
-                #doLog("debug", query % values)
-                cursor.execute(query, values)
-                (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
-                #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
-
-                if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                    doLog("info", "Rule 9 hit, %s is %s turning aircon on to..." % (mode, turnOnOff))
-                    return
-                elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                    doLog("info", "Rule 10 hit, %s is %s turning aircon off to..." % (mode, turnOnOff))
-                    return
-                elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
-                    doLog("info", "Rule 11 hit, keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing...")
-                    return
-                elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
-                    doLog("info", "Rule 12 hit, keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing...")
-                    return
-
-                #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-
-            query = "SELECT whentime, turnOnOff FROM timers WHERE uid=%s AND UNIX_TIMESTAMP(whentime) + seconds < UNIX_TIMESTAMP(NOW())"
-            values = (podUID, )
-            doLog("debug", query % values)
-            cursor.execute(query, values)
-            result = cursor.fetchall()
-            for (whentime, turnOnOff) in result:
-                query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
-                values = (podUID, )
-                doLog("debug", query % values)
-                cursor.execute(query, values)
-                (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
-
-                if(turnOnOff == "On"):
-                    if(airconon == 0):
-                        doLog("info", "Rule 13 hit for %s, turning aircon on..." % (podUID, ))
-                    query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
-                    values = (whentime, podUID)
-                    doLog("debug", query % values)
-                    cursor.execute(query, values)
-                    mydb.commit()
-                    return
-                elif(turnOnOff == "Off"):
-                    if(airconon == 1):
-                        doLog("info", "Rule 14 hit for %s, turning aircon off..." % (podUID, ))
-                    query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
-                    values = (whentime, podUID)
-                    doLog("debug", query % values)
-                    cursor.execute(query, values)
-                    mydb.commit()
-                    return
-
-                #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
@@ -791,54 +777,98 @@ def checkSettings(mydb):
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
 
-def getObservations():
+def TimerSettingsLoop():
     while True:
         try:
-            doLog("info", "getObservations(%s)" % podUID)
             mydb = MySQLdb.connect(hostname, username, password, database)
+            cursor = mydb.cursor()
 
-            if(weatherapikey != ''):
-                getWeatherAPI(mydb, podUID)
+            for podUID in uidList:
+                doLog("info", "TimerSettingsLoop() wake up")
 
-            if(OWMapikey != ''):
-                getOpenWeatherMap(mydb, podUID)
+                query = "SELECT daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, startTime FROM timesettings WHERE uid=%s AND enabled=1 AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00')"
+                doLog("debug", query % podUID)
+                values = (podUID, )
+                #doLog("debug", query % values)
+                cursor.execute(query, values)
+                result = cursor.fetchall()
+                for(daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, startTime) in result:
+                    if(not daysOfWeek & 2 ** datetime.today().weekday()):
+                        continue
 
-            if(inigoURL != ''):
-                getInigoData(mydb)
+                    query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                    values = (podUID, )
+                    #doLog("debug", query % values)
+                    cursor.execute(query, values)
+                    (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
+                    #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
 
-            if(bomURL != ''):
-                getBOM(mydb)
+                    if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
+                        doLog("info", "Rule 9 hit, %s is %s turning aircon on to..." % (mode, turnOnOff))
+                        continue
+                    elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
+                        doLog("info", "Rule 10 hit, %s is %s turning aircon off to..." % (mode, turnOnOff))
+                        continue
+                    elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
+                        doLog("info", "Rule 11 hit, keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing...")
+                        continue
+                    elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
+                        doLog("info", "Rule 12 hit, keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing...")
+                        continue
 
-            if(metLocation != ''):
-                getMetService(mydb)
+                    #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
-            if(doOpenMeteo):
-                getOpenMeteo(mydb, podUID)
+                    query = "SELECT whentime, turnOnOff FROM timers WHERE uid=%s AND UNIX_TIMESTAMP(whentime) + seconds < UNIX_TIMESTAMP(NOW())"
+                    values = (podUID, )
+                    doLog("debug", query % values)
+                    cursor.execute(query, values)
+                    result = cursor.fetchall()
+                    for (whentime, turnOnOff) in result:
+                        query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                        values = (podUID, )
+                        doLog("debug", query % values)
+                        cursor.execute(query, values)
+                        (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
+
+                        if(turnOnOff == "On"):
+                            if(airconon == 0):
+                                doLog("info", "Rule 13 hit for %s, turning aircon on..." % (podUID, ))
+                            query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
+                            values = (whentime, podUID)
+                            doLog("debug", query % values)
+                            cursor.execute(query, values)
+                            mydb.commit()
+                        elif(turnOnOff == "Off"):
+                            if(airconon == 1):
+                                doLog("info", "Rule 14 hit for %s, turning aircon off..." % (podUID, ))
+                            query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
+                            values = (whentime, podUID)
+                            doLog("debug", query % values)
+                            cursor.execute(query, values)
+                            mydb.commit()
+
+                        #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
             mydb.close()
 
-            updateTime = 15
-            ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 120
-            if(inigoURL != ''):
-                updateTime = 5
-                ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 45
+            ttime = round(datetime.now().timestamp() / 60) * 60 - datetime.now().timestamp()
 
             while(ttime <= 0):
-                ttime += updateTime * 60
-            while(ttime >= updateTime * 60):
-                ttime -= updateTime * 60
+                ttime += 60
+            while(ttime >= 60):
+                ttime -= 60
 
-            doLog("info", "Sleeping Obs thread for %d seconds..." % ttime)
+            doLog("info", "Sleeping TimerSettingsLoop thread for %d seconds..." % ttime)
             time.sleep(ttime)
 
         except Exception as e:
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
 
-def getCurrentWeather(podUID):
-    doLog("info", "Getting observation...")
+def doTimerSettings():
+    doLog("info", "Doing Timer Settings Loop...")
 
-    my_thread = threading.Thread(target=getObservations)
+    my_thread = threading.Thread(target=TimerSettingsLoop)
     my_thread.start()
 
 def getOpenWeatherMap(mydb, podUID):
@@ -1170,21 +1200,21 @@ def updateDatabase(mydb):
             cursor.execute(query)
             mydb.commit()
 
+        query = "SHOW COLUMNS FROM `timesettings` LIKE 'endTime'"
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if(row):
+            doLog("info", "Removing endTime column...")
+            query = "ALTER TABLE `timesettings` DROP `endTime`"
+            cursor.execute(query)
+            mydb.commit()
+
         query = "SHOW COLUMNS FROM `sensibo` LIKE 'watts'"
         cursor.execute(query)
         row = cursor.fetchone()
         if(not row):
             doLog("info", "Creating watts column...")
             query = "ALTER TABLE `sensibo` ADD `watts` FLOAT NOT NULL DEFAULT '0' AFTER `cost`"
-            cursor.execute(query)
-            mydb.commit()
-
-        query = "SHOW COLUMNS FROM `sensibo` LIKE 'amps'"
-        cursor.execute(query)
-        row = cursor.fetchone()
-        if(row):
-            doLog("info", "Dropping amps column...")
-            query = "ALTER TABLE `sensibo` DROP `amps`"
             cursor.execute(query)
             mydb.commit()
 
@@ -1462,7 +1492,7 @@ if __name__ == "__main__":
 
         doHistoricalMeasurements(mydb, days)
         calcCost(mydb)
-        checkSettings(mydb)
+        #checkSettings(mydb)
 
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
@@ -1479,6 +1509,7 @@ if __name__ == "__main__":
     loops = 0
 
     getCurrentWeather(podUID)
+    doTimerSettings()
 
     while True:
         try:
@@ -1553,7 +1584,7 @@ if __name__ == "__main__":
             calcCost(mydb)
 
             getLastCommands(mydb, 5)
-            checkSettings(mydb)
+            #checkSettings(mydb)
 
             loops += 1
             if(loops >= 40):

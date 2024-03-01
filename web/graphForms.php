@@ -26,7 +26,7 @@
 		$url = "https://home.sensibo.com/api/v2/pods/$podUID/acStates?apiKey=".$apikey;
 		$body = json_encode(array('acState' => $changes));
 
-		$opts = array('http' => array('method' => "POST", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 5));
+		$opts = array('http' => array('method' => "POST", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 15));
 		$context = stream_context_create($opts);
 		$ret = @file_get_contents($url, false, $context);
 
@@ -103,14 +103,11 @@
 	if(isset($_REQUEST['podUID2']) && !empty($_REQUEST['podUID2']) && (!isset($_REQUEST['created2']) || empty($_REQUEST['created2'])) && $_SESSION['rw'] && (!isset($_REQUEST['action']) || empty($_REQUEST['action'])))
 	{
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
-		$onOff = mysqli_real_escape_string($link, $_REQUEST['onOff']);
-		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
-		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
-		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
-		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
-		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
+		$name = mysqli_real_escape_string($link, $_REQUEST['name']);
+		$upperTemperature = mysqli_real_escape_string($link, $_REQUEST['upperTemperature']);
+		$lowerTemperature = mysqli_real_escape_string($link, $_REQUEST['lowerTemperature']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
+		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
 		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
 		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
@@ -119,8 +116,9 @@
 		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
 			$enabled = 1;
 
-		$query = "INSERT INTO settings (uid, created, onOff, targetType, targetOp, targetValue, startTime, endTime, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing, enabled) VALUES ".
-			 "('$uid', NOW(), '$onOff', '$targetType', '$targetOp', '$targetValue', '$startTime', '$endTime', '$turnOnOff', '$targetTemperature', '$mode', '$fanLevel', '$swing', '$horizontalSwing', '$enabled')";
+		$query = "INSERT INTO settings (uid, created, name, upperTemperature, lowerTemperature, targetTemperature, turnOnOff, mode, fanLevel, swing, horizontalSwing, enabled) VALUES ".
+			 "('$uid', NOW(), '$name', '$upperTemperature', '$lowerTemperature', '$targetTemperature', '$turnOnOff', '$mode', '$fanLevel', '$swing', '$horizontalSwing', '$enabled')";
+syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
 		else
@@ -132,14 +130,11 @@
 	{
 		$created = mysqli_real_escape_string($link, $_REQUEST['created2']);
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
-		$onOff = mysqli_real_escape_string($link, $_REQUEST['onOff']);
-		$targetType = mysqli_real_escape_string($link, $_REQUEST['targetType']);
-		$targetOp = mysqli_real_escape_string($link, $_REQUEST['targetOp']);
-		$targetValue = mysqli_real_escape_string($link, $_REQUEST['targetValue']);
-		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
-		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
+		$name = mysqli_real_escape_string($link, $_REQUEST['name']);
+		$upperTemperature = mysqli_real_escape_string($link, $_REQUEST['upperTemperature']);
+		$lowerTemperature = mysqli_real_escape_string($link, $_REQUEST['lowerTemperature']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
+		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
 		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
 		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
@@ -148,8 +143,9 @@
 		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
 			$enabled = 1;
 
-		$query = "UPDATE settings SET onOff='$onOff', targetType='$targetType', targetOp='$targetOp', targetValue='$targetValue', startTime='$startTime', endTime='$endTime', turnOnOff='$turnOnOff', ".
-			 "targetTemperature='$targetTemperature', mode='$mode', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='$uid' AND created='$created'";
+		$query = "UPDATE settings SET name='$name', upperTemperature='$upperTemperature', lowerTemperature='$lowerTemperature', targetTemperature='$targetTemperature', turnOnOff='$turnOnOff', ".
+			 "mode='$mode', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='$uid' AND created='$created'";
+syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
 		else
@@ -163,6 +159,7 @@
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
 
 		$query = "DELETE FROM settings WHERE uid='$uid' AND created='$created'";
+syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
 		else
@@ -175,13 +172,18 @@
 		$created = mysqli_real_escape_string($link, $_REQUEST['created5']);
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
 		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
 		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
 		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
 		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+		$climateSetting = mysqli_real_escape_string($link, $_REQUEST['climateSetting']);
+
+		if($climateSetting == "none")
+			$climateSetting = "NULL";
+		else
+			$climateSetting = "'$climateSetting'";
 
 		$daysOfWeek = 0;
 		foreach($_REQUEST['days'] as $k => $v)
@@ -194,7 +196,9 @@
 		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
 			$enabled = 1;
 
-		$query = "UPDATE timesettings SET daysOfWeek='$daysOfWeek', startTime='$startTime', endTime='$endTime', turnOnOff='$turnOnOff', mode='$mode', targetTemperature='$targetTemperature', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='$uid' AND created='$created'";
+		$query = "UPDATE timesettings SET daysOfWeek='$daysOfWeek', startTime='$startTime', turnOnOff='$turnOnOff', mode='$mode', targetTemperature='$targetTemperature', fanLevel='$fanLevel', swing='$swing', ".
+			 "horizontalSwing='$horizontalSwing', climateSetting=$climateSetting, enabled='$enabled' WHERE uid='$uid' AND created='$created'";
+syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
 		else
@@ -206,13 +210,18 @@
 	{
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
 		$startTime = mysqli_real_escape_string($link, $_REQUEST['startTime']).":00";
-		$endTime = mysqli_real_escape_string($link, $_REQUEST['endTime']).":59";
 		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
 		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
 		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
 		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
 		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
 		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+		$climateSetting = mysqli_real_escape_string($link, $_REQUEST['climateSetting']);
+
+		if($climateSetting == "none")
+			$climateSetting = "NULL";
+		else
+			$climateSetting = "'$climateSetting'";
 
 		$daysOfWeek = 0;
 		foreach($_REQUEST['days'] as $k => $v)
@@ -225,8 +234,9 @@
 		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
 			$enabled = 1;
 
-		$query = "INSERT INTO timesettings (uid, created, daysOfWeek, startTime, endTime, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, enabled) VALUES ".
-			 "('$uid', NOW(), '$daysOfWeek', '$startTime', '$endTime', '$turnOnOff', '$mode', '$targetTemperature', '$fanLevel', '$swing', '$horizontalSwing', '$enabled')";
+		$query = "INSERT INTO timesettings (uid, created, daysOfWeek, startTime, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, climateSetting, enabled) VALUES ".
+			 "('$uid', NOW(), '$daysOfWeek', '$startTime', '$turnOnOff', '$mode', '$targetTemperature', '$fanLevel', '$swing', '$horizontalSwing', $climateSetting, '$enabled')";
+syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
 		else
@@ -240,6 +250,7 @@
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID5']);
 
 		$query = "DELETE FROM timesettings WHERE uid='$uid' AND created='$created'";
+syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
 		else
@@ -254,6 +265,7 @@
 		$seconds = substr($_REQUEST['timer'], 0, 2) * 3600 + substr($_REQUEST['timer'], 3, 2) * 60;
 
 		$query = "INSERT INTO timers (uid, whentime, turnOnOff, seconds) VALUES ('$uid', NOW(), '$turnOnOff', '$seconds')";
+syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
 		else
@@ -267,6 +279,7 @@
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID8']);
 
 		$query = "DELETE FROM timers WHERE uid='$uid' AND whentime='$whentime'";
+syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
 		else
