@@ -30,11 +30,11 @@
 		} else if($drow['daysOfWeek'] == 127) {
 			$days = "Mon-Sun";
 		} else if($drow['daysOfWeek'] == 96) {
-			$days = "Sat-Sun";
+			$days = "Sat, Sun";
 		} else if($drow['daysOfWeek'] == 79) {
-			$days = "Mon-Thu, Sun";
+			$days = "Sun-Thu";
 		} else if($drow['daysOfWeek'] == 48) {
-			$days = "Fri-Sat";
+			$days = "Fri, Sat";
 		} else {
 			for($v = 0; $v < 7; $v++)
 			{

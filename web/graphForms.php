@@ -180,7 +180,7 @@ syslog(LOG_INFO, $query);
 		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
 		$climateSetting = mysqli_real_escape_string($link, $_REQUEST['climateSetting']);
 
-		if($climateSetting == "none")
+		if($climateSetting == "None")
 			$climateSetting = "NULL";
 		else
 			$climateSetting = "'$climateSetting'";
@@ -218,7 +218,7 @@ syslog(LOG_INFO, $query);
 		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
 		$climateSetting = mysqli_real_escape_string($link, $_REQUEST['climateSetting']);
 
-		if($climateSetting == "none")
+		if($climateSetting == "None")
 			$climateSetting = "NULL";
 		else
 			$climateSetting = "'$climateSetting'";
