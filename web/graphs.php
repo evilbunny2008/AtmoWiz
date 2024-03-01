@@ -536,7 +536,8 @@ function deleteSetting(created, uid)
 ?>
 	</select>
 	</div>
-	<label for="turnOnOff2"><b>Turn On/Off:</b></label><select class="myInputs2" id="turnOnOff2" name="turnOnOff">
+	<label for="turnOnOff2"><b>Turn On/Off:</b></label>
+	<select class="myInputs2" id="turnOnOff2" name="turnOnOff">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
@@ -550,7 +551,8 @@ function deleteSetting(created, uid)
 ?>
 	</select>
 	<div class="divLeft">
-	<label for="mode2"><b>Mode:</b></label><select class="myInputs2" id="mode2" name="mode" onChange="populateSelect('2'); return false;">
+	<label for="mode2"><b>Mode:</b></label>
+	<select class="myInputs2" id="mode2" name="mode" onChange="populateSelect('2'); return false;">
 <?php
 	$defmode = "";
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -566,7 +568,8 @@ function deleteSetting(created, uid)
 	}
 ?>
 	</select>
-	<label for="fanLevel2"><b>Fan Level:</b></label><select class="myInputs2" id='fanLevel2' name="fanLevel">
+	<label for="fanLevel2"><b>Fan Level:</b></label>
+	<select class="myInputs2" id='fanLevel2' name="fanLevel">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
@@ -581,7 +584,8 @@ function deleteSetting(created, uid)
 	</select>
 	</div>
 	<div class="divRight">
-	<label for="swing2"><b>Swing:</b></label><select class="myInputs2" id="swing2" name="swing">
+	<label for="swing2"><b>Swing:</b></label>
+	<select class="myInputs2" id="swing2" name="swing">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
@@ -594,7 +598,8 @@ function deleteSetting(created, uid)
 	}
 ?>
 		</select>
-	<label for="horizontalSwing2"><b>Horizontal Swing:</b></label><select class="myInputs2" id="horizontalSwing2" name="horizontalSwing">
+	<label for="horizontalSwing2"><b>Horizontal Swing:</b></label>
+	<select class="myInputs2" id="horizontalSwing2" name="horizontalSwing">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
@@ -705,7 +710,8 @@ function deleteTimeSetting(created, uid)
 	<label for="startTime5"><b>Start Time:</b></label>
 	<input id='startTime5' name='startTime' class="myInputs5" data-clocklet="class-name: clocklet-options-1; alignment: center;">
 	<div class="divLeft">
-	<label for="turnOnOff5"><b>Turn On/Off:</b></label><select class="myInputs5" id="turnOnOff5" name="turnOnOff">
+	<label for="turnOnOff5"><b>Turn On/Off:</b></label>
+	<select class="myInputs5" id="turnOnOff5" name="turnOnOff">
 <?php
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
@@ -718,7 +724,8 @@ function deleteTimeSetting(created, uid)
 	}
 ?>
 	</select>
-	<label for="mode5"><b>Mode:</b></label><select class="myInputs5" id="mode5" name="mode" onChange="populateSelect('5'); return false;">
+	<label for="mode5"><b>Mode:</b></label>
+	<select class="myInputs5" id="mode5" name="mode" onChange="populateSelect('5'); return false;">
 <?php
 	$defmode = "";
 	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
@@ -749,17 +756,6 @@ function deleteTimeSetting(created, uid)
 	</select>
 	<label for="climateSetiings"><b>Climate Setting:</b></label>
 	<select class="myInputs5" id='climateSetting5' name='climateSetting'>
-	<option value="none">None</option>
-<?php
-	$query = "SELECT created, name FROM settings WHERE uid='${row['uid']}'";
-	$dres = mysqli_query($link, $query);
-	while($drow = mysqli_fetch_assoc($dres))
-	{
-		$k = $drow['created'];
-		$v = $drow['name'];
-		echo "\t\t<option value='$k'>$v</option>\n";
-	}
-?>
 	</select>
 	</div>
 	<div class="divRight">
@@ -1631,9 +1627,55 @@ console.log(url);
 	const ret = await response.json();
 
 	if(ret['status'] == 200)
+	{
 		popSelect(document.getElementById(contentType + fieldID), ret['content'], ret[contentType]);
-	else
+		if(fieldID == "2" && contentType == "targetTemperature")
+		{
+			popSelect(document.getElementById("upperTemperature2"), ret['content'], ret[contentType]);
+			popSelect(document.getElementById("lowerTemperature2"), ret['content'], ret[contentType]);
+		}
+	} else {
 		console.log(ret);
+	}
+}
+
+async function popSelect2(dropdown, content, current)
+{
+	dropdown.innerHTML = '';
+	var opt = document.createElement("option");
+	opt.value = "None";
+	opt.innerHTML = "None";
+	dropdown.appendChild(opt);
+
+	for(let i = 0; i < content.length; i++)
+	{
+		var opt = document.createElement('option');
+		opt.value = content[i]['created'];
+		opt.innerHTML = content[i]['name'];
+		if(opt.value == current)
+			opt.selected = true;
+		dropdown.appendChild(opt);
+	}
+}
+
+async function populateClimateSetting(def)
+{
+	try
+	{
+		var url = "getClimateNames.php?time=" + new Date().getTime() + '&uid=' + uid;
+		console.log(url);
+		const response = await fetch(url);
+		const ret = await response.json();
+
+		if(ret['status'] == 200)
+		{
+			popSelect2(document.getElementById("climateSetting5"), ret['content'], def);
+		} else {
+			console.log(ret);
+		}
+	} catch (e) {
+		console.log(e);
+	}
 }
 
 async function populateSelect(fieldID)
@@ -1837,6 +1879,8 @@ function editSetting(created, uid, name, upperTemperature, lowerTemperature, tar
 
 function editTimeSetting(created, uid, daysOfWeek, startTime, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, climateSetting, enabled)
 {
+	populateClimateSetting(climateSetting);
+
 	document.getElementById("created5").value = created;
 
 	var def = null;
@@ -1902,19 +1946,6 @@ function editTimeSetting(created, uid, daysOfWeek, startTime, turnOnOff, mode, t
 			dd.options[i].selected = 'selected';
 	}
 
-	def = climateSetting;
-	dd = document.getElementById("climateSetting5");
-	if(def == null)
-	{
-		dd.options[0].selected = 'selected';
-	} else {
-		for(let i = 1; i < dd.options.length; i++)
-		{
-			if(dd.options[i].value == def)
-				dd.options[i].selected = 'selected';
-		}
-	}
-
 	if(enabled == 1)
 		document.getElementById("enabled5").checked = true;
 	else
@@ -1946,6 +1977,8 @@ function cancelAddTimer()
 
 function newTimeSetting()
 {
+	populateClimateSetting('none');
+
 	document.getElementById("created5").value = "";
 
 	document.getElementById("startTime5").value = "00:00";
@@ -1961,8 +1994,6 @@ function newTimeSetting()
 	document.getElementById("fanLevel5").options[2].selected = 'selected';
 	document.getElementById("swing5").options[1].selected = 'selected';
 	document.getElementById("horizontalSwing5").options[3].selected = 'selected';
-
-	document.getElementById("climateSetting5").options[0].selected = 'selected';
 
 	document.getElementById("enabled5").checked = true;
 	document.getElementById("submitAddUpdate5").innerHTML = "Add Setting";
@@ -1996,7 +2027,7 @@ DataLoop();
 populateSelect("1");
 populateSelect("2");
 populateSelect("5");
-
+populateClimateSetting('none');
 
 function delayLoading()
 {

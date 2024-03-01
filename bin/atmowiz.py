@@ -697,75 +697,49 @@ def getCurrentWeather(podUID):
     my_thread = threading.Thread(target=getObservations)
     my_thread.start()
 
-def checkSettings(mydb):
-    return
-
+def checkClimateSetting(mydb):
     doLog("info", "Checking climate settings...")
     for podUID in uidList:
         try:
             cursor = mydb.cursor()
-            query = "SELECT onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing FROM settings WHERE uid=%s AND enabled=1 AND " + \
-                    "(TIME(NOW()) BETWEEN startTime AND endTime OR (endTime < startTime AND (TIME(NOW()) BETWEEN startTime AND '23:59:59' OR TIME(NOW()) BETWEEN '00:00:00' and endTime)))"
+
+            query = "SELECT daysOfWeek, startTime, name, upperTemperature, lowerTemperature, settings.targetTemperature as targetTemperature, settings.turnOnOff as turnOnOff, settings.mode as mode, settings.fanLevel as fanLevel, " + \
+                    "settings.swing as swing, settings.horizontalSwing as horizontalSwing FROM timesettings, settings WHERE settings.uid=%s AND settings.uid=timesettings.uid AND settings.enabled=1 AND timesettings.enabled=1 " + \
+                    "AND timesettings.climateSetting=settings.created AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00')"
+            doLog("debug", query % podUID)
+
             values = (podUID, )
-            #doLog("debug", query % values)
             cursor.execute(query, values)
+
             result = cursor.fetchall()
-            for (onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing) in result:
-                #doLog("debug", "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (onOff, targetType, targetOp, targetValue, turnOnOff, targetTemperature, mode, fanLevel, swing, horizontalSwing))
-                query = "SELECT airconon,temperature,humidity,feelsLike FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+
+            for(daysOfWeek, startTime, name, upperTemperature, lowerTemperature, targetTemperature, turnOnOff, mode, fanLevel, swing, horizontalSwing) in result:
+                doLog("debug", "%d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (daysOfWeek, startTime, name, upperTemperature, lowerTemperature, targetTemperature, turnOnOff, mode, fanLevel, swing, horizontalSwing))
+                if(not daysOfWeek & 2 ** datetime.today().weekday()):
+                    continue
+
+                query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
                 values = (podUID, )
-                #doLog("debug", query % values)
+                doLog("debug", query % values)
                 cursor.execute(query, values)
-                (airconon, temperature, humidity, feelsLike) = cursor.fetchone()
-                doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
+                (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
+                doLog("debug", "%d, %s, %s, %s, %s, %s" % (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing))
 
-                query = "SELECT temperature,humidity,feelsLike FROM weather ORDER BY whentime DESC LIMIT 1"
-                cursor.execute(query)
-                (outdoorTemperature, outdoorHumidity, outdoorFeelsLike) = cursor.fetchone()
-                doLog("debug", "%s, %s, %s" % (outdoorTemperature, outdoorHumidity, outdoorFeelsLike))
+                if(turnOnOff == "On" and airconon == 0):
+                    doLog("info", "Rule 1 hit, turning aircon to on...")
+                    continue
 
-                dict = {}
-                dict['temperature'] = temperature
-                dict['humidity'] = humidity
-                dict['feelsLike'] = feelsLike
-                dict['outdoorTemperature'] = outdoorTemperature
-                dict['outdoorHumidity'] = outdoorHumidity
-                dict['outdoorFeelsLike'] = outdoorFeelsLike
+                if(turnOnOff == "On" and airconon == 1):
+                    doLog("info", "Rule 2 hit, keeping aircon to on...")
+                    continue
 
-                #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                if(turnOnOff == "Off" and airconon == 1):
+                    doLog("info", "Rule 3 hit, turning aircon to off...")
+                    continue
 
-                for i in dict:
-                    if(onOff == 'Off' and airconon == 0 and i == targetType and targetOp == '>=' and dict[i] >= targetValue):
-                        if(turnOnOff == 'On'):
-                            doLog("info", "Rule 1 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                            return
-                        else:
-                            doLog("info", "Rule 2 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                            return
-                    elif(onOff == 'Off' and airconon == 0 and i == targetType and targetOp == '<=' and dict[i] <= targetValue):
-                        if(turnOnOff == 'Off'):
-                            doLog("info", "Rule 3 hit, %s is %s keeping aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                            return
-                        else:
-                            doLog("info", "Rule 4 hit, %s is %s turning aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                            return
-                    elif(onOff == 'On' and airconon == 1 and i == targetType and targetOp == '>=' and dict[i] >= targetValue):
-                        if(turnOnOff == 'On'):
-                            doLog("info", "Rule 5 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                            return
-                        else:
-                            doLog("info", "Rule 6 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                            return
-                    elif(onOff == 'On' and airconon == 1 and i == targetType and targetOp == '<=' and dict[i] <= targetValue):
-                        if(turnOnOff == 'Off'):
-                            doLog("info", "Rule 7 hit, %s is %s turning aircon off to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                            return
-                        else:
-                            doLog("info", "Rule 8 hit, %s is %s keeping aircon on to %s(%s)..." % (i, dict[i], mode, turnOnOff))
-                            return
-
-                    #else:
-                    #    doLog("debug", "Rule X hit, %s is %s... %s(%s)..." % (i, dict[i], mode, turnOnOff))
+                if(turnOnOff == "Off" and airconon == 0):
+                    doLog("info", "Rule 4 hit, keeping aircon to off...")
+                    continue
 
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
@@ -779,14 +753,18 @@ def checkSettings(mydb):
 
 def TimerSettingsLoop():
     while True:
+        doLog("info", "TimerSettingsLoop() wake up")
+
         try:
             mydb = MySQLdb.connect(hostname, username, password, database)
+
+            checkClimateSetting(mydb)
+
             cursor = mydb.cursor()
-
             for podUID in uidList:
-                doLog("info", "TimerSettingsLoop() wake up")
 
-                query = "SELECT daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, startTime FROM timesettings WHERE uid=%s AND enabled=1 AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00')"
+                query = "SELECT daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, startTime FROM timesettings " + \
+                        "WHERE uid=%s AND enabled=1 AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00') AND climateSetting IS NULL"
                 doLog("debug", query % podUID)
                 values = (podUID, )
                 #doLog("debug", query % values)
