@@ -31,14 +31,14 @@
 <title>AtmoWiz Web UI</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="favicon.svg">
-<link rel="stylesheet" href="clocklet.min.css">
-<script src="canvasjs.min.js"></script>
-<script src="clocklet.js"></script>
-<link href="time-pick.css" rel="stylesheet">
-<script src="time-pick.js"></script>
-<script src="intro.min.js"></script>
-<link href="introjs.min.css" rel="stylesheet">
+<link rel="icon" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/clocklet.min.css">
+<script src="assets/canvasjs.min.js"></script>
+<script src="assets/clocklet.js"></script>
+<link href="assets/time-pick.css" rel="stylesheet">
+<script src="assets/time-pick.js"></script>
+<script src="assets/intro.min.js"></script>
+<link href="assets/introjs.min.css" rel="stylesheet">
 <style>
 *
 {
@@ -358,8 +358,8 @@ td
     </nav>
   </div>
   <div style="width:calc(100% - 375px);float:right;">
-    <div class="child" style='left:40%;'><img onClick="prevDay(); return false;" style='height:40px;' src='left.png' /></div>
-    <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='right.png' /></div>
+    <div class="child" style='left:40%;'><img onClick="prevDay(); return false;" style='height:40px;' src='assets/left.png' /></div>
+    <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='assets/right.png' /></div>
     <div id="chartContainer" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
     <div style="height:calc(100vh / 3 * 2 - 20px); width:100%; background:#fff;">
       <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 20px);"></div>
@@ -1411,10 +1411,10 @@ async function toggleAC()
 
 	const img = document.getElementById("onoff");
 	const imgsrc = img.src.split('/');
-	if(imgsrc[imgsrc.length - 1] == 'on.png')
-		img.src = "off.png";
+	if(imgsrc[imgsrc.length - 1] == 'assets/on.png')
+		img.src = "assets/off.png";
 	else
-		img.src = "on.png";
+		img.src = "assets/on.png";
 
 	const url = 'toggleAC.php?time=' + new Date().getTime() + '&uid=' + uid;
 	const response = await fetch(url);
@@ -2013,43 +2013,43 @@ function delayLoading()
 ?>
 			{
 				element: document.querySelector('.card-demo1'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="hourglass.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you set a simple timer to turn your aircon on or off</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/hourglass.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you set a simple timer to turn your aircon on or off</p></div>',
 				position: 'bottom'
 			},
 			{
 				element: document.querySelector('.card-demo2'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="wand.png" style="float:left;margin-right:20px;" width="50px"><p>Our Climate Settings screen allows you to take charge based on real-time conditions</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/wand.png" style="float:left;margin-right:20px;" width="50px"><p>Our Climate Settings screen allows you to take charge based on real-time conditions</p></div>',
 				position: 'bottom'
 			},
 			{
 				element: document.querySelector('.card-demo3'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="watch.png" style="float:left;margin-right:20px;" width="50px"><p>Similar to the Climate Settings screen, but focused on time intervals</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/watch.png" style="float:left;margin-right:20px;" width="50px"><p>Similar to the Climate Settings screen, but focused on time intervals</p></div>',
 				position: 'bottom'
 			},
 			{
 				element: document.querySelector('.card-demo4'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="settings.png" style="float:left;margin-right:20px;" width="50px"><p>Air Conditioner Settings screen allows you to adjust temperature and fan speed to and modes</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/settings.png" style="float:left;margin-right:20px;" width="50px"><p>Air Conditioner Settings screen allows you to adjust temperature and fan speed to and modes</p></div>',
 				position: 'bottom'
 			},
 			{
 				element: document.querySelector('.card-demo5'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="on.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you turn your aircon on and off</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/on.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you turn your aircon on and off</p></div>',
 				position: 'bottom'
 			},
 <?php } ?>
 			{
 				element: document.querySelector('.card-demo6'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="tick.png" style="float:left;margin-right:20px;" width="50px"><p>This jumps the display to the current date/time</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/tick.png" style="float:left;margin-right:20px;" width="50px"><p>This jumps the display to the current date/time</p></div>',
 				position: 'bottom'
 			},
 			{
 				element: document.querySelector('.card-demo7'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="exit.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you logout of the AtmoWiz interface</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/exit.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you logout of the AtmoWiz interface</p></div>',
 				position: 'bottom'
 			},
 			{
 				element: document.querySelector('.card-demo8'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="question-mark.png" style="float:left;margin-right:20px;" width="50px"><p>Click this icon to open more indepth help.</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/question-mark.png" style="float:left;margin-right:20px;" width="50px"><p>Click this icon to open more indepth help.</p></div>',
 				position: 'bottom'
 			},
 			{

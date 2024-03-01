@@ -34,7 +34,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="favicon.svg">
+<link rel="icon" href="assets/favicon.svg">
 <title>AtmoWiz Login</title>
 <style>
 * {
@@ -156,7 +156,7 @@ span.password {
 <body>
   <form class="modal-content animate" action="index.php" method="post">
     <div class="imgcontainer">
-      <img src="img_avatar2.png" alt="Avatar" class="avatar">
+      <img src="assets/img_avatar2.png" alt="Avatar" class="avatar">
     </div>
 <?php
 	if($error != null)

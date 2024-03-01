@@ -396,29 +396,29 @@
 	{
 		$commandHeader .= "<ul id='CommandHeader'>\n";
 		$commandHeader .= "<li style='text-align:center'>\n";
-		$commandHeader .= "<img style='width:40px;' onClick='showTimers(); return false;' src='hourglass.png' title='Timer' class='card-demo1' />\n";
-		$commandHeader .= "<img style='width:40px;' onClick='showSettings(); return false;' src='wand.png' title='Show Climate Settings' class='card-demo2' />\n";
-		$commandHeader .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='watch.png' title='Show Time Based Settings' class='card-demo3' />\n";
-		$commandHeader .= "<img style='width:40px;' onClick='settings(); return false;' src='settings.png' title='Show AirCon Settings' class='card-demo4' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showTimers(); return false;' src='assets/hourglass.png' title='Timer' class='card-demo1' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showSettings(); return false;' src='assets/wand.png' title='Show Climate Settings' class='card-demo2' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='assets/watch.png' title='Show Time Based Settings' class='card-demo3' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='settings(); return false;' src='assets/settings.png' title='Show AirCon Settings' class='card-demo4' />\n";
 		$commandHeader .= "</li>\n";
 
 		$commandHeader .= "<li style='text-align:center'>";
 		if($ac == "on")
-			$commandHeader .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='on.png' title='Turn AirCon Off' class='card-demo5' />\n";
+			$commandHeader .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='assets/on.png' title='Turn AirCon Off' class='card-demo5' />\n";
 		else
-			$commandHeader .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='off.png' title='Turn AirCon On' class='card-demo5' />\n";
+			$commandHeader .= "<img id='onoff' style='width:40px;' onClick='toggleAC(); return false;' src='assets/off.png' title='Turn AirCon On' class='card-demo5' />\n";
 
-		$commandHeader .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' class='card-demo6' />\n";
-		$commandHeader .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' class='card-demo7' />\n";
-		$commandHeader .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' class='card-demo8' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='assets/tick.png' title='Jump to Now' class='card-demo6' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='logout(); return false;' src='assets/exit.png' title='Logout' class='card-demo7' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='help(); return false;' src='assets/question-mark.png' title='Get Help' class='card-demo8' />\n";
 
 		$commandHeader .= "</li>\n";
 	} else {
 		$commandHeader .= "<ul id='CommandHeader'>\n";
 		$commandHeader .= "<li style='text-align:center'>";
-		$commandHeader .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='tick.png' title='Jump to Now' class='card-demo6' />\n";
-		$commandHeader .= "<img style='width:40px;' onClick='logout(); return false;' src='exit.png' title='Logout' class='card-demo7' />\n";
-		$commandHeader .= "<img style='width:40px;' onClick='help(); return false;' src='question-mark.png' title='Get Help' class='card-demo8' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='assets/tick.png' title='Jump to Now' class='card-demo6' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='logout(); return false;' src='assets/exit.png' title='Logout' class='card-demo7' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='help(); return false;' src='assets/question-mark.png' title='Get Help' class='card-demo8' />\n";
 		$commandHeader .= "</li>\n";
 	}
 
