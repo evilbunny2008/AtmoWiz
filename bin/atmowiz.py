@@ -73,6 +73,16 @@ class SensiboClientAPI(object):
             doLog("error", "Request failed, full error messages hidden to protect the API key")
             return None
 
+    def _put(self, path, headers, data, ** params):
+        try:
+            params['apiKey'] = self._api_key
+            response = requests.put(_SERVER + path, headers = headers, params = params, data = data)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as exc:
+            doLog("error", "Request failed, full error messages hidden to protect the API key")
+            return None
+
     def devices(self):
         result = self._get("/users/me/pods", fields="id,room")
         if(result == None or result['result'] == []):
@@ -191,6 +201,11 @@ class SensiboClientAPI(object):
         except Exception as e:
             doLog("error", result, True)
             return None
+
+    def pod_smartmode(self, podUid, body):
+        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        self._post("/pods/%s/smartmode" % podUid, headers, body)
+        self._put("/pods/%s/smartmode" % podUid, headers, json.dumps({"enabled": false}))
 
 def calcAT(temp, humid, country, feelslike):
     if(feelslike != None and country == 'None'):
@@ -698,27 +713,24 @@ def getCurrentWeather(podUID):
     my_thread.start()
 
 def checkClimateSetting(mydb):
-    return
-
     doLog("info", "Checking climate settings...")
     for podUID in uidList:
         try:
             cursor = mydb.cursor()
 
-            query = "SELECT daysOfWeek, startTime, name, upperTemperature, lowerTemperature, settings.targetTemperature as targetTemperature, settings.turnOnOff as turnOnOff, settings.mode as mode, settings.fanLevel as fanLevel, " + \
-                    "settings.swing as swing, settings.horizontalSwing as horizontalSwing FROM timesettings, settings WHERE settings.uid=%s AND settings.uid=timesettings.uid AND settings.enabled=1 AND timesettings.enabled=1 " + \
-                    "AND timesettings.climateSetting=settings.created AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00')"
+            query = "SELECT daysOfWeek, name, type, upperTemperature, upperTargetTemperature, upperTurnOnOff, upperMode, upperFanLevel, upperSwing, upperHorizontalSwing, lowerTemperature, " + \
+                    "lowerTargetTemperature, lowerTurnOnOff, lowerMode, lowerFanLevel, lowerSwing, lowerHorizontalSwing FROM timesettings, settings " + \
+                    "WHERE settings.uid=%s AND settings.uid=timesettings.uid AND settings.enabled=1 AND timesettings.enabled=1 AND timesettings.climateSetting=settings.created AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00')"
             doLog("debug", query % podUID)
-            return
-
 
             values = (podUID, )
             cursor.execute(query, values)
 
             result = cursor.fetchall()
 
-            for(daysOfWeek, startTime, name, upperTemperature, lowerTemperature, targetTemperature, turnOnOff, mode, fanLevel, swing, horizontalSwing) in result:
-                doLog("debug", "%d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (daysOfWeek, startTime, name, upperTemperature, lowerTemperature, targetTemperature, turnOnOff, mode, fanLevel, swing, horizontalSwing))
+            for(daysOfWeek, name, type, upperTemperature, upperTargetTemperature, upperTurnOnOff, upperMode, upperFanLevel, upperSwing, upperHorizontalSwing, lowerTemperature, lowerTargetTemperature, lowerTurnOnOff, lowerMode, lowerFanLevel, lowerSwing, lowerHorizontalSwing) in result:
+                doLog("debug", "%d, %s, %s, %s, %s, %s, %s, %s, %s, %s" % (daysOfWeek, name, type, upperTemperature, upperTargetTemperature, upperTurnOnOff, upperMode, upperFanLevel, upperSwing, upperHorizontalSwing))
+                doLog("debug", "%s, %s, %s, %s, %s, %s, %s" % (lowerTemperature, lowerTargetTemperature, lowerTurnOnOff, lowerMode, lowerFanLevel, lowerSwing, lowerHorizontalSwing))
                 if(not daysOfWeek & 2 ** datetime.today().weekday()):
                     continue
 
@@ -729,21 +741,36 @@ def checkClimateSetting(mydb):
                 (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
                 doLog("debug", "%d, %s, %s, %s, %s, %s" % (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing))
 
-                if(turnOnOff == "On" and airconon == 0):
-                    doLog("info", "Rule 1 hit, turning aircon to on...")
-                    continue
+                body = {}
+                body["enabled"] = True
+                body["lowTemperatureThreshold"] = int(lowerTemperature)
+                if(lowerTurnOnOff):
+                    body["lowTemperatureState"] = {"on": True}
+                else:
+                    body["lowTemperatureState"] = {"on": False}
 
-                if(turnOnOff == "On" and airconon == 1):
-                    doLog("info", "Rule 2 hit, keeping aircon to on...")
-                    continue
+                body["lowTemperatureState"]["targetTemperature"] = lowerTargetTemperature
+                body["lowTemperatureState"]["mode"] = lowerMode
+                body["lowTemperatureState"]["fanLevel"] = lowerFanLevel
+                body["lowTemperatureState"]["swing"] = lowerSwing
+                body["lowTemperatureState"]["horizontalSwing"] = lowerHorizontalSwing
 
-                if(turnOnOff == "Off" and airconon == 1):
-                    doLog("info", "Rule 3 hit, turning aircon to off...")
-                    continue
+                body["highTemperatureThreshold"] = int(upperTemperature)
+                if(upperTurnOnOff):
+                    body["highTemperatureState"] = {"on": True}
+                else:
+                    body["highTemperatureState"] = {"on": False}
 
-                if(turnOnOff == "Off" and airconon == 0):
-                    doLog("info", "Rule 4 hit, keeping aircon to off...")
-                    continue
+                body["highTemperatureState"]["targetTemperature"] = upperTargetTemperature
+                body["highTemperatureState"]["mode"] = upperMode
+                body["highTemperatureState"]["fanLevel"] = upperFanLevel
+                body["highTemperatureState"]["swing"] = upperSwing
+                body["highTemperatureState"]["horizontalSwing"] = upperHorizontalSwing
+
+                body = json.dumps(body)
+                doLog("debug", body)
+
+                client.pod_smartmode(podUID, body)
 
         except MySQLdb._exceptions.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
