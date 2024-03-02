@@ -73,16 +73,6 @@ class SensiboClientAPI(object):
             doLog("error", "Request failed, full error messages hidden to protect the API key")
             return None
 
-    def _put(self, path, headers, data, ** params):
-        try:
-            params['apiKey'] = self._api_key
-            response = requests.put(_SERVER + path, headers = headers, params = params, data = data)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key")
-            return None
-
     def devices(self):
         result = self._get("/users/me/pods", fields="id,room")
         if(result == None or result['result'] == []):
@@ -205,7 +195,6 @@ class SensiboClientAPI(object):
     def pod_smartmode(self, podUid, body):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         self._post("/pods/%s/smartmode" % podUid, headers, body)
-        self._put("/pods/%s/smartmode" % podUid, headers, json.dumps({"enabled": false}))
 
 def calcAT(temp, humid, country, feelslike):
     if(feelslike != None and country == 'None'):
@@ -814,18 +803,20 @@ def TimerSettingsLoop():
 
                     if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
                         doLog("info", "Rule 9 hit, %s is %s turning aircon on to..." % (mode, turnOnOff))
+                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                         continue
                     elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
                         doLog("info", "Rule 10 hit, %s is %s turning aircon off to..." % (mode, turnOnOff))
+                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                         continue
                     elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
                         doLog("info", "Rule 11 hit, keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing...")
+                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                         continue
                     elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
                         doLog("info", "Rule 12 hit, keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing...")
+                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                         continue
-
-                    #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
                     query = "SELECT whentime, turnOnOff FROM timers WHERE uid=%s AND UNIX_TIMESTAMP(whentime) + seconds < UNIX_TIMESTAMP(NOW())"
                     values = (podUID, )
@@ -847,6 +838,7 @@ def TimerSettingsLoop():
                             doLog("debug", query % values)
                             cursor.execute(query, values)
                             mydb.commit()
+                            client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
                         elif(turnOnOff == "Off"):
                             if(airconon == 1):
                                 doLog("info", "Rule 14 hit for %s, turning aircon off..." % (podUID, ))
@@ -855,8 +847,7 @@ def TimerSettingsLoop():
                             doLog("debug", query % values)
                             cursor.execute(query, values)
                             mydb.commit()
-
-                        #client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                            client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
 
             mydb.close()
 

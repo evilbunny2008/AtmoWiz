@@ -62,18 +62,24 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `uid` varchar(20) NOT NULL,
   `created` datetime NOT NULL DEFAULT current_timestamp(),
   `name` varchar(255) NOT NULL DEFAULT 'Climate Setting',
-  `upperTemperature` tinyint(4) NOT NULL DEFAULT 29,
-  `lowerTemperature` tinyint(4) NOT NULL DEFAULT 22,
-  `targetTemperature` tinyint(4) NOT NULL DEFAULT 26,
-  `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
-  `mode` enum('cool','heat','dry','auto','fan') NOT NULL DEFAULT 'cool',
-  `fanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
-  `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
-  `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
+  `type` enum('temperature','humidity','feelsLike') NOT NULL DEFAULT 'feelsLike',
+  `upperTemperature` tinyint(4) NOT NULL DEFAULT 26,
+  `lowerTemperature` tinyint(4) NOT NULL DEFAULT 26,
+  `upperTargetTemperature` tinyint(4) NOT NULL DEFAULT 26,
+  `lowerTargetTemperature` tinyint(4) NOT NULL DEFAULT 26,
+  `upperTurnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
+  `lowerTurnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
+  `upperMode` enum('cool','heat','dry','auto','fan') NOT NULL DEFAULT 'cool',
+  `lowerMode` enum('cool','heat','dry','auto','fan') NOT NULL DEFAULT 'cool',
+  `upperFanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
+  `lowerFanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
+  `upperSwing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
+  `lowerSwing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
+  `upperHorizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
+  `lowerHorizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`uid`,`created`) USING BTREE
+  PRIMARY KEY (`uid`,`created`)
 ) ENGINE=InnoDB;
-
 
 CREATE TABLE IF NOT EXISTS `timesettings` (
   `created` datetime NOT NULL,
