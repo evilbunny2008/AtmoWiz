@@ -1721,7 +1721,6 @@ async function popSelect(dropdown, content, current)
 async function doPop(mode, val, contentType, fieldID)
 {
 	var url = 'modes.php?time=' + new Date().getTime() + '&uid=' + uid + '&mode=' + mode + '&keyval=' + val;
-console.log(url);
 	const response = await fetch(url);
 	const ret = await response.json();
 
@@ -1774,19 +1773,8 @@ async function populateULSelect(UL, mode)
 {
 	try
 	{
-		var url = "modes.php?time=" + new Date().getTime() + '&uid=' + uid;
-		console.log(url);
-		const response = await fetch(url);
-		const ret = await response.json();
-
-		if(ret['status'] == 200)
-		{
-			if(UL == "upper")
-			{
-			} else {
-			}
-			console.log(ret);
-		}
+		doPop(mode, 'temperatures', UL + 'TargetTemperature', "2");
+		doPop(mode, 'temperatures', UL + 'Temperature', "2");
 	} catch (e) {
 		console.log(e);
 	}
@@ -1916,6 +1904,9 @@ function newSetting()
 
 	document.getElementById("enabled2").checked = true;
 	document.getElementById("submitAddUpdate2").innerHTML = "Add Climate Setting";
+
+	populateULSelect('upper', 'cool');
+	populateULSelect('lower', 'cool');
 
 	modal2.style.display = "none";
 	modal3.style.display = "block";
@@ -2117,6 +2108,8 @@ DataLoop();
 populateSelect("1");
 populateSelect("5");
 populateClimateSetting('none');
+populateULSelect('upper', 'cool');
+populateULSelect('lower', 'cool');
 
 function delayLoading()
 {
