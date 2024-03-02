@@ -1878,7 +1878,7 @@ function newSetting()
 	document.getElementById("created2").value = "";
 	document.getElementById("name2").value = "Climate Setting #1";
 
-	document.getElementById("type2").options[2].selected = 'selected';
+	document.getElementById("type2").options[1].selected = 'selected';
 
 	document.getElementById("upperTargetTemperature2").options[8].selected = 'selected';
 	document.getElementById("upperTemperature2").options[10].selected = 'selected';

@@ -348,9 +348,9 @@ def calcWatts(mode, targetTemperature, temperature):
         return (heat * 1000 / COP - 1000 + -42.83076121510051 * targetTemperature + 129.95832636202184 * (temperature - targetTemperature)) / 1000
 
     if(mode == 'cool' or mode == 'dry'):
-        return (cool * 1000 / EER - 1000 + -42.83076121510051 * targetTemperature + 129.95832636202184 * (temperature - targetTemperature)) / 1000
+        return (cool * 1000 / EER - 1000 + -78.16997770836882 * targetTemperature + 152.33221447666833 * (temperature - targetTemperature)) / 1000
 
-    return 1
+    return 10
 
 def calcCost(mydb):
     doLog("info", "Running cost calc...")
