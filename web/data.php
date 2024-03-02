@@ -80,7 +80,6 @@
 	else
 		$period = 86400000;
 
-	$humidityOrWatts = 'humidity';
 	$query = "SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW()) as tzoffset";
 	$res = mysqli_query($link, $query);
 	$tzoffset = mysqli_fetch_assoc($res)['tzoffset'];
@@ -183,11 +182,16 @@
 
 					if($row2 !== False && doubleval($row2['whentimes']) > 0)
 					{
+						if($row2['watts'] != null)
+							$row2['watts'] = intval($row2['watts']);
+						else
+							$row2['watts'] = null;
+
 						$dataPoints1[] = array('x' => doubleval($row2['whentimes']), 'y' => floatval($row2['temperature']));
-						$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2[$humidityOrWatts]));
+						$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['humidity']));
 						$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => round(floatval($row2['feelslike']) * 10.0) / 10.0);
 						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['rssi']));
-						$dataPoints6[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['watts']));
+						$dataPoints6[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['watts']);
 					}
 				}
 			}
@@ -277,10 +281,16 @@
 				} else
 					$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
 
-				$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row[$humidityOrWatts]));
+				$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['humidity']));
 				$dataPoints3[] = array('x' => doubleval($row['whentimes']), 'y' => round(floatval($row['feelslike']) * 10.0) / 10.0);
 				$dataPoints4[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['rssi']));
-				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['watts']));
+
+				if($row['watts'] != null)
+					$row['watts'] = intval($row['watts']);
+				else
+					$row['watts'] = null;
+
+				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => $row['watts']);
 			}
 
 			mysqli_free_result($res);

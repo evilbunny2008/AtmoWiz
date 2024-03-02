@@ -104,20 +104,35 @@
 	{
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
 		$name = mysqli_real_escape_string($link, $_REQUEST['name']);
+		$type = mysqli_real_escape_string($link, $_REQUEST['type']);
+
+		$upperMode = mysqli_real_escape_string($link, $_REQUEST['upperMode']);
+		$lowerMode = mysqli_real_escape_string($link, $_REQUEST['lowerMode']);
+
 		$upperTemperature = mysqli_real_escape_string($link, $_REQUEST['upperTemperature']);
 		$lowerTemperature = mysqli_real_escape_string($link, $_REQUEST['lowerTemperature']);
-		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
-		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
-		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
-		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
-		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
-		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+
+		$upperTargetTemperature = mysqli_real_escape_string($link, $_REQUEST['upperTargetTemperature']);
+		$lowerTargetTemperature = mysqli_real_escape_string($link, $_REQUEST['lowerTargetTemperature']);
+
+		$upperTurnOnOff = mysqli_real_escape_string($link, $_REQUEST['upperTurnOnOff']);
+		$lowerTurnOnOff = mysqli_real_escape_string($link, $_REQUEST['lowerTurnOnOff']);
+
+		$upperFanLevel = mysqli_real_escape_string($link, $_REQUEST['upperFanLevel']);
+		$lowerFanLevel = mysqli_real_escape_string($link, $_REQUEST['lowerFanLevel']);
+
+		$upperSwing = mysqli_real_escape_string($link, $_REQUEST['upperSwing']);
+		$lowerSwing = mysqli_real_escape_string($link, $_REQUEST['lowerSwing']);
+
+		$upperHorizontalSwing = mysqli_real_escape_string($link, $_REQUEST['upperHorizontalSwing']);
+		$lowerHorizontalSwing = mysqli_real_escape_string($link, $_REQUEST['lowerHorizontalSwing']);
+
 		$enabled = 0;
 		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
 			$enabled = 1;
 
-		$query = "INSERT INTO settings (uid, created, name, upperTemperature, lowerTemperature, targetTemperature, turnOnOff, mode, fanLevel, swing, horizontalSwing, enabled) VALUES ".
-			 "('$uid', NOW(), '$name', '$upperTemperature', '$lowerTemperature', '$targetTemperature', '$turnOnOff', '$mode', '$fanLevel', '$swing', '$horizontalSwing', '$enabled')";
+		$query = "INSERT INTO settings (uid, created, name, type, upperMode, lowerMode, upperTemperature, lowerTemperature, upperTargetTemperature, lowerTargetTemperature, upperTurnOnOff, lowerTurnOnOff, upperFanLevel, lowerFanLevel, upperSwing, lowerSwing, upperHorizontalSwing, lowerHorizontalSwing, enabled) VALUES ".
+			 "('$uid', NOW(), '$name', '$type', '$upperMode', '$lowerMode', '$upperTemperature', '$lowerTemperature', '$upperTargetTemperature', '$lowerTargetTemperature', '$upperTurnOnOff', '$lowerTurnOnOff', '$upperFanLevel', '$lowerFanLevel', '$upperSwing', '$lowerSwing', '$upperHorizontalSwing', '$lowerHorizontalSwing', '$enabled')";
 syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));
@@ -131,20 +146,37 @@ syslog(LOG_INFO, $query);
 		$created = mysqli_real_escape_string($link, $_REQUEST['created2']);
 		$uid = mysqli_real_escape_string($link, $_REQUEST['podUID2']);
 		$name = mysqli_real_escape_string($link, $_REQUEST['name']);
+		$type = mysqli_real_escape_string($link, $_REQUEST['type']);
+
+		$upperMode = mysqli_real_escape_string($link, $_REQUEST['upperMode']);
+		$lowerMode = mysqli_real_escape_string($link, $_REQUEST['lowerMode']);
+
 		$upperTemperature = mysqli_real_escape_string($link, $_REQUEST['upperTemperature']);
 		$lowerTemperature = mysqli_real_escape_string($link, $_REQUEST['lowerTemperature']);
-		$targetTemperature = mysqli_real_escape_string($link, $_REQUEST['targetTemperature']);
-		$turnOnOff = mysqli_real_escape_string($link, $_REQUEST['turnOnOff']);
-		$mode = mysqli_real_escape_string($link, $_REQUEST['mode']);
-		$fanLevel = mysqli_real_escape_string($link, $_REQUEST['fanLevel']);
-		$swing = mysqli_real_escape_string($link, $_REQUEST['swing']);
-		$horizontalSwing = mysqli_real_escape_string($link, $_REQUEST['horizontalSwing']);
+
+		$upperTargetTemperature = mysqli_real_escape_string($link, $_REQUEST['upperTargetTemperature']);
+		$lowerTargetTemperature = mysqli_real_escape_string($link, $_REQUEST['lowerTargetTemperature']);
+
+		$upperTurnOnOff = mysqli_real_escape_string($link, $_REQUEST['upperTurnOnOff']);
+		$lowerTurnOnOff = mysqli_real_escape_string($link, $_REQUEST['lowerTurnOnOff']);
+
+		$upperFanLevel = mysqli_real_escape_string($link, $_REQUEST['upperFanLevel']);
+		$lowerFanLevel = mysqli_real_escape_string($link, $_REQUEST['lowerFanLevel']);
+
+		$upperSwing = mysqli_real_escape_string($link, $_REQUEST['upperSwing']);
+		$lowerSwing = mysqli_real_escape_string($link, $_REQUEST['lowerSwing']);
+
+		$upperHorizontalSwing = mysqli_real_escape_string($link, $_REQUEST['upperHorizontalSwing']);
+		$lowerHorizontalSwing = mysqli_real_escape_string($link, $_REQUEST['lowerHorizontalSwing']);
+
 		$enabled = 0;
 		if(isset($_REQUEST['enabled']) && $_REQUEST['enabled'] == '1')
 			$enabled = 1;
 
-		$query = "UPDATE settings SET name='$name', upperTemperature='$upperTemperature', lowerTemperature='$lowerTemperature', targetTemperature='$targetTemperature', turnOnOff='$turnOnOff', ".
-			 "mode='$mode', fanLevel='$fanLevel', swing='$swing', horizontalSwing='$horizontalSwing', enabled='$enabled' WHERE uid='$uid' AND created='$created'";
+		$query  = "UPDATE settings SET name='$name', type='$type', upperMode='$upperMode', lowerMode='$lowerMode', upperTemperature='$upperTemperature', lowerTemperature='$lowerTemperature',";
+		$query .= " upperTargetTemperature='$upperTargetTemperature', lowerTargetTemperature='$lowerTargetTemperature', upperTurnOnOff='$upperTurnOnOff', lowerTurnOnOff='$lowerTurnOnOff',";
+		$query .= " upperFanLevel='$upperFanLevel', lowerFanLevel='$lowerFanLevel', upperSwing='$upperSwing', lowerSwing='$lowerSwing', upperHorizontalSwing='$upperHorizontalSwing',";
+		$query .= " lowerHorizontalSwing='$lowerHorizontalSwing', enabled='$enabled' WHERE uid='$uid' AND created='$created'";
 syslog(LOG_INFO, $query);
 		if(!mysqli_query($link, $query))
 			echo sprintf("Error message: %s\n", mysqli_error($link));

@@ -698,6 +698,8 @@ def getCurrentWeather(podUID):
     my_thread.start()
 
 def checkClimateSetting(mydb):
+    return
+
     doLog("info", "Checking climate settings...")
     for podUID in uidList:
         try:
@@ -707,6 +709,8 @@ def checkClimateSetting(mydb):
                     "settings.swing as swing, settings.horizontalSwing as horizontalSwing FROM timesettings, settings WHERE settings.uid=%s AND settings.uid=timesettings.uid AND settings.enabled=1 AND timesettings.enabled=1 " + \
                     "AND timesettings.climateSetting=settings.created AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00')"
             doLog("debug", query % podUID)
+            return
+
 
             values = (podUID, )
             cursor.execute(query, values)
@@ -1565,7 +1569,7 @@ if __name__ == "__main__":
             #checkSettings(mydb)
 
             loops += 1
-            if(loops >= 40):
+            if(loops >= 480):
                 loops = 0
                 doHistoricalMeasurements(mydb, 1)
 

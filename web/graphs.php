@@ -489,13 +489,30 @@ function deleteSetting(created, uid)
       <span onclick="cancelAddUpdate(); return false;" class="close">&times;</span>
     </div>
     <div class="container">
-	<h1 style='text-align: center;'>Climate Settings</h1><br/>
+	<h1 style='text-align: center;'>Climate Settings</h1>
 	<input id="created2" type="hidden" name="created2" />
 	<div class="divLeft">
-	<label for="name2" style="width:200px;"><b>Name:</b></label>
+	<label for="name2"><b>Name:</b></label>
 	<input class="myInputs2" id="name2" name="name">
-	<label for="targetTemperature2"><b>Target Temperature:</b></label>
-	<select class="myInputs2" id='targetTemperature2' name='targetTemperature'>
+	<label for="upperMode2"><b>Mode:</b></label>
+	<select class="myInputs2" id="upperMode2" name="upperMode" onChange="populateULSelect('upper', this.value); return false;">
+<?php
+	$defmode = "";
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperMode'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+		if($defmode == "")
+			$defmode = $v;
+	}
+?>
+	</select>
+	<label for="upperTemperature2"><b>Upper Temperature:</b></label>
+	<select class="myInputs2" id='upperTemperature2' name='upperTemperature'>
 <?php
 	$defmode = 'cool';
 	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='temperatures'";
@@ -507,10 +524,8 @@ function deleteSetting(created, uid)
 	}
 ?>
 	</select>
-	</div>
-	<div class="divRight">
-	<label for="upperTemperature2"><b>Upper Temperature:</b></label>
-	<select class="myInputs2" id='upperTemperature2' name='upperTemperature'>
+	<label for="upperTargetTemperature2"><b>Target Temperature:</b></label>
+	<select class="myInputs2" id='upperTargetTemperature2' name='upperTargetTemperature'>
 <?php
 	$defmode = 'cool';
 	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='temperatures'";
@@ -519,6 +534,99 @@ function deleteSetting(created, uid)
 	{
 		$v = $drow['value'];
 		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	<label for="upperTurnOnOff2"><b>Turn On/Off:</b></label>
+	<select class="myInputs2" id="upperTurnOnOff2" name="upperTurnOnOff">
+<?php
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperTurnOnOff'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	<label for="upperFanLevel2"><b>Fan Level:</b></label>
+	<select class="myInputs2" id='upperFanLevel2' name="upperFanLevel">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperFanLevel'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	<label for="upperSwing2"><b>Swing:</b></label>
+	<select class="myInputs2" id="upperSwing2" name="upperSwing">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperSwing'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+		</select>
+	<label for="upperHorizontalSwing2"><b>Horizontal Swing:</b></label>
+	<select class="myInputs2" id="upperHorizontalSwing2" name="upperHorizontalSwing">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperHorizontalSwing'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	</div>
+
+
+
+
+	<div class="divRight">
+	<label for="type2"><b>Type:</b></label>
+	<select class="myInputs2" id="type2" name="type">
+<?php
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'type'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	<label for="lowerMode2"><b>Mode:</b></label>
+	<select class="myInputs2" id="lowerMode2" name="lowerMode" onChange="populateULSelect('lower', this.value); return false;">
+<?php
+	$defmode = "";
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerMode'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+		if($defmode == "")
+			$defmode = $v;
 	}
 ?>
 	</select>
@@ -535,45 +643,11 @@ function deleteSetting(created, uid)
 	}
 ?>
 	</select>
-	</div>
-	<label for="turnOnOff2"><b>Turn On/Off:</b></label>
-	<select class="myInputs2" id="turnOnOff2" name="turnOnOff">
+	<label for="lowerTargetTemperature2"><b>Target Temperature:</b></label>
+	<select class="myInputs2" id='lowerTargetTemperature2' name='lowerTargetTemperature'>
 <?php
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'turnOnOff'";
-	$dres = mysqli_query($link, $dquery);
-	while($drow = mysqli_fetch_assoc($dres))
-	{
-		$v = $drow['value'];
-		echo "\t\t<option value='$v'>$v</option>\n";
-	}
-?>
-	</select>
-	<div class="divLeft">
-	<label for="mode2"><b>Mode:</b></label>
-	<select class="myInputs2" id="mode2" name="mode" onChange="populateSelect('2'); return false;">
-<?php
-	$defmode = "";
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'mode'";
-	$dres = mysqli_query($link, $dquery);
-	while($drow = mysqli_fetch_assoc($dres))
-	{
-		$v = $drow['value'];
-		echo "\t\t<option value='$v'>$v</option>\n";
-		if($defmode == "")
-			$defmode = $v;
-	}
-?>
-	</select>
-	<label for="fanLevel2"><b>Fan Level:</b></label>
-	<select class="myInputs2" id='fanLevel2' name="fanLevel">
-<?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'fanLevel'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='temperatures'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -582,14 +656,40 @@ function deleteSetting(created, uid)
 	}
 ?>
 	</select>
-	</div>
-	<div class="divRight">
-	<label for="swing2"><b>Swing:</b></label>
-	<select class="myInputs2" id="swing2" name="swing">
+	<label for="lowerTurnOnOff2"><b>Turn On/Off:</b></label>
+	<select class="myInputs2" id="lowerTurnOnOff2" name="lowerTurnOnOff">
+<?php
+	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerTurnOnOff'";
+	$dres = mysqli_query($link, $dquery);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	<label for="lowerFanLevel2"><b>Fan Level:</b></label>
+	<select class="myInputs2" id='lowerFanLevel2' name="lowerFanLevel">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'swing'";
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerFanLevel'";
+	$dres = mysqli_query($link, $query);
+	while($drow = mysqli_fetch_assoc($dres))
+	{
+		$v = $drow['value'];
+		echo "\t\t<option value='$v'>$v</option>\n";
+	}
+?>
+	</select>
+	<label for="lowerSwing2"><b>Swing:</b></label>
+	<select class="myInputs2" id="lowerSwing2" name="lowerSwing">
+<?php
+	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
+			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerSwing'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -598,12 +698,12 @@ function deleteSetting(created, uid)
 	}
 ?>
 		</select>
-	<label for="horizontalSwing2"><b>Horizontal Swing:</b></label>
-	<select class="myInputs2" id="horizontalSwing2" name="horizontalSwing">
+	<label for="lowerHorizontalSwing2"><b>Horizontal Swing:</b></label>
+	<select class="myInputs2" id="lowerHorizontalSwing2" name="lowerHorizontalSwing">
 <?php
 	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
 			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'horizontalSwing'";
+			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerHorizontalSwing'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -654,7 +754,6 @@ document.forms['climateSettingsForm'].addEventListener('submit', (event) =>
     </div>
     <div class="container">
 	<h1>Time Based Settings</h1>
-	<br/>
 	<table id="timeSettings">
 	</table><br/><br/>
 	<b onClick="newTimeSetting(); return false;" style="cursor: pointer;color: #085f24;">Add Time Based Setting</b>
@@ -1627,16 +1726,9 @@ console.log(url);
 	const ret = await response.json();
 
 	if(ret['status'] == 200)
-	{
 		popSelect(document.getElementById(contentType + fieldID), ret['content'], ret[contentType]);
-		if(fieldID == "2" && contentType == "targetTemperature")
-		{
-			popSelect(document.getElementById("upperTemperature2"), ret['content'], ret[contentType]);
-			popSelect(document.getElementById("lowerTemperature2"), ret['content'], ret[contentType]);
-		}
-	} else {
+	else
 		console.log(ret);
-	}
 }
 
 async function popSelect2(dropdown, content, current)
@@ -1678,6 +1770,29 @@ async function populateClimateSetting(def)
 	}
 }
 
+async function populateULSelect(UL, mode)
+{
+	try
+	{
+		var url = "modes.php?time=" + new Date().getTime() + '&uid=' + uid;
+		console.log(url);
+		const response = await fetch(url);
+		const ret = await response.json();
+
+		if(ret['status'] == 200)
+		{
+			if(UL == "upper")
+			{
+			} else {
+			}
+			console.log(ret);
+		}
+	} catch (e) {
+		console.log(e);
+	}
+}
+
+
 async function populateSelect(fieldID)
 {
 	try
@@ -1690,7 +1805,7 @@ async function populateSelect(fieldID)
 		doPop(value, 'swing', 'swing', fieldID);
 		doPop(value, 'horizontalSwing', 'horizontalSwing', fieldID);
 	} catch (e) {
-		console.log(e)
+		console.log(e);
 	}
 }
 
@@ -1774,17 +1889,30 @@ function newSetting()
 {
 	document.getElementById("created2").value = "";
 	document.getElementById("name2").value = "Climate Setting #1";
-	document.getElementById("targetTemperature2").options[8].selected = 'selected';
 
+	document.getElementById("type2").options[2].selected = 'selected';
+
+	document.getElementById("upperTargetTemperature2").options[8].selected = 'selected';
 	document.getElementById("upperTemperature2").options[10].selected = 'selected';
-	document.getElementById("lowerTemperature2").options[4].selected = 'selected';
-	document.getElementById("turnOnOff2").options[0].selected = 'selected';
 
-	document.getElementById("mode2").options[0].selected = 'selected';
+	document.getElementById("upperTurnOnOff2").options[0].selected = 'selected';
 
-	document.getElementById("fanLevel2").options[2].selected = 'selected';
-	document.getElementById("swing2").options[1].selected = 'selected';
-	document.getElementById("horizontalSwing2").options[3].selected = 'selected';
+	document.getElementById("upperMode2").options[0].selected = 'selected';
+
+	document.getElementById("upperFanLevel2").options[2].selected = 'selected';
+	document.getElementById("upperSwing2").options[1].selected = 'selected';
+	document.getElementById("upperHorizontalSwing2").options[3].selected = 'selected';
+
+	document.getElementById("lowerTargetTemperature2").options[8].selected = 'selected';
+	document.getElementById("lowerTemperature2").options[6].selected = 'selected';
+
+	document.getElementById("lowerTurnOnOff2").options[0].selected = 'selected';
+
+	document.getElementById("lowerMode2").options[0].selected = 'selected';
+
+	document.getElementById("lowerFanLevel2").options[2].selected = 'selected';
+	document.getElementById("lowerSwing2").options[1].selected = 'selected';
+	document.getElementById("lowerHorizontalSwing2").options[3].selected = 'selected';
 
 	document.getElementById("enabled2").checked = true;
 	document.getElementById("submitAddUpdate2").innerHTML = "Add Climate Setting";
@@ -1793,7 +1921,17 @@ function newSetting()
 	modal3.style.display = "block";
 }
 
-function editSetting(created, uid, name, upperTemperature, lowerTemperature, targetTemperature, turnOnOff, mode, fanLevel, swing, horizontalSwing, enabled)
+function updateSelected(def, dd)
+{
+	for(let i = 0; i < dd.options.length; i++)
+	{
+		if(dd.options[i].value == def)
+			dd.options[i].selected = 'selected';
+	}
+}
+
+function editSetting(created, uid, name, type, upperTemperature, upperTargetTemperature, upperTurnOnOff, upperMode, upperFanLevel, upperSwing, upperHorizontalSwing,
+					       lowerTemperature, lowerTargetTemperature, lowerTurnOnOff, lowerMode, lowerFanLevel, lowerSwing, lowerHorizontalSwing, enabled)
 {
 	document.getElementById("created2").value = created;
 
@@ -1802,69 +1940,21 @@ function editSetting(created, uid, name, upperTemperature, lowerTemperature, tar
 
 	document.getElementById("name2").value = name;
 
-	def = upperTemperature;
-	dd = document.getElementById("upperTemperature2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = lowerTemperature;
-	dd = document.getElementById("lowerTemperature2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = targetTemperature;
-	dd = document.getElementById("targetTemperature2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = turnOnOff;
-	dd = document.getElementById("turnOnOff2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = mode;
-	dd = document.getElementById("mode2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = fanLevel;
-	dd = document.getElementById("fanLevel2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = swing;
-	dd = document.getElementById("swing2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
-
-	def = horizontalSwing;
-	dd = document.getElementById("horizontalSwing2");
-	for(let i = 0; i < dd.options.length; i++)
-	{
-		if(dd.options[i].value == def)
-			dd.options[i].selected = 'selected';
-	}
+	updateSelected(type, document.getElementById("type2"));
+	updateSelected(upperTemperature, document.getElementById("upperTemperature2"));
+	updateSelected(upperTargetTemperature, document.getElementById("upperTargetTemperature2"));
+	updateSelected(upperTurnOnOff, document.getElementById("upperTurnOnOff2"));
+	updateSelected(upperMode, document.getElementById("upperMode2"));
+	updateSelected(upperFanLevel, document.getElementById("upperFanLevel2"));
+	updateSelected(upperSwing, document.getElementById("upperSwing2"));
+	updateSelected(upperHorizontalSwing, document.getElementById("upperHorizontalSwing2"));
+	updateSelected(lowerTemperature, document.getElementById("lowerTemperature2"));
+	updateSelected(lowerTargetTemperature, document.getElementById("lowerTargetTemperature2"));
+	updateSelected(lowerTurnOnOff, document.getElementById("lowerTurnOnOff2"));
+	updateSelected(lowerMode, document.getElementById("lowerMode2"));
+	updateSelected(lowerFanLevel, document.getElementById("lowerFanLevel2"));
+	updateSelected(lowerSwing, document.getElementById("lowerSwing2"));
+	updateSelected(lowerHorizontalSwing, document.getElementById("lowerHorizontalSwing2"));
 
 	if(enabled == 1)
 		document.getElementById("enabled2").checked = true;
@@ -2025,7 +2115,6 @@ function help()
 
 DataLoop();
 populateSelect("1");
-populateSelect("2");
 populateSelect("5");
 populateClimateSetting('none');
 

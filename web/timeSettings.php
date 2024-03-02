@@ -61,8 +61,10 @@
 			$table .= "N/A";
 		} else {
 			$query = "SELECT * FROM settings WHERE uid='$uid' AND created='${drow['climateSetting']}'";
-			$ddrow = mysqli_fetch_assoc(mysqli_query($link, $query));
-			$table .= $ddrow['name'];
+			if($ddrow = mysqli_fetch_assoc(mysqli_query($link, $query)))
+				$table .= $ddrow['name'];
+			else
+				$table .= "N/A";
 		}
 		$table .= "</td>\n";
 		$table .= "<td>";
