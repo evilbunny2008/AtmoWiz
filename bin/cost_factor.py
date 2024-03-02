@@ -45,12 +45,12 @@ password = configParser.get('mariadb', 'password', fallback = 'password')
 db_uri = "mysql://%s:%s@%s/%s" % (username, password, hostname, database)
 engine = create_engine(db_uri)
 
-query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='cool'"
-df = pd.read_sql(query, engine)
-#df.to_csv('/root/AtmoWiz/web/data.csv')
+query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND (mode='cool' OR mode='dry')"
+cool_df = pd.read_sql(query, engine)
+#cool_df.to_csv('/root/AtmoWiz/web/data.csv')
 
-X = df[["temperature", "tempDiff"]]
-y = df["watts"]
+X = cool_df[["temperature", "tempDiff"]]
+y = cool_df["watts"]
 
 for k in regressors:
     print (f"Trying {k}...")
@@ -70,9 +70,35 @@ for k in regressors:
     coef_temp_diff = model.coef_[1]
 
     predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
-    print("Predicted Watts:", predicted_watts)
+    print("Cool Predicted Watts:", predicted_watts)
 
-#exit(0)
+query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='heat'"
+heat_df = pd.read_sql(query, engine)
+
+X = heat_df[["temperature", "tempDiff"]]
+y = heat_df["watts"]
+
+for k in regressors:
+    print (f"Trying {k}...")
+
+    model = regressors[k]
+    model.fit(X, y)
+    model.feature_names_in_ = None
+
+    y_pred = model.predict(X)
+
+    new_data_point = [[float(sys.argv[1]), float(sys.argv[2])]]
+    predicted_watts = model.predict(new_data_point)
+    print("Predicted Watts: %f" % (predicted_watts, ))
+
+    intercept = model.intercept_
+    coef_target_temp = model.coef_[0]
+    coef_temp_diff = model.coef_[1]
+
+    predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
+    print("Cool Predicted Watts:", predicted_watts)
+
+exit(0)
 
 
 
