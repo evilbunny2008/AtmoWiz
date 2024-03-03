@@ -48,13 +48,13 @@
 }
 
 @font-face {
-  font-family: Roboto;
-  src: url('assets/Roboto-Regular.ttf') format('ttf');
+  font-family: StintUltraCondensed;
+  src: url('assets/StintUltraCondensed-Regular.ttf') format('ttf');
 }
 
 body
 {
-  font-family: Roboto;
+  font-family: StintUltraCondensed;
 }
 
 nav
