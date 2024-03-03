@@ -55,6 +55,7 @@
 body
 {
   font-family: StintUltraCondensed;
+  font-size: 12pt;
 }
 
 nav
