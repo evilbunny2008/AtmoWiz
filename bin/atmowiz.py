@@ -6,14 +6,15 @@ import grp
 import json
 import logging
 import math
+import multiprocessing
 import MySQLdb
 import os
 import pwd
 import random
 import requests
 import shutil
+import signal
 import sys
-import threading
 import time
 import traceback
 from datetime import datetime
@@ -51,7 +52,7 @@ class SensiboClientAPI(object):
             return response.json()
         except requests.exceptions.RequestException as exc:
             doLog("error", "Request failed, full error messages hidden to protect the API key")
-            return None
+            return response.json()
 
     def _patch(self, path, data, ** params):
         try:
@@ -61,7 +62,7 @@ class SensiboClientAPI(object):
             return response.json()
         except requests.exceptions.RequestException as exc:
             doLog("error", "Request failed, full error messages hidden to protect the API key")
-            return None
+            return response.json()
 
     def _post(self, path, headers, data, ** params):
         try:
@@ -71,20 +72,20 @@ class SensiboClientAPI(object):
             return response.json()
         except requests.exceptions.RequestException as exc:
             doLog("error", "Request failed, full error messages hidden to protect the API key")
-            return None
+            return response.json()
 
     def devices(self):
         result = self._get("/users/me/pods", fields="id,room")
-        if(result == None or result['result'] == []):
-            return None
-
-        if(len(result) == 0):
+        if(result == None):
             return None
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = devices()
+            result = self.devices()
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
 
         try:
             return result
@@ -94,16 +95,16 @@ class SensiboClientAPI(object):
 
     def pod_all_stats(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,feelsLike")
-        if(result == None or result['result'] == []):
-            return None
-
-        if(len(result) == 0):
+        if(result == None):
             return None
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
             result = pod_all_stats(podUid, nb)
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
 
         try:
             return result
@@ -113,16 +114,16 @@ class SensiboClientAPI(object):
 
     def pod_get_remote_capabilities(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,remoteCapabilities,features")
-        if(result == None or result['result'] == []):
-            return None
-
-        if(len(result) == 0):
+        if(result == None):
             return None
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
             result = pod_get_remote_capabilities(podUid, nb)
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
 
         try:
             return result
@@ -132,16 +133,16 @@ class SensiboClientAPI(object):
 
     def pod_status(self, podUid, lastlimit = 5):
         result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser,resultingAcState,changedProperties")
-        if(result == None or result['result'] == []):
-            return None
-
-        if(len(result) == 0):
+        if(result == None):
             return None
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
             result = pod_status(podUid, lastlimit)
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
 
         try:
             return result
@@ -151,16 +152,16 @@ class SensiboClientAPI(object):
 
     def pod_get_past(self, podUid, days = 1):
         result = self._get("/pods/%s/historicalMeasurements" % podUid, days = days, fields="status,reason,time,acState,causedByUser")
-        if(result == None or result['result'] == []):
-            return None
-
-        if(len(result) == 0):
+        if(result == None):
             return None
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
             result = pod_get_past(podUid, days)
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
 
         try:
             return result
@@ -170,21 +171,37 @@ class SensiboClientAPI(object):
 
     def pod_change_ac_state(self, podUid, on, targetTemperature, mode, fanLevel, swing, hswing):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        self._post("/pods/%s/acStates" % podUid, headers,
-                json.dumps({"acState": {"on": on, "mode": mode, "targetTemperature": int(targetTemperature), "fanLevel": fanLevel, "swing": swing, "horizontalSwing": hswing}}))
+        result = self._post("/pods/%s/acStates" % podUid, headers,
+                            json.dumps({"acState": {"on": on, "mode": mode, "targetTemperature": int(targetTemperature), "fanLevel": fanLevel, "swing": swing, "horizontalSwing": hswing}}))
+        if(result == None):
+            return None
+
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            time.sleep(5)
+            result = pod_change_ac_state(podUid, on, targetTemperature, mode, fanLevel, swing, hswing)
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
+
+        try:
+            return result
+        except Exception as e:
+            doLog("error", result, True)
+            return None
 
     def pod_location(self, podUid):
         result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="pod")
-        if(result == None or result['result'] == []):
-            return None
-
-        if(len(result) == 0):
+        if(result == None):
             return None
 
         if(result['status'] == 429):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
             result = pod_location(podUid)
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
 
         try:
             return result
@@ -194,7 +211,27 @@ class SensiboClientAPI(object):
 
     def pod_smartmode(self, podUid, body):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        self._post("/pods/%s/smartmode" % podUid, headers, body)
+        result = self._post("/pods/%s/smartmode" % podUid, headers, body)
+        if(result == None):
+            return None
+
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            time.sleep(5)
+            result = pod_smartmode(podUid, body)
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
+
+        try:
+            return result
+        except Exception as e:
+            doLog("error", result, True)
+            return None
+
+def signal_handling(signum,frame):
+    global _terminate
+    _terminate = True
 
 def calcAT(temp, humid, country, feelslike):
     if(feelslike != None and country == 'None'):
@@ -318,7 +355,7 @@ def doLog(logType, line, doStackTrace = False):
 
 def getWatts():
     if(costCurrentPort == None):
-        return 0
+        return None
 
     import serial
     import xmltodict
@@ -340,15 +377,15 @@ def getWatts():
         doLog("error", e, True)
         return getWatts()
 
-    return 0
+    return None
 
 def calcWatts(mode, targetTemperature, temperature):
     if(mode == 'heat'):
         # Todo, this needs to be updated when we get useful values
-        return (heat * 1000 / COP - 1000 + -42.83076121510051 * targetTemperature + 129.95832636202184 * (temperature - targetTemperature)) / 1000
+        return (heat * 1000 / COP + -42.83076121510051 * targetTemperature + 129.95832636202184 * (temperature - targetTemperature)) / 1000
 
     if(mode == 'cool' or mode == 'dry'):
-        return (cool * 1000 / EER - 1000 + -78.16997770836882 * targetTemperature + 152.33221447666833 * (temperature - targetTemperature)) / 1000
+        return (cool * 1000 / EER + -78.16997770836882 * targetTemperature + 152.33221447666833 * (temperature - targetTemperature)) / 1000
 
     return 10
 
@@ -562,7 +599,7 @@ def doHistoricalMeasurements(mydb, days = 1):
             doLog("debug", historicalMeasurements['humidity'][i])
 
             at = calcAT(temp, humid, country, feelslike)
-            values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, 0)
+            values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, None)
             doLog("debug", _sqlquery3 % values)
             cursor.execute(_sqlquery3, values)
             mydb.commit()
@@ -650,30 +687,35 @@ def updateEnum(mydb, table_name, field):
     mydb.commit()
 
 def getObservations():
-    while True:
-        try:
-            doLog("info", "getObservations(%s)" % podUID)
-            mydb = MySQLdb.connect(hostname, username, password, database)
+    try:
+        while True:
+            try:
+                doLog("info", "getObservations(%s)" % podUID)
+                mydb = MySQLdb.connect(hostname, username, password, database)
 
-            if(weatherapikey != ''):
-                getWeatherAPI(mydb, podUID)
+                if(weatherapikey != ''):
+                    getWeatherAPI(mydb, podUID)
 
-            if(OWMapikey != ''):
-                getOpenWeatherMap(mydb, podUID)
+                if(OWMapikey != ''):
+                    getOpenWeatherMap(mydb, podUID)
 
-            if(inigoURL != ''):
-                getInigoData(mydb)
+                if(inigoURL != ''):
+                    getInigoData(mydb)
 
-            if(bomURL != ''):
-                getBOM(mydb)
+                if(bomURL != ''):
+                    getBOM(mydb)
 
-            if(metLocation != ''):
-                getMetService(mydb)
+                if(metLocation != ''):
+                    getMetService(mydb)
 
-            if(doOpenMeteo):
-                getOpenMeteo(mydb, podUID)
+                if(doOpenMeteo):
+                    getOpenMeteo(mydb, podUID)
 
-            mydb.close()
+                mydb.close()
+
+            except Exception as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                pass
 
             updateTime = 15
             ttime = round(datetime.now().timestamp() / (updateTime * 60)) * updateTime * 60 - datetime.now().timestamp() + 120
@@ -686,18 +728,16 @@ def getObservations():
             while(ttime >= updateTime * 60):
                 ttime -= updateTime * 60
 
-            doLog("info", "Sleeping Obs thread for %d seconds..." % ttime)
+            doLog("info", "Sleeping Obs mp for %d seconds..." % ttime)
             time.sleep(ttime)
 
-        except Exception as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            pass
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
 
 def getCurrentWeather(podUID):
     doLog("info", "Getting observation...")
-
-    my_thread = threading.Thread(target=getObservations)
-    my_thread.start()
+    _obs_mp.start()
 
 def checkClimateSetting(mydb):
     doLog("info", "Checking climate settings...")
@@ -770,84 +810,89 @@ def checkClimateSetting(mydb):
             pass
 
 def TimerSettingsLoop():
-    while True:
-        doLog("info", "TimerSettingsLoop() wake up")
+    try:
+        while True:
+            doLog("info", "TimerSettingsLoop() wake up")
 
-        try:
-            mydb = MySQLdb.connect(hostname, username, password, database)
+            try:
+                mydb = MySQLdb.connect(hostname, username, password, database)
 
-            checkClimateSetting(mydb)
+                checkClimateSetting(mydb)
 
-            cursor = mydb.cursor()
-            for podUID in uidList:
+                cursor = mydb.cursor()
+                for podUID in uidList:
 
-                query = "SELECT daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, startTime FROM timesettings " + \
-                        "WHERE uid=%s AND enabled=1 AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00') AND climateSetting IS NULL"
-                doLog("debug", query % podUID)
-                values = (podUID, )
-                #doLog("debug", query % values)
-                cursor.execute(query, values)
-                result = cursor.fetchall()
-                for(daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, startTime) in result:
-                    if(not daysOfWeek & 2 ** datetime.today().weekday()):
-                        continue
-
-                    query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                    query = "SELECT daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, startTime FROM timesettings " + \
+                            "WHERE uid=%s AND enabled=1 AND startTime = TIME_FORMAT(NOW(), '%%H:%%i:00') AND climateSetting IS NULL"
+                    doLog("debug", query % podUID)
                     values = (podUID, )
                     #doLog("debug", query % values)
                     cursor.execute(query, values)
-                    (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
-                    #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
-
-                    if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                        doLog("info", "Rule 9 hit, %s is %s turning aircon on to..." % (mode, turnOnOff))
-                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                        continue
-                    elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
-                        doLog("info", "Rule 10 hit, %s is %s turning aircon off to..." % (mode, turnOnOff))
-                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                        continue
-                    elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
-                        doLog("info", "Rule 11 hit, keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing...")
-                        client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                        continue
-                    elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
-                        doLog("info", "Rule 12 hit, keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing...")
-                        client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                        continue
-
-                    query = "SELECT whentime, turnOnOff FROM timers WHERE uid=%s AND UNIX_TIMESTAMP(whentime) + seconds < UNIX_TIMESTAMP(NOW())"
-                    values = (podUID, )
-                    doLog("debug", query % values)
-                    cursor.execute(query, values)
                     result = cursor.fetchall()
-                    for (whentime, turnOnOff) in result:
+                    for(daysOfWeek, turnOnOff, mode, targetTemperature, fanLevel, swing, horizontalSwing, startTime) in result:
+                        if(not daysOfWeek & 2 ** datetime.today().weekday()):
+                            continue
+
                         query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                        values = (podUID, )
+                        #doLog("debug", query % values)
+                        cursor.execute(query, values)
+                        (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
+                        #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
+
+                        if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
+                            doLog("info", "Rule 9 hit, %s is %s turning aircon on to..." % (mode, turnOnOff))
+                            client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                            continue
+                        elif((turnOnOff == "Off" and airconon == 1) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
+                            doLog("info", "Rule 10 hit, %s is %s turning aircon off to..." % (mode, turnOnOff))
+                            client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                            continue
+                        elif(not (turnOnOff == "On" and airconon == 1 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
+                            doLog("info", "Rule 11 hit, keeping aircon on but changing mode, targetTemp, fanLevel swing or hor.swing...")
+                            client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                            continue
+                        elif(not (turnOnOff == "Off" and airconon == 0 and mode == current_mode and targetTemperature == current_targetTemperature or fanLevel == current_fanLevel or swing == current_swing or horizontalSwing == current_horizontalSwing)):
+                            doLog("info", "Rule 12 hit, keeping aircon off but changing mode, targetTemp, fanLevel swing or hor.swing...")
+                            client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                            continue
+
+                        query = "SELECT whentime, turnOnOff FROM timers WHERE uid=%s AND UNIX_TIMESTAMP(whentime) + seconds < UNIX_TIMESTAMP(NOW())"
                         values = (podUID, )
                         doLog("debug", query % values)
                         cursor.execute(query, values)
-                        (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
-
-                        if(turnOnOff == "On"):
-                            if(airconon == 0):
-                                doLog("info", "Rule 13 hit for %s, turning aircon on..." % (podUID, ))
-                            query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
-                            values = (whentime, podUID)
+                        result = cursor.fetchall()
+                        for (whentime, turnOnOff) in result:
+                            query = "SELECT airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing FROM sensibo WHERE uid=%s ORDER BY whentime DESC LIMIT 1"
+                            values = (podUID, )
                             doLog("debug", query % values)
                             cursor.execute(query, values)
-                            mydb.commit()
-                            client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
-                        elif(turnOnOff == "Off"):
-                            if(airconon == 1):
-                                doLog("info", "Rule 14 hit for %s, turning aircon off..." % (podUID, ))
-                            query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
-                            values = (whentime, podUID)
-                            doLog("debug", query % values)
-                            cursor.execute(query, values)
-                            mydb.commit()
-                            client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                            (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
 
-            mydb.close()
+                            if(turnOnOff == "On"):
+                                if(airconon == 0):
+                                    doLog("info", "Rule 13 hit for %s, turning aircon on..." % (podUID, ))
+                                query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
+                                values = (whentime, podUID)
+                                doLog("debug", query % values)
+                                cursor.execute(query, values)
+                                mydb.commit()
+                                client.pod_change_ac_state(podUID, True, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+                            elif(turnOnOff == "Off"):
+                                if(airconon == 1):
+                                    doLog("info", "Rule 14 hit for %s, turning aircon off..." % (podUID, ))
+                                query = "DELETE FROM timers WHERE whentime=%s AND uid=%s"
+                                values = (whentime, podUID)
+                                doLog("debug", query % values)
+                                cursor.execute(query, values)
+                                mydb.commit()
+                                client.pod_change_ac_state(podUID, False, targetTemperature, mode, fanLevel, swing, horizontalSwing)
+
+                mydb.close()
+
+            except Exception as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                pass
 
             ttime = round(datetime.now().timestamp() / 60) * 60 - datetime.now().timestamp()
 
@@ -856,18 +901,17 @@ def TimerSettingsLoop():
             while(ttime >= 60):
                 ttime -= 60
 
-            doLog("info", "Sleeping TimerSettingsLoop thread for %d seconds..." % ttime)
+            doLog("info", "Sleeping TimerSettingsLoop mp for %d seconds..." % ttime)
             time.sleep(ttime)
 
-        except Exception as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            pass
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+
 
 def doTimerSettings():
     doLog("info", "Doing Timer Settings Loop...")
-
-    my_thread = threading.Thread(target=TimerSettingsLoop)
-    my_thread.start()
+    _settings_mp.start()
 
 def getOpenWeatherMap(mydb, podUID):
     if(OWMapikey == ''):
@@ -1220,6 +1264,12 @@ def updateDatabase(mydb):
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
+def signal_handler(sig, frame):
+    doLog("error", 'You pressed Ctrl+C!')
+    _obs_mp.terminate()
+    _settings_mp.terminate()
+    exit(0)
+
 if __name__ == "__main__":
     os.system("")
     log = logging.getLogger('AtmoWiz Daemon')
@@ -1234,6 +1284,10 @@ if __name__ == "__main__":
     if(os.getuid() != 0 or os.getgid() != 0):
         doLog("error", "This program is designed to be started as root.", True)
         exit(1)
+
+    _obs_mp = multiprocessing.Process(target=getObservations)
+    _settings_mp = multiprocessing.Process(target=TimerSettingsLoop)
+    signal.signal(signal.SIGINT, signal_handler)
 
     parser = argparse.ArgumentParser(description='Daemon to collect data from Sensibo.com and store it locally in a MariaDB database.')
     parser.add_argument('-c', '--config', type = str, default='/etc/atmowiz.conf',
@@ -1490,7 +1544,6 @@ if __name__ == "__main__":
 
         doHistoricalMeasurements(mydb, days)
         calcCost(mydb)
-        #checkSettings(mydb)
 
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
@@ -1509,97 +1562,108 @@ if __name__ == "__main__":
     getCurrentWeather(podUID)
     doTimerSettings()
 
-    while True:
-        try:
-            mydb = MySQLdb.connect(hostname, username, password, database)
-            doLog("debug", "Connection to mariadb accepted")
-            secondsAgo = -1
+    try:
+        while True:
+            try:
+                mydb = MySQLdb.connect(hostname, username, password, database)
+                doLog("info", "Starting main loop...")
+                doLog("debug", "Connection to mariadb accepted")
+                secondsAgo = -1
 
-            for podUID in uidList:
-                pod_measurement = client.pod_all_stats(podUID, 1)
-                if(pod_measurement == None):
-                    continue
-
-                pod_measurement = pod_measurement['result'][0]
-                ac_state = pod_measurement['device']['acState']
-                measurements = pod_measurement['device']['measurements']
-
-                if(not validateValues(measurements['temperature'], measurements['humidity'])):
-                    doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (measurements['temperature'], measurements['humidity']))
-                    continue
-
-                if(secondsAgo == -1):
-                    #doLog("debug", "secondsAgo = %d" % measurements['time']['secondsAgo'])
-                    secondsAgo = 90 - measurements['time']['secondsAgo']
-
-                sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
-                utc = sstring.replace(tzinfo=from_zone)
-                localzone = utc.astimezone(to_zone)
-                sdate = localzone.strftime(fmt)
-                values = (sdate, podUID)
-
-                try:
-                    cursor = mydb.cursor()
-                    #doLog("debug", _sqlselect3 % values)
-                    cursor.execute(_sqlselect3, values)
-                    row = cursor.fetchone()
-                    if(row):
-                        #doLog("debug", "Skipping insert due to row already existing.")
+                for podUID in uidList:
+                    pod_measurement = client.pod_all_stats(podUID, 1)
+                    if(pod_measurement == None):
                         continue
 
-                    if(ac_state['mode'] == 'fan'):
-                        ac_state['targetTemperature'] = None
-                        ac_state['temperatureUnit'] = None
+                    pod_measurement = pod_measurement['result'][0]
+                    ac_state = pod_measurement['device']['acState']
+                    measurements = pod_measurement['device']['measurements']
 
-                    at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
+                    if(not validateValues(measurements['temperature'], measurements['humidity'])):
+                        doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (measurements['temperature'], measurements['humidity']))
+                        continue
 
-                    values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
-                              at, measurements['rssi'], ac_state['on'],
-                              ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
-                              ac_state['swing'], ac_state['horizontalSwing'], getWatts())
-                    doLog("debug", _sqlquery3 % values)
-                    cursor.execute(_sqlquery3, values)
-                    mydb.commit()
-                except MySQLdb._exceptions.ProgrammingError as e:
-                    doLog("error", "There was a problem, error was %s" % e, True)
-                    pass
-                except MySQLdb._exceptions.IntegrityError as e:
-                    doLog("error", "There was a problem, error was %s" % e, True)
-                    pass
-                except MySQLdb._exceptions.OperationalError as e:
-                    doLog("error", "There was a problem, error was %s" % e, True)
-                    pass
-                except MySQLdb._exceptions.DataError as e:
-                    if(e.args[0] == 1265):
-                        table_name = 'sensibo'
-                        field = e.args[1].split("'")[1]
-                        updateEnum(mydb, table_name, field)
+                    if(secondsAgo == -1):
+                        #doLog("debug", "secondsAgo = %d" % measurements['time']['secondsAgo'])
+                        secondsAgo = 90 - measurements['time']['secondsAgo']
+
+                    sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
+                    utc = sstring.replace(tzinfo=from_zone)
+                    localzone = utc.astimezone(to_zone)
+                    sdate = localzone.strftime(fmt)
+                    values = (sdate, podUID)
+
+                    try:
+                        cursor = mydb.cursor()
+                        #doLog("debug", _sqlselect3 % values)
+                        cursor.execute(_sqlselect3, values)
+                        row = cursor.fetchone()
+                        if(row):
+                            #doLog("debug", "Skipping insert due to row already existing.")
+                            continue
+
+                        if(ac_state['mode'] == 'fan'):
+                            ac_state['targetTemperature'] = None
+                            ac_state['temperatureUnit'] = None
+
+                        at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
+
+                        values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
+                                  at, measurements['rssi'], ac_state['on'],
+                                  ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
+                                  ac_state['swing'], ac_state['horizontalSwing'], getWatts())
                         doLog("debug", _sqlquery3 % values)
                         cursor.execute(_sqlquery3, values)
                         mydb.commit()
+                    except MySQLdb._exceptions.ProgrammingError as e:
+                        doLog("error", "There was a problem, error was %s" % e, True)
                         pass
+                    except MySQLdb._exceptions.IntegrityError as e:
+                        doLog("error", "There was a problem, error was %s" % e, True)
+                        pass
+                    except MySQLdb._exceptions.OperationalError as e:
+                        doLog("error", "There was a problem, error was %s" % e, True)
+                        pass
+                    except MySQLdb._exceptions.DataError as e:
+                        if(e.args[0] == 1265):
+                            table_name = 'sensibo'
+                            field = e.args[1].split("'")[1]
+                            updateEnum(mydb, table_name, field)
+                            doLog("debug", _sqlquery3 % values)
+                            cursor.execute(_sqlquery3, values)
+                            mydb.commit()
+                            pass
 
-            calcCost(mydb)
+                calcCost(mydb)
 
-            getLastCommands(mydb, 5)
-            #checkSettings(mydb)
+                getLastCommands(mydb, 5)
 
-            loops += 1
-            if(loops >= 480):
-                loops = 0
-                doHistoricalMeasurements(mydb, 1)
+                loops += 1
+                if(loops >= 480):
+                    loops = 0
+                    doHistoricalMeasurements(mydb, 1)
 
-            if(secondsAgo <= 0):
-                secondsAgo = 90
-            if(secondsAgo > 90):
-                secondsAgo = 90
+                if(secondsAgo <= 0):
+                    secondsAgo = 90
+                if(secondsAgo > 90):
+                    secondsAgo = 90
 
-            timeToWait = secondsAgo + random.randint(10, 20)
+                timeToWait = secondsAgo + random.randint(10, 20)
 
-            doLog("debug", "Closing connection to MariaDB")
-            mydb.close()
-            doLog("debug", "Sleeping for %d seconds..." % timeToWait)
-            time.sleep(timeToWait)
-        except Exception as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            pass
+                doLog("debug", "Closing connection to MariaDB")
+                mydb.close()
+
+                doLog("debug", "Sleeping for %d seconds..." % timeToWait)
+                time.sleep(timeToWait)
+
+            except KeyboardInterrupt:
+                exit(0)
+            except Exception as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                pass
+
+    except KeyboardInterrupt:
+        exit(0)
+    except Exception as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        exit(1)
