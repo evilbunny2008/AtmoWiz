@@ -46,16 +46,27 @@
     padding: 0;
     box-sizing: border-box;
 }
-
+/*
 @font-face {
   font-family: StintUltraCondensed;
-  src: url('assets/StintUltraCondensed-Regular.ttf') format('ttf');
+  src: url('assets/StintUltraCondensed-Regular.ttf') format('truetype');
 }
-
+*/
 body
 {
-  font-family: StintUltraCondensed;
-  font-size: 12pt;
+  font-family: Arial;
+  font-size: 1rem;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar
+{
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb
+{
+  border-radius: 5px;
 }
 
 nav
@@ -1590,18 +1601,21 @@ async function climateSettings()
 
 function checkWindowSize()
 {
-	var chh = 220;
+	var chh = 190;
 
 	if(document.getElementById('card-demo').classList.contains('card-demo1'))
-		chh += 65;
+		chh += 60;
 
 	if(document.getElementById("device-chooser").style.display == "block")
-		chh += 65;
+		chh += 60;
+
+	chh += 50;
+
+	document.getElementById("commandHeader").style.height = chh + "px";
 
 	chh += 32;
 
-	document.getElementById("commandHeader").style.height = chh + "px";
-	document.getElementById("commandList").style.height = (window.innerHeight - chh) + "px";
+	document.getElementById("commandList").style.height = window.innerHeight - chh + "px";
 }
 
 window.onresize = function(event)
