@@ -304,6 +304,27 @@ td
   text-align: center;
 }
 
+.commandListOverflow
+{
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: inline-block;
+  width: 315px;
+  //border: 1px solid black;
+}
+
+.commandListDD
+{
+  float: right;
+  width: 50%;
+  padding: 12px 12px;
+  margin: 8px 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
 .animate
 {
   -webkit-animation: animatezoom 0.6s;
@@ -476,7 +497,7 @@ function deleteSetting(created, uid)
     </div>
     <div class="container">
 	<h1 style='text-align: center;'>Climate Settings</h1>
-	<div id="id03-device-title"></div><br/>
+	<div style="text-align:center;" id="id03-device-title"></div><br/>
 
 	<input id="created2" type="hidden" name="created2" />
 	<div class="divLeft">
@@ -485,17 +506,13 @@ function deleteSetting(created, uid)
 	<label for="upperMode2"><b>Mode:</b></label>
 	<select class="myInputs2" id="upperMode2" name="upperMode" onChange="populateULSelect('upper', this.value); return false;">
 <?php
-	$defmode = "";
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperMode'";
-	$dres = mysqli_query($link, $dquery);
+	$defmode = 'cool';
+	$query = "SELECT mode FROM meta WHERE uid='${row['uid']}' GROUP BY mode";
+	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
-		$v = $drow['value'];
+		$v = $drow['mode'];
 		echo "\t\t<option value='$v'>$v</option>\n";
-		if($defmode == "")
-			$defmode = $v;
 	}
 ?>
 	</select>
@@ -542,9 +559,8 @@ function deleteSetting(created, uid)
 	<label for="upperFanLevel2"><b>Fan Level:</b></label>
 	<select class="myInputs2" id='upperFanLevel2' name="upperFanLevel">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperFanLevel'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='fanLevels'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -556,9 +572,8 @@ function deleteSetting(created, uid)
 	<label for="upperSwing2"><b>Swing:</b></label>
 	<select class="myInputs2" id="upperSwing2" name="upperSwing">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperSwing'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='swing'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -566,13 +581,12 @@ function deleteSetting(created, uid)
 		echo "\t\t<option value='$v'>$v</option>\n";
 	}
 ?>
-		</select>
+	</select>
 	<label for="upperHorizontalSwing2"><b>Horizontal Swing:</b></label>
 	<select class="myInputs2" id="upperHorizontalSwing2" name="upperHorizontalSwing">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperHorizontalSwing'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='horizontalSwing'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -600,17 +614,13 @@ function deleteSetting(created, uid)
 	<label for="lowerMode2"><b>Mode:</b></label>
 	<select class="myInputs2" id="lowerMode2" name="lowerMode" onChange="populateULSelect('lower', this.value); return false;">
 <?php
-	$defmode = "";
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerMode'";
-	$dres = mysqli_query($link, $dquery);
+	$defmode = 'cool';
+	$query = "SELECT mode FROM meta WHERE uid='${row['uid']}' GROUP BY mode";
+	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
-		$v = $drow['value'];
+		$v = $drow['mode'];
 		echo "\t\t<option value='$v'>$v</option>\n";
-		if($defmode == "")
-			$defmode = $v;
 	}
 ?>
 	</select>
@@ -657,9 +667,8 @@ function deleteSetting(created, uid)
 	<label for="lowerFanLevel2"><b>Fan Level:</b></label>
 	<select class="myInputs2" id='lowerFanLevel2' name="lowerFanLevel">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerFanLevel'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='fanLevel'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -671,9 +680,8 @@ function deleteSetting(created, uid)
 	<label for="lowerSwing2"><b>Swing:</b></label>
 	<select class="myInputs2" id="lowerSwing2" name="lowerSwing">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerSwing'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='swing'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -681,13 +689,12 @@ function deleteSetting(created, uid)
 		echo "\t\t<option value='$v'>$v</option>\n";
 	}
 ?>
-		</select>
+	</select>
 	<label for="lowerHorizontalSwing2"><b>Horizontal Swing:</b></label>
 	<select class="myInputs2" id="lowerHorizontalSwing2" name="lowerHorizontalSwing">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerHorizontalSwing'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='horizontalSwing'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -779,7 +786,7 @@ function deleteTimeSetting(created, uid)
     </div>
     <div class="container">
 	<h1 style='text-align: center;'>Time Based Settings</h1>
-	<div id="id05-device-title"></div><br/>
+	<div style="text-align:center;" id="id05-device-title"></div><br/>
 	<input id="created5" type="hidden" name="created5" />
 	<label for="dayOfWeek5"><b>Day(s) of the Week:</b></label><br/>
 	<select class="myInputs5" id="days5" name="days[]" size="7" multiple="multiple" required>
@@ -811,17 +818,13 @@ function deleteTimeSetting(created, uid)
 	<label for="mode5"><b>Mode:</b></label>
 	<select class="myInputs5" id="mode5" name="mode" onChange="populateSelect('5'); return false;">
 <?php
-	$defmode = "";
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'mode'";
-	$dres = mysqli_query($link, $dquery);
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='mode'";
+	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
 		$v = $drow['value'];
 		echo "\t\t<option value='$v'>$v</option>\n";
-		if($defmode == "")
-			$defmode = $v;
 	}
 ?>
 	</select>
@@ -846,9 +849,8 @@ function deleteTimeSetting(created, uid)
 	<label for="fanLevel5"><b>Fan Level:</b></label>
 	<select class="myInputs5" id='fanLevel5' name="fanLevel">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'fanLevel'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='fanLevel'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -856,13 +858,12 @@ function deleteTimeSetting(created, uid)
 		echo "\t\t<option value='$v'>$v</option>\n";
 	}
 ?>
-		</select>
+	</select>
 	<label for="swing5"><b>Swing:</b></label>
 	<select class="myInputs5" id="swing5" name="swing">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'swing'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='swing'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -870,13 +871,12 @@ function deleteTimeSetting(created, uid)
 		echo "\t\t<option value='$v'>$v</option>\n";
 	}
 ?>
-		</select>
+	</select>
 	<label for="horizontalSwing5"><b>Horizontal Swing:</b></label>
 	<select class="myInputs5" id="horizontalSwing5" name="horizontalSwing">
 <?php
-	$query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'horizontalSwing'";
+	$defmode = 'cool';
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='horizontalSwing'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -954,9 +954,9 @@ document.forms['id05'].addEventListener('submit', (event) =>
       <span onclick="cancelAddTimer(); return false;" class="close">&times;</span>
     </div>
     <div class="container">
-	<h1>New Timer</h1>
-        <div id="id08-device-title"></div><br/>
-	<label for="timer8">Set a Time:</label>
+	<h1 style="text-align:center;">New Timer</h1>
+        <div style="text-align:center;" id="id08-device-title"></div><br/>
+	<label for="timer8">Set a Timer:</label>
 	<input type="text" id="timer8" name="timer" class="myInputs2" value="00:20" />
 	<label for="turnOnOff8"><b>Turn On/Off:</b></label>
 	<select class="myInputs8" id="turnOnOff8" name="turnOnOff">
@@ -1589,13 +1589,13 @@ async function climateSettings()
 
 function checkWindowSize()
 {
-	var chh = 200;
+	var chh = 220;
 
 	if(document.getElementById('card-demo').classList.contains('card-demo1'))
-		chh += 50;
+		chh += 65;
 
 	if(document.getElementById("device-chooser").style.display == "block")
-		chh += 25;
+		chh += 65;
 
 	chh += 32;
 

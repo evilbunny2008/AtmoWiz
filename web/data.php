@@ -439,8 +439,8 @@
 	else
 		$displayblock = "none";
 
-	$commandHeader .= "<li id='device-chooser' style='display:$displayblock'><label for='devices'>Choose a Device:</label>\n";
-	$commandHeader .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
+	$commandHeader .= "<li id='device-chooser' style='display:$displayblock;'><label for='devices'>Choose a Device:</label>\n";
+	$commandHeader .= "<select class='commandListDD' name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
 
 	while($row = mysqli_fetch_assoc($res))
 	{
@@ -449,12 +449,12 @@
 			$commandHeader .= " selected";
 		$commandHeader .= ">".$row['name']."</option>\n";
 	}
-	$commandHeader .= "</select></li>\n";
+	$commandHeader .= "</select><br/><br/><br/></li>\n";
 
 	mysqli_free_result($res);
 
 	$commandHeader .= "<li class='card-demo9'><label for='timePeriod'>Time Period:</label>\n";
-	$commandHeader .= "<select name='timePeriod' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
+	$commandHeader .= "<select class='commandListDD' name='timePeriod' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
 	$commandHeader .= "<option value='day'";
 	if($period == 86400000)
 		$commandHeader .= " selected";
@@ -471,7 +471,7 @@
 	if($period == 31536000000)
 		$commandHeader .= " selected";
 	$commandHeader .= ">Year</option>";
-	$commandHeader .= "</select></li>\n";
+	$commandHeader .= "</select><br/><br/></li>\n";
 
 	$commandHeader .= "<li>&nbsp;</li>\n";
 
@@ -526,26 +526,26 @@
 		}
 
 		if(stripos($row['changes'], "'targetTemperature'"))
-			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set temperature to ".$row["targetTemperature"]."</li>\n";
+			$commands .= "<li class='commandListOverflow' title='".$row["wttime"]." -- $who set temperature to ".$row["targetTemperature"]."'><b>".$row["wttime"]."</b> -- $who set temp. to ".$row["targetTemperature"]."</li>\n";
 
 		if(stripos($row['changes'], "'mode'"))
-			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set mode to ".$row["mode"]."</li>\n";
+			$commands .= "<li class='commandListOverflow' title='".$row["wttime"]." -- $who set mode to ".$row["mode"]."'><b>".$row["wttime"]."</b> -- $who set mode to ".$row["mode"]."</li>\n";
 
 		if(stripos($row['changes'], "'fanLevel'"))
-			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set fan to ".$row["fanLevel"]."</li>\n";
+			$commands .= "<li class='commandListOverflow' title='".$row["wttime"]." -- $who set fan to ".$row["fanLevel"]."'><b>".$row["wttime"]."</b> -- $who set fan to ".$row["fanLevel"]."</li>\n";
 
 		if(stripos($row['changes'], "'swing'"))
-			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set vertical swing to ".$row["swing"]."</li>\n";
+			$commands .= "<li class='commandListOverflow' title='".$row["wttime"]." -- $who set swing to ".$row["swing"]."'><b>".$row["wttime"]."</b> -- $who set swing to ".$row["swing"]."</li>\n";
 
 		if(stripos($row['changes'], "'horizontalSwing'"))
-			$commands .= "<li><b>".$row["wttime"]."</b> -- $who set horizontonalswing to ".$row["horizontalSwing"]."</li>\n";
+			$commands .= "<li class='commandListOverflow' title='".$row["wttime"]." -- $who set horizontal swing to ".$row["horizontalSwing"]."'><b>".$row["wttime"]."</b> -- $who set hor. swing to ".$row["horizontalSwing"]."</li>\n";
 
 		if(stripos($row['changes'], "'on'"))
 		{
 			if($row["airconon"] == 1)
-				$commands .= "<li><b>".$row["wttime"]."</b> -- $who set AC on</li>\n";
+				$commands .= "<li class='commandListOverflow' title='".$row["wttime"]." -- $who set AC on'><b>".$row["wttime"]."</b> -- $who set AC on</li>\n";
 			else
-				$commands .= "<li><b>".$row["wttime"]."</b> -- $who set AC off</li>\n";
+				$commands .= "<li class='commandListOverflow' title='".$row["wttime"]." -- $who set AC off'><b>".$row["wttime"]."</b> -- $who set AC off</li>\n";
 		}
 	}
 
