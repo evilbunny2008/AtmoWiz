@@ -404,9 +404,9 @@
 
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
 	{
-		$commandHeader .= "<ul id='CommandHeader'>\n";
+		$commandHeader .= "<ul>\n";
 		$commandHeader .= "<li style='text-align:center'>\n";
-		$commandHeader .= "<img style='width:40px;' onClick='showTimers(); return false;' src='assets/hourglass.png' title='Timer' class='card-demo1' />\n";
+		$commandHeader .= "<img id='card-demo' style='width:40px;' onClick='showTimers(); return false;' src='assets/hourglass.png' title='Timer' class='card-demo1' />\n";
 		$commandHeader .= "<img style='width:40px;' onClick='showSettings(); return false;' src='assets/wand.png' title='Show Climate Settings' class='card-demo2' />\n";
 		$commandHeader .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='assets/watch.png' title='Show Time Based Settings' class='card-demo3' />\n";
 		$commandHeader .= "<img style='width:40px;' onClick='settings(); return false;' src='assets/settings.png' title='Show AirCon Settings' class='card-demo4' />\n";
@@ -424,9 +424,9 @@
 
 		$commandHeader .= "</li>\n";
 	} else {
-		$commandHeader .= "<ul id='CommandHeader'>\n";
+		$commandHeader .= "<ul>\n";
 		$commandHeader .= "<li style='text-align:center'>";
-		$commandHeader .= "<img style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='assets/tick.png' title='Jump to Now' class='card-demo6' />\n";
+		$commandHeader .= "<img id='card-demo' style='width:40px;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;' src='assets/tick.png' title='Jump to Now' class='card-demo6' />\n";
 		$commandHeader .= "<img style='width:40px;' onClick='logout(); return false;' src='assets/exit.png' title='Logout' class='card-demo7' />\n";
 		$commandHeader .= "<img style='width:40px;' onClick='help(); return false;' src='assets/question-mark.png' title='Get Help' class='card-demo8' />\n";
 		$commandHeader .= "</li>\n";
@@ -435,21 +435,23 @@
 	$query = "SELECT uid,name FROM devices ORDER BY name";
 	$res = mysqli_query($link, $query);
 	if(mysqli_num_rows($res) > 1)
+		$displayblock = "block";
+	else
+		$displayblock = "none";
+
+	$commandHeader .= "<li id='device-chooser' style='display:$displayblock'><label for='devices'>Choose a Device:</label>\n";
+	$commandHeader .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
+
+	while($row = mysqli_fetch_assoc($res))
 	{
-		$commandHeader .= "<li><label for='devices'>Choose a Device:</label>\n";
-		$commandHeader .= "<select name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
-
-		while($row = mysqli_fetch_assoc($res))
-		{
-			$commandHeader .= "<option value='".$row['uid']."'";
-			if($uid == $row['uid'])
-				$commandHeader .= " selected";
+		$commandHeader .= "<option value='".$row['uid']."'";
+		if($uid == $row['uid'])
+			$commandHeader .= " selected";
 		$commandHeader .= ">".$row['name']."</option>\n";
-		}
-		$commandHeader .= "</select></li>\n";
-
-		mysqli_free_result($res);
 	}
+	$commandHeader .= "</select></li>\n";
+
+	mysqli_free_result($res);
 
 	$commandHeader .= "<li class='card-demo9'><label for='timePeriod'>Time Period:</label>\n";
 	$commandHeader .= "<select name='timePeriod' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
@@ -498,7 +500,7 @@
 	$date = $lastdate = '';
 
 	$commandHeader .= "</ul>\n";
-	$commands = "<ul id='commands'>\n";
+	$commands = "<ul>\n";
 
 	$res = mysqli_query($link, $query);
 	while($row = mysqli_fetch_assoc($res))
@@ -516,7 +518,7 @@
 
 		if($date != $lastdate)
 		{
-			if($commands != "<ul id='commands'>\n")
+			if($commands != "<ul>\n")
 				$commands .= "<li>&nbsp;</li>\n";
 
 			$commands .= "<li style='text-align:center;cursor:pointer;' onClick='showDay(\"$wtsec\"); return false;'><u><b>$date</b></u></li>\n";

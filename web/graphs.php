@@ -47,11 +47,14 @@
     box-sizing: border-box;
 }
 
+@font-face {
+  font-family: Roboto;
+  src: url('assets/Roboto-Regular.ttf') format('ttf');
+}
+
 body
 {
-  font-family: Arial, Helvetica, sans-serif;
-  min-height: 750px;
-  height: 750px;
+  font-family: Roboto;
 }
 
 nav
@@ -102,7 +105,7 @@ section::after
   width: 100%;
 }
 
-#footer a, #commands a
+#footer a
 {
   color: #085f24;
 }
@@ -112,11 +115,6 @@ section::after
   position: absolute;
   z-index: 1;
   top: 5px;
-}
-
-body
-{
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 #mode1, #targetTemperature1, #fanLevel1, #swing1, #horizontalSwing1
@@ -286,17 +284,6 @@ span.psw
   padding: 20px;
 }
 
-.wrapper
-{
-  display: flex;
-  padding-top: 30px;
-}
-
-.wrapper > div
-{
-  flex: 1;
-}
-
 table, th, td
 {
   border: 1px solid black;
@@ -352,12 +339,12 @@ td
 <body>
 <section>
   <div style="display:flex;flex-direction:column;position:absolute;">
-    <nav id="commandHeader" style='flex:0 0 auto;height:250px;'>
+    <nav id="commandHeader" style='flex:0 0 auto;'>
     </nav>
-    <nav id="commandList" style='flex:0 0 auto;overflow-x:hidden;overflow-y:scroll;height:calc(100vh - 282px);'>
+    <nav id="commandList" style='flex:0 0 auto;overflow-x:hidden;overflow-y:scroll;'>
     </nav>
   </div>
-  <div style="width:calc(100% - 375px);float:right;">
+  <div style="width:calc(100vw - 375px);float:right;">
     <div class="child" style='left:40%;'><img onClick="prevDay(); return false;" style='height:40px;' src='assets/left.png' /></div>
     <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='assets/right.png' /></div>
     <div id="chartContainer" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
@@ -372,7 +359,6 @@ td
 <footer id="footer">
   <div id="footer-content"><a target='_blank' href='https://AtmoWiz.com'>&copy; 2024 by </a><a target='_blank' href='https://evilbunny.org'>evilbunny</a></div>
 </footer>
-
 <?php
 //	https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_login_form_modal
 ?>
@@ -490,6 +476,8 @@ function deleteSetting(created, uid)
     </div>
     <div class="container">
 	<h1 style='text-align: center;'>Climate Settings</h1>
+	<div id="id03-device-title"></div><br/>
+
 	<input id="created2" type="hidden" name="created2" />
 	<div class="divLeft">
 	<label for="name2"><b>Name:</b></label>
@@ -594,10 +582,6 @@ function deleteSetting(created, uid)
 ?>
 	</select>
 	</div>
-
-
-
-
 	<div class="divRight">
 	<label for="type2"><b>Type:</b></label>
 	<select class="myInputs2" id="type2" name="type">
@@ -794,7 +778,8 @@ function deleteTimeSetting(created, uid)
       <span onclick="cancelAddUpdateTime(); return false;" class="close">&times;</span>
     </div>
     <div class="container">
-	<h1 style='text-align: center;'>Time Based Settings</h1><br/>
+	<h1 style='text-align: center;'>Time Based Settings</h1>
+	<div id="id05-device-title"></div><br/>
 	<input id="created5" type="hidden" name="created5" />
 	<label for="dayOfWeek5"><b>Day(s) of the Week:</b></label><br/>
 	<select class="myInputs5" id="days5" name="days[]" size="7" multiple="multiple" required>
@@ -970,7 +955,7 @@ document.forms['id05'].addEventListener('submit', (event) =>
     </div>
     <div class="container">
 	<h1>New Timer</h1>
-	<br/>
+        <div id="id08-device-title"></div><br/>
 	<label for="timer8">Set a Time:</label>
 	<input type="text" id="timer8" name="timer" class="myInputs2" value="00:20" />
 	<label for="turnOnOff8"><b>Turn On/Off:</b></label>
@@ -1602,6 +1587,27 @@ async function climateSettings()
 	}
 }
 
+function checkWindowSize()
+{
+	var chh = 200;
+
+	if(document.getElementById('card-demo').classList.contains('card-demo1'))
+		chh += 50;
+
+	if(document.getElementById("device-chooser").style.display == "block")
+		chh += 25;
+
+	chh += 32;
+
+	document.getElementById("commandHeader").style.height = chh + "px";
+	document.getElementById("commandList").style.height = (window.innerHeight - chh) + "px";
+}
+
+window.onresize = function(event)
+{
+	checkWindowSize();
+};
+
 async function startDataLoop(force)
 {
 	try
@@ -1634,6 +1640,8 @@ console.log("Update should have happened.");
 
 		document.getElementById("commandHeader").innerHTML = content['commandHeader'];
 		document.getElementById("commandList").innerHTML = content['commands'];
+		checkWindowSize();
+
 		uid = content['uid'];
 
 		if(timePeriod == "day")
@@ -1642,10 +1650,12 @@ console.log("Update should have happened.");
 			chart2.options.axisX.intervalType = 'hour';
 			chart3.options.axisX.intervalType = 'hour';
 			chart3.options.dataPointWidth = 50;
+			chart4.options.axisX.intervalType = 'hour';
 
 			chart1.options.axisX.valueFormatString = 'D MMM, hTT';
 			chart2.options.axisX.valueFormatString = 'D MMM, hTT';
 			chart3.options.axisX.valueFormatString = 'D MMM, hTT';
+			chart4.options.axisX.valueFormatString = 'D MMM, hTT';
 		}
 
 		if(timePeriod == "week")
@@ -1654,10 +1664,12 @@ console.log("Update should have happened.");
 			chart2.options.axisX.intervalType = 'day';
 			chart3.options.axisX.intervalType = 'day';
 			chart3.options.dataPointWidth = 7;
+			chart4.options.axisX.intervalType = 'day';
 
 			chart1.options.axisX.valueFormatString = 'D MMM';
 			chart2.options.axisX.valueFormatString = 'D MMM';
 			chart3.options.axisX.valueFormatString = 'D MMM';
+			chart4.options.axisX.valueFormatString = 'D MMM';
 		}
 
 		if(timePeriod == "month")
@@ -1666,10 +1678,12 @@ console.log("Update should have happened.");
 			chart2.options.axisX.intervalType = 'week';
 			chart3.options.axisX.intervalType = 'week';
 			chart3.options.dataPointWidth = 40;
+			chart4.options.axisX.intervalType = 'week';
 
 			chart1.options.axisX.valueFormatString = 'D MMM YY';
 			chart2.options.axisX.valueFormatString = 'D MMM YY';
 			chart3.options.axisX.valueFormatString = 'D MMM YY';
+			chart4.options.axisX.valueFormatString = 'D MMM YY';
 		}
 
 		if(timePeriod == "year")
@@ -1678,10 +1692,12 @@ console.log("Update should have happened.");
 			chart2.options.axisX.intervalType = 'month';
 			chart3.options.axisX.intervalType = 'month';
 			chart3.options.dataPointWidth = 20;
+			chart4.options.axisX.intervalType = 'month';
 
 			chart1.options.axisX.valueFormatString = 'MMM YYYY';
 			chart2.options.axisX.valueFormatString = 'MMM YYYY';
 			chart3.options.axisX.valueFormatString = 'MMM YYYY';
+			chart4.options.axisX.valueFormatString = 'MMM YYYY';
 		}
 
 		chart1.options.data[0].dataPoints = content['dataPoints3'];
@@ -1878,7 +1894,7 @@ function newSetting()
 	document.getElementById("created2").value = "";
 	document.getElementById("name2").value = "Climate Setting #1";
 
-	document.getElementById("type2").options[1].selected = 'selected';
+	document.getElementById("type2").options[0].selected = 'selected';
 
 	document.getElementById("upperTargetTemperature2").options[8].selected = 'selected';
 	document.getElementById("upperTemperature2").options[10].selected = 'selected';
@@ -1908,6 +1924,8 @@ function newSetting()
 	populateULSelect('upper', 'cool');
 	populateULSelect('lower', 'cool');
 
+	dd = document.getElementById("devices");
+	document.getElementById("id03-device-title").innerHTML = dd.options[dd.selectedIndex].text;
 	modal2.style.display = "none";
 	modal3.style.display = "block";
 }
@@ -1954,6 +1972,8 @@ function editSetting(created, uid, name, type, upperTemperature, upperTargetTemp
 
 	document.getElementById("submitAddUpdate2").innerHTML = "Update";
 
+	dd = document.getElementById("devices");
+	document.getElementById("id03-device-title").innerHTML = dd.options[dd.selectedIndex].text;
 	modal2.style.display = "none";
 	modal3.style.display = "block";
 }
@@ -2034,6 +2054,8 @@ function editTimeSetting(created, uid, daysOfWeek, startTime, turnOnOff, mode, t
 
 	document.getElementById("submitAddUpdate5").innerHTML = "Update";
 
+	dd = document.getElementById("devices");
+	document.getElementById("id05-device-title").innerHTML = dd.options[dd.selectedIndex].text;
 	modal4.style.display = "none";
 	modal5.style.display = "block";
 }
@@ -2079,6 +2101,8 @@ function newTimeSetting()
 	document.getElementById("enabled5").checked = true;
 	document.getElementById("submitAddUpdate5").innerHTML = "Add Setting";
 
+	dd = document.getElementById("devices");
+	document.getElementById("id05-device-title").innerHTML = dd.options[dd.selectedIndex].text;
 	modal4.style.display = "none";
 	modal5.style.display = "block";
 }
@@ -2095,6 +2119,8 @@ function showTimers()
 
 function newTimer()
 {
+	dd = document.getElementById("devices");
+	document.getElementById("id08-device-title").innerHTML = dd.options[dd.selectedIndex].text;
 	modal7.style.display = "none";
 	modal8.style.display = "block";
 }
