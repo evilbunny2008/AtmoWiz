@@ -45,15 +45,15 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   `temperature` float NOT NULL DEFAULT 0,
   `humidity` tinyint(3) NOT NULL DEFAULT 0,
   `feelslike` float NOT NULL DEFAULT 0,
-  `rssi` tinyint(3) NOT NULL DEFAULT 0,
+  `rssi` tinyint(3) DEFAULT NULL,
   `airconon` tinyint(1) NOT NULL DEFAULT 0,
   `mode` enum('cool','heat','dry','auto','fan') NOT NULL DEFAULT 'cool',
-  `targetTemperature` tinyint(4) NULL DEFAULT 0,
+  `targetTemperature` tinyint(4) DEFAULT NULL,
   `fanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
   `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
   `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
   `cost` float NOT NULL DEFAULT 0,
-  `amps` float NOT NULL DEFAULT 0,
+  `watts` float DEFAULT 0
   PRIMARY KEY (`whentime`,`uid`) USING BTREE,
   KEY `cost` (`cost`)
 ) ENGINE=InnoDB;
@@ -71,30 +71,14 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `lowerTurnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
   `upperMode` enum('cool','heat','dry','auto','fan') NOT NULL DEFAULT 'cool',
   `lowerMode` enum('cool','heat','dry','auto','fan') NOT NULL DEFAULT 'cool',
-  `upperFanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
-  `lowerFanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
-  `upperSwing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
-  `lowerSwing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
-  `upperHorizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
-  `lowerHorizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
+  `upperFanLevel` varchar(20) NOT NULL DEFAULT 'medium',
+  `lowerFanLevel` varchar(20) NOT NULL DEFAULT 'medium',
+  `upperSwing` varchar(20) NOT NULL DEFAULT 'fixedTop',
+  `lowerSwing` varchar(20) NOT NULL DEFAULT 'fixedTop',
+  `upperHorizontalSwing` varchar(20) NOT NULL DEFAULT 'fixedCenter',
+  `lowerHorizontalSwing` varchar(20) NOT NULL DEFAULT 'fixedCenter',
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`uid`,`created`)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS `timesettings` (
-  `created` datetime NOT NULL,
-  `uid` varchar(8) NOT NULL,
-  `daysOfWeek` tinyint(3) NOT NULL,
-  `startTime` time NOT NULL,
-  `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
-  `mode` enum('Cool','Heat','Auto','Fan','Dry') NOT NULL DEFAULT 'Cool',
-  `targetTemperature` tinyint(4) DEFAULT 26,
-  `fanLevel` enum('quiet','low','medium','high','auto') NOT NULL DEFAULT 'medium',
-  `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
-  `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
-  `climateSetting` datetime DEFAULT NULL,
-  `enabled` tinyint(1) NOT NULL DEFAULT ,
-  PRIMARY KEY (`created`,`uid`) USING BTREE
 ) ENGINE=InnoDB;
 
 CREATE TABLE `timers` (
@@ -103,6 +87,22 @@ CREATE TABLE `timers` (
   `seconds` mediumint(5) NOT NULL DEFAULT 1200,
   `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
   PRIMARY KEY (`whentime`,`uid`) USING BTREE
+) ENGINE=InnoDB;
+
+CREATE TABLE `timesettings` (
+  `created` datetime NOT NULL,
+  `uid` varchar(8) NOT NULL,
+  `daysOfWeek` tinyint(3) NOT NULL,
+  `startTime` time NOT NULL,
+  `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
+  `mode` enum('Cool','Heat','Auto','Fan','Dry') NOT NULL DEFAULT 'Cool',
+  `targetTemperature` tinyint(4) DEFAULT 26,
+  `fanLevel` varchar(20) NOT NULL DEFAULT 'medium',
+  `swing` varchar(20) NOT NULL DEFAULT 'fixedTop',
+  `horizontalSwing` varchar(20) NOT NULL DEFAULT 'fixedCenter',
+  `climateSetting` datetime DEFAULT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`created`,`uid`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `weather` (
