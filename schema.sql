@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   `swing` enum('stopped','fixedTop','fixedMiddleTop','fixedMiddleBottom','fixedBottom','rangeFull') NOT NULL DEFAULT 'fixedTop',
   `horizontalSwing` enum('stopped','fixedLeft','fixedCenterLeft','fixedCenter','fixedCenterRight','fixedRight','rangeFull') NOT NULL DEFAULT 'fixedCenter',
   `cost` float NOT NULL DEFAULT 0,
-  `watts` float DEFAULT 0
+  `watts` float DEFAULT 0,
   PRIMARY KEY (`whentime`,`uid`) USING BTREE,
   KEY `cost` (`cost`)
 ) ENGINE=InnoDB;
