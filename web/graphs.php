@@ -556,17 +556,8 @@ function deleteSetting(created, uid)
 	</select>
 	<label for="upperTurnOnOff2"><b>Turn On/Off:</b></label>
 	<select class="myInputs2" id="upperTurnOnOff2" name="upperTurnOnOff">
-<?php
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'upperTurnOnOff'";
-	$dres = mysqli_query($link, $dquery);
-	while($drow = mysqli_fetch_assoc($dres))
-	{
-		$v = $drow['value'];
-		echo "\t\t<option value='$v'>$v</option>\n";
-	}
-?>
+		<option value='On'>On</option>
+		<option value='Off'>Off</option>
 	</select>
 	<label for="upperFanLevel2"><b>Fan Level:</b></label>
 	<select class="myInputs2" id='upperFanLevel2' name="upperFanLevel">
@@ -664,17 +655,8 @@ function deleteSetting(created, uid)
 	</select>
 	<label for="lowerTurnOnOff2"><b>Turn On/Off:</b></label>
 	<select class="myInputs2" id="lowerTurnOnOff2" name="lowerTurnOnOff">
-<?php
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'settings' AND COLUMN_NAME = 'lowerTurnOnOff'";
-	$dres = mysqli_query($link, $dquery);
-	while($drow = mysqli_fetch_assoc($dres))
-	{
-		$v = $drow['value'];
-		echo "\t\t<option value='$v'>$v</option>\n";
-	}
-?>
+		<option value='On'>On</option>
+		<option value='Off'>Off</option>
 	</select>
 	<label for="lowerFanLevel2"><b>Fan Level:</b></label>
 	<select class="myInputs2" id='lowerFanLevel2' name="lowerFanLevel">
@@ -815,17 +797,8 @@ function deleteTimeSetting(created, uid)
 	<div class="divLeft">
 	<label for="turnOnOff5"><b>Turn On/Off:</b></label>
 	<select class="myInputs5" id="turnOnOff5" name="turnOnOff">
-<?php
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timesettings' AND COLUMN_NAME = 'turnOnOff'";
-	$dres = mysqli_query($link, $dquery);
-	while($drow = mysqli_fetch_assoc($dres))
-	{
-		$v = $drow['value'];
-		echo "\t\t<option value='$v'>$v</option>\n";
-	}
-?>
+		<option value='On'>On</option>
+		<option value='Off'>Off</option>
 	</select>
 	<label for="mode5"><b>Mode:</b></label>
 	<select class="myInputs5" id="mode5" name="mode" onChange="populateSelect('5'); return false;">
@@ -972,17 +945,8 @@ document.forms['id05'].addEventListener('submit', (event) =>
 	<input type="text" id="timer8" name="timer" class="myInputs2" value="00:20" />
 	<label for="turnOnOff8"><b>Turn On/Off:</b></label>
 	<select class="myInputs8" id="turnOnOff8" name="turnOnOff">
-<?php
-	$dquery = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN ".
-			"(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 ".
-			"UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) tens WHERE TABLE_NAME = 'timers' AND COLUMN_NAME = 'turnOnOff'";
-	$dres = mysqli_query($link, $dquery);
-	while($drow = mysqli_fetch_assoc($dres))
-	{
-		$v = $drow['value'];
-		echo "\t\t<option value='$v'>$v</option>\n";
-	}
-?>
+		<option value='On'>On</option>
+		<option value='Off'>Off</option>
 	</select>
 	<button type="submit" id="submit8">Add</button>
     </div>

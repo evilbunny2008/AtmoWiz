@@ -439,7 +439,7 @@
 	else
 		$displayblock = "none";
 
-	$commandHeader .= "<li id='device-chooser' style='display:$displayblock;'><label for='devices'>Choose a Device:</label>\n";
+	$commandHeader .= "<li id='device-chooser' style='vertical-align: middle;display: block;height:65px;line-height:65px;display:$displayblock;'><label for='devices'>Choose a Device:</label>\n";
 	$commandHeader .= "<select class='commandListDD' name='devices' id='devices' onChange='changeAC(this.value); return false;'>\n";
 
 	while($row = mysqli_fetch_assoc($res))
@@ -449,11 +449,11 @@
 			$commandHeader .= " selected";
 		$commandHeader .= ">".$row['name']."</option>\n";
 	}
-	$commandHeader .= "</select><br/><br/><br/></li>\n";
+	$commandHeader .= "</select></li>\n";
 
 	mysqli_free_result($res);
 
-	$commandHeader .= "<li class='card-demo9'><label for='timePeriod'>Time Period:</label>\n";
+	$commandHeader .= "<li class='card-demo9' style='vertical-align: middle;display: block;height:65px;line-height:65px;'><label for='timePeriod'>Time Period:</label>\n";
 	$commandHeader .= "<select class='commandListDD' name='timePeriod' id='timePeriod' onChange='changeTP(this.value); return false;'>\n";
 	$commandHeader .= "<option value='day'";
 	if($period == 86400000)
@@ -471,7 +471,7 @@
 	if($period == 31536000000)
 		$commandHeader .= " selected";
 	$commandHeader .= ">Year</option>";
-	$commandHeader .= "</select><br/><br/></li>\n";
+	$commandHeader .= "</select></li>\n";
 
 	$commandHeader .= "<li>&nbsp;</li>\n";
 
