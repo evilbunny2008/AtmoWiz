@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
   PRIMARY KEY (`uid`,`created`)
 ) ENGINE=InnoDB;
 
-CREATE TABLE `timers` (
+CREATE TABLE IF NOT EXISTS `timers` (
   `whentime` datetime NOT NULL DEFAULT current_timestamp(),
   `uid` varchar(8) NOT NULL,
   `seconds` mediumint(5) NOT NULL DEFAULT 1200,
@@ -89,7 +89,7 @@ CREATE TABLE `timers` (
   PRIMARY KEY (`whentime`,`uid`) USING BTREE
 ) ENGINE=InnoDB;
 
-CREATE TABLE `timesettings` (
+CREATE TABLE IF NOT EXISTS `timesettings` (
   `created` datetime NOT NULL,
   `uid` varchar(8) NOT NULL,
   `daysOfWeek` tinyint(3) NOT NULL,
