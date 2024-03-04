@@ -680,7 +680,7 @@ function deleteSetting(created, uid)
 	<select class="myInputs2" id='lowerFanLevel2' name="lowerFanLevel">
 <?php
 	$defmode = 'cool';
-	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='fanLevel'";
+	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='fanLevels'";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
@@ -831,7 +831,7 @@ function deleteTimeSetting(created, uid)
 	<select class="myInputs5" id="mode5" name="mode" onChange="populateSelect('5'); return false;">
 <?php
 	$defmode = 'cool';
-	$query = "SELECT value FROM meta WHERE uid='${row['uid']}' AND mode='$defmode' AND keyval='mode'";
+	$query = "SELECT mode as value FROM meta WHERE uid='${row['uid']}' GROUP BY mode";
 	$dres = mysqli_query($link, $query);
 	while($drow = mysqli_fetch_assoc($dres))
 	{
