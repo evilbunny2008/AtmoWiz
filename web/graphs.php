@@ -56,7 +56,14 @@ body
 {
   font-family: Arial;
   font-size: 1rem;
-  scrollbar-width: thin;
+  scrollbar-color: #888 #ddd;
+  scrollbar-width: auto;
+}
+
+.commandList
+{
+  scrollbar-color: #888 #ddd;
+  scrollbar-width: auto;
 }
 
 ::-webkit-scrollbar
@@ -66,6 +73,7 @@ body
 
 ::-webkit-scrollbar-thumb
 {
+  background-color: #888;
   border-radius: 5px;
 }
 
@@ -1300,7 +1308,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 				if(entry.dataSeries.name == "Temperature [°C]")
 					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Power [W]")
-					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
+					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
@@ -1880,7 +1888,7 @@ function newSetting()
 
 	document.getElementById("upperTurnOnOff2").options[0].selected = 'selected';
 
-	document.getElementById("upperMode2").options[0].selected = 'selected';
+	document.getElementById("upperMode2").options[1].selected = 'selected';
 
 	document.getElementById("upperFanLevel2").options[2].selected = 'selected';
 	document.getElementById("upperSwing2").options[1].selected = 'selected';
@@ -1891,7 +1899,7 @@ function newSetting()
 
 	document.getElementById("lowerTurnOnOff2").options[0].selected = 'selected';
 
-	document.getElementById("lowerMode2").options[0].selected = 'selected';
+	document.getElementById("lowerMode2").options[1].selected = 'selected';
 
 	document.getElementById("lowerFanLevel2").options[2].selected = 'selected';
 	document.getElementById("lowerSwing2").options[1].selected = 'selected';
@@ -1899,9 +1907,6 @@ function newSetting()
 
 	document.getElementById("enabled2").checked = true;
 	document.getElementById("submitAddUpdate2").innerHTML = "Add Climate Setting";
-
-	populateULSelect('upper', 'cool');
-	populateULSelect('lower', 'cool');
 
 	dd = document.getElementById("devices");
 	document.getElementById("id03-device-title").innerHTML = dd.options[dd.selectedIndex].text;
@@ -2070,7 +2075,7 @@ function newTimeSetting()
 		dd.options[i].selected = 'selected';
 
 	document.getElementById("turnOnOff5").options[0].selected = 'selected';
-	document.getElementById("mode5").options[0].selected = 'selected';
+	document.getElementById("mode5").options[1].selected = 'selected';
 	document.getElementById("targetTemperature5").options[8].selected = 'selected';
 
 	document.getElementById("fanLevel5").options[2].selected = 'selected';
