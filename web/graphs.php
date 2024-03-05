@@ -42,39 +42,28 @@
 <style>
 *
 {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scrollbar-color: #888 #ddd;
+  scrollbar-width: thin;
 }
-/*
-@font-face {
-  font-family: StintUltraCondensed;
-  src: url('assets/StintUltraCondensed-Regular.ttf') format('truetype');
-}
-*/
+
 body
 {
   font-family: Arial;
   font-size: 1rem;
-  scrollbar-color: #888 #ddd;
-  scrollbar-width: auto;
-}
-
-.commandList
-{
-  scrollbar-color: #888 #ddd;
-  scrollbar-width: auto;
 }
 
 ::-webkit-scrollbar
 {
-  width: 10px;
+  width: 20px;
 }
 
 ::-webkit-scrollbar-thumb
 {
   background-color: #888;
-  border-radius: 5px;
+  border-radius: 10px;
 }
 
 nav

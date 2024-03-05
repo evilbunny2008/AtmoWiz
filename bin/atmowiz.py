@@ -658,14 +658,14 @@ def getLastCommands(mydb, nb = 5):
                 if(e.args[0] == 1265):
                     table_name = 'commands'
                     field = e.args[1].split("'")[1]
-                    updateEnum(mydb, table_name, field)
+                    updateEnum(mydb, table_name, field, acState)
                     doLog("debug", _sqlquery1 % values)
                     cursor.execute(_sqlquery1, values)
                     mydb.commit()
 
     mydb.commit()
 
-def updateEnum(mydb, table_name, field):
+def updateEnum(mydb, table_name, field, acState):
     cursor = mydb.cursor()
     query = "SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING(COLUMN_TYPE, 7, LENGTH(COLUMN_TYPE) - 8), \"','\", 1 + units.i + tens.i * 10) , \"','\", -1) AS value FROM INFORMATION_SCHEMA.COLUMNS CROSS JOIN " + \
             "(SELECT 0 AS i UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) units CROSS JOIN (SELECT 0 AS i UNION SELECT 1 " + \
@@ -1629,7 +1629,7 @@ if __name__ == "__main__":
                         if(e.args[0] == 1265):
                             table_name = 'sensibo'
                             field = e.args[1].split("'")[1]
-                            updateEnum(mydb, table_name, field)
+                            updateEnum(mydb, table_name, field, ac_state)
                             doLog("debug", _sqlquery3 % values)
                             cursor.execute(_sqlquery3, values)
                             mydb.commit()
