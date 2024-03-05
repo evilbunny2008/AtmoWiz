@@ -533,77 +533,95 @@ def calcFL(mydb, country):
         pass
 
 def doHistoricalMeasurements(mydb, days = 1):
-    doLog("info", "Getting %d days of historical data from Sensibo.com..." % days)
-    cursor = mydb.cursor()
+    try:
+        doLog("info", "Getting %d days of historical data from Sensibo.com..." % days)
+        cursor = mydb.cursor()
 
-    for podUID in uidList:
-        historicalMeasurements = client.pod_get_past(podUID, days)
-        if(historicalMeasurements == None):
-            continue
-
-        historicalMeasurements = historicalMeasurements['result']
-
-        pod_measurement40 = client.pod_all_stats(podUID, 40)
-        if(pod_measurement40 == None):
-            continue
-
-        pod_measurement40 = pod_measurement40['result']
-
-        rc = -1
-        for i in range(len(historicalMeasurements['temperature']) - 1, 0, -1):
-            rc += 1
-            temp = historicalMeasurements['temperature'][i]['value']
-            humid = historicalMeasurements['humidity'][i]['value']
-
-            if(not validateValues(temp, humid)):
-                doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (temp, humid))
+        for podUID in uidList:
+            historicalMeasurements = client.pod_get_past(podUID, days)
+            if(historicalMeasurements == None):
                 continue
 
-            if(rc < len(pod_measurement40)):
-                feelslike = pod_measurement40[rc]['device']['measurements']['feelsLike']
-                rssi = pod_measurement40[rc]['device']['measurements']['rssi']
-                airconon = pod_measurement40[rc]['device']['acState']['on']
-                mode = pod_measurement40[rc]['device']['acState']['mode']
-                if(mode != 'fan'):
-                    targetTemperature = pod_measurement40[rc]['device']['acState']['targetTemperature']
-                    temperatureUnit = pod_measurement40[rc]['device']['acState']['temperatureUnit']
+            historicalMeasurements = historicalMeasurements['result']
+
+            pod_measurement40 = client.pod_all_stats(podUID, 40)
+            if(pod_measurement40 == None):
+                continue
+
+            pod_measurement40 = pod_measurement40['result']
+
+            rc = -1
+            for i in range(len(historicalMeasurements['temperature']) - 1, 0, -1):
+                rc += 1
+                temp = historicalMeasurements['temperature'][i]['value']
+                humid = historicalMeasurements['humidity'][i]['value']
+
+                if(not validateValues(temp, humid)):
+                    doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (temp, humid))
+                    continue
+
+                if(rc < len(pod_measurement40)):
+                    feelslike = pod_measurement40[rc]['device']['measurements']['feelsLike']
+                    rssi = pod_measurement40[rc]['device']['measurements']['rssi']
+                    airconon = pod_measurement40[rc]['device']['acState']['on']
+                    mode = pod_measurement40[rc]['device']['acState']['mode']
+                    if(mode != 'fan'):
+                        targetTemperature = pod_measurement40[rc]['device']['acState']['targetTemperature']
+                        temperatureUnit = pod_measurement40[rc]['device']['acState']['temperatureUnit']
+                    else:
+                        targetTemperature = None
+                        temperatureUnit = None
+
+                    fanLevel = pod_measurement40[rc]['device']['acState']['fanLevel']
+                    swing = pod_measurement40[rc]['device']['acState']['swing']
+                    horizontalSwing = pod_measurement40[rc]['device']['acState']['horizontalSwing']
                 else:
-                    targetTemperature = None
-                    temperatureUnit = None
+                    feelslike = None
+                    rssi = 0
+                    airconon = 0
+                    mode = 'cool'
+                    targetTemperature = 0
+                    fanLevel = 'medium'
+                    swing = 'fixedTop'
+                    horizontalSwing = 'fixedCenter'
 
-                fanLevel = pod_measurement40[rc]['device']['acState']['fanLevel']
-                swing = pod_measurement40[rc]['device']['acState']['swing']
-                horizontalSwing = pod_measurement40[rc]['device']['acState']['horizontalSwing']
-            else:
-                feelslike = None
-                rssi = 0
-                airconon = 0
-                mode = 'cool'
-                targetTemperature = 0
-                fanLevel = 'medium'
-                swing = 'fixedTop'
-                horizontalSwing = 'fixedCenter'
+                sstring = datetime.strptime(historicalMeasurements['temperature'][i]['time'], fromfmt2)
+                utc = sstring.replace(tzinfo=from_zone)
+                localzone = utc.astimezone(to_zone)
+                sdate = localzone.strftime(fmt)
+                values = (sdate, podUID)
+                #doLog("debug", _sqlselect3 % values)
+                cursor.execute(_sqlselect3, values)
+                row = cursor.fetchone()
+                if(row):
+                    continue
 
-            sstring = datetime.strptime(historicalMeasurements['temperature'][i]['time'], fromfmt2)
-            utc = sstring.replace(tzinfo=from_zone)
-            localzone = utc.astimezone(to_zone)
-            sdate = localzone.strftime(fmt)
-            values = (sdate, podUID)
-            #doLog("debug", _sqlselect3 % values)
-            cursor.execute(_sqlselect3, values)
-            row = cursor.fetchone()
-            if(row):
-                continue
+                doLog("debug", "rc = %d, i = %d" % (rc, i))
+                doLog("debug", historicalMeasurements['temperature'][i])
+                doLog("debug", historicalMeasurements['humidity'][i])
 
-            doLog("debug", "rc = %d, i = %d" % (rc, i))
-            doLog("debug", historicalMeasurements['temperature'][i])
-            doLog("debug", historicalMeasurements['humidity'][i])
-
-            at = calcAT(temp, humid, country, feelslike)
-            values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, None)
+                at = calcAT(temp, humid, country, feelslike)
+                values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, None)
+                doLog("debug", _sqlquery3 % values)
+                cursor.execute(_sqlquery3, values)
+                mydb.commit()
+    except MySQLdb._exceptions.DataError as e:
+        if(e.args[0] == 1265):
+            table_name = 'sensibo'
+            field = e.args[1].split("'")[1]
+            acState = {}
+            acState['on'] = airconon
+            acState['mode'] = mode
+            acState['targetTemperature'] = targetTemperature
+            acState['temperatureUnit'] = _corf
+            acState['fanLevel'] = fanLevel
+            acState['swing'] = swing
+            acState['horizontalSwing'] = horizontalSwing
+            updateEnum(mydb, table_name, field, acState)
             doLog("debug", _sqlquery3 % values)
             cursor.execute(_sqlquery3, values)
             mydb.commit()
+
 
 def getLastCommands(mydb, nb = 5):
     for podUID in uidList:
@@ -684,7 +702,7 @@ def updateEnum(mydb, table_name, field, acState):
     enum_values = ', '.join(["'{}'".format(value) for value in values])
     alter_query = f"ALTER TABLE `{table_name}` CHANGE `{field}` `{field}` ENUM({enum_values}) NOT NULL DEFAULT '{default}'"
     doLog("info", alter_query)
-    cursor.execute(query)
+    cursor.execute(alter_query)
     mydb.commit()
 
 def getObservations():
