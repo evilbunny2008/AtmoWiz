@@ -1124,6 +1124,14 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			markerSize: 0,
 			showInLegend: true,
 			color: "<?=$outTempColour?>",
+		},{
+			type: "line",
+			axisYType: "secondary",
+			name: "Humidity [%]",
+			xValueType: "dateTime",
+			markerSize: 0,
+			showInLegend: true,
+			color: "<?=$outHumidColour?>",
 		}
 	],
 });
@@ -1691,6 +1699,7 @@ console.log("Update should have happened.");
 		chart4.options.data[0].dataPoints = content['dataPoints7'];
 		chart4.options.data[1].dataPoints = content['dataPoints6'];
 		chart1.options.data[3].dataPoints = content['dataPoints7'];
+		chart1.options.data[4].dataPoints = content['dataPoints8'];
 
 		if(content['showChart4'])
 			document.getElementById("chartContainer4").style.display = 'block';

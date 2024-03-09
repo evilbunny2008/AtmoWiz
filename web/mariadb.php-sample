@@ -18,6 +18,7 @@
 	$costColour = "Steelblue";
 	$powerColour = "Steelblue";
 	$outTempColour = "DarkMagenta";
+	$outHumidColour = "DeepPink";
 
 	session_start();
 
