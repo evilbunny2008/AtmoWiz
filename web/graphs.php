@@ -1117,6 +1117,13 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			markerSize: 0,
 			showInLegend: true,
 			color: "<?=$tempColour?>",
+		},{
+			type: "line",
+			name: "Temperature [°C]",
+			xValueType: "dateTime",
+			markerSize: 0,
+			showInLegend: true,
+			color: "<?=$outTempColour?>",
 		}
 	],
 });
@@ -1344,7 +1351,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			color: "<?=$FLColour?>",
+			color: "<?=$outTempColour?>",
 		},{
 			type: "line",
 			axisYType: "secondary",
@@ -1683,6 +1690,7 @@ console.log("Update should have happened.");
 		chart3.options.data[0].dataPoints = content['dataPoints5'];
 		chart4.options.data[0].dataPoints = content['dataPoints7'];
 		chart4.options.data[1].dataPoints = content['dataPoints6'];
+		chart1.options.data[3].dataPoints = content['dataPoints7'];
 
 		if(content['showChart4'])
 			document.getElementById("chartContainer4").style.display = 'block';

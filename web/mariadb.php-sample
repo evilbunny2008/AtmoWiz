@@ -17,6 +17,7 @@
 	$wifiColour = "Steelblue";
 	$costColour = "Steelblue";
 	$powerColour = "Steelblue";
+	$outTempColour = "DarkMagenta";
 
 	session_start();
 
