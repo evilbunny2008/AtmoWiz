@@ -378,7 +378,7 @@ td
     <div class="child" style='left:40%;'><img onClick="prevDay(); return false;" style='height:40px;' src='assets/left.png' /></div>
     <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='assets/right.png' /></div>
     <div id="chartContainer" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
-    <div style="height:calc(100vh / 3 * 2 - 20px); width:100%; background:#fff;">
+    <div style="height:calc(100vh / 3 * 2 - 20px); width:calc(100% - 25px); background:#fff;">
       <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 20px);"></div>
       <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 20px);"></div>
     </div>
