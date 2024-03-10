@@ -577,7 +577,7 @@ def doHistoricalMeasurements(mydb, days = 1):
                     horizontalSwing = pod_measurement40[rc]['device']['acState']['horizontalSwing']
                 else:
                     feelslike = None
-                    rssi = 0
+                    rssi = None
                     airconon = 0
                     mode = 'cool'
                     targetTemperature = 0
