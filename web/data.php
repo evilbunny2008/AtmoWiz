@@ -190,10 +190,15 @@
 						else
 							$row2['watts'] = null;
 
+						if($row2['rssi'] != null)
+							$row2['rssi'] = intval($row2['rssi']);
+						else
+							$row2['rssi'] = null;
+
 						$dataPoints1[] = array('x' => doubleval($row2['whentimes']), 'y' => floatval($row2['temperature']));
 						$dataPoints2[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['humidity']));
 						$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => round(floatval($row2['feelslike']) * 10.0) / 10.0);
-						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => intval($row2['rssi']));
+						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['rssi']);
 						$dataPoints6[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['watts']);
 					}
 				}
@@ -289,7 +294,13 @@
 
 				$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['humidity']));
 				$dataPoints3[] = array('x' => doubleval($row['whentimes']), 'y' => round(floatval($row['feelslike']) * 10.0) / 10.0);
-				$dataPoints4[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['rssi']));
+
+				if($row['rssi'] != null)
+					$row['rssi'] = intval($row['rssi']);
+				else
+					$row['rssi'] = null;
+
+				$dataPoints4[] = array('x' => doubleval($row['whentimes']), 'y' => $row['rssi']);
 
 				if($row['watts'] != null)
 					$row['watts'] = intval($row['watts']);
