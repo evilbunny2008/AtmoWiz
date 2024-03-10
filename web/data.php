@@ -429,10 +429,10 @@
 	{
 		$commandHeader .= "<ul>\n";
 		$commandHeader .= "<li style='text-align:center'>\n";
-		$commandHeader .= "<img id='card-demo' style='width:40px;' onClick='showTimers(); return false;' src='assets/hourglass.png' title='Timer' class='card-demo1' />\n";
+		$commandHeader .= "<img id='card-demo' style='width:40px;' onClick='settings(); return false;' src='assets/home-settings.png' title='Show AirCon Settings' class='card-demo1' />\n";
 		$commandHeader .= "<img style='width:40px;' onClick='showSettings(); return false;' src='assets/wand.png' title='Show Climate Settings' class='card-demo2' />\n";
 		$commandHeader .= "<img style='width:40px;' onClick='showTimeSettings(); return false;' src='assets/watch.png' title='Show Time Based Settings' class='card-demo3' />\n";
-		$commandHeader .= "<img style='width:40px;' onClick='settings(); return false;' src='assets/home-settings.png' title='Show AirCon Settings' class='card-demo4' />\n";
+		$commandHeader .= "<img style='width:40px;' onClick='showTimers(); return false;' src='assets/hourglass.png' title='Timer' class='card-demo4' />\n";
 		$commandHeader .= "</li>\n";
 
 		$commandHeader .= "<li style='text-align:center'>";

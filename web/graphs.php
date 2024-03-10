@@ -2134,7 +2134,7 @@ function delayLoading()
 		introJs().setOptions(
 		{
 			showBullets: false,
-			dontShowAgain: true,
+			dontShowAgain: false,
 			steps: [
 <?php
 	if($_SESSION['rw'])
@@ -2142,7 +2142,7 @@ function delayLoading()
 ?>
 			{
 				element: document.querySelector('.card-demo1'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="assets/hourglass.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you set a simple timer to turn your aircon on or off</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/home-settings.png" style="float:left;margin-right:20px;" width="50px"><p>Air Conditioner Settings screen allows you to adjust the mode, the preferred temperature, the fan speed and swing settings.</p></div>',
 				position: 'bottom'
 			},
 			{
@@ -2157,7 +2157,7 @@ function delayLoading()
 			},
 			{
 				element: document.querySelector('.card-demo4'),
-				intro: '<div style="overflow:hidden;width:250px"><img src="assets/home-settings.png" style="float:left;margin-right:20px;" width="50px"><p>Air Conditioner Settings screen allows you to adjust temperature and fan speed to and modes</p></div>',
+				intro: '<div style="overflow:hidden;width:250px"><img src="assets/hourglass.png" style="float:left;margin-right:20px;" width="50px"><p>This lets you set a simple timer to turn your aircon on or off</p></div>',
 				position: 'bottom'
 			},
 			{
