@@ -634,7 +634,11 @@ def doHistoricalMeasurements(mydb, days = 1):
 
 def getLastCommands(mydb, nb = 5):
     for podUID in uidList:
-        lastCommands = client.pod_status(podUID, nb)['result']
+        lastCommands = client.pod_status(podUID, nb)
+        if(lastCommands == None):
+            continue
+
+        lastCommands = lastCommands['result']
         if(lastCommands == None):
             continue
 
