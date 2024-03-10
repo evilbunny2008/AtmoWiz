@@ -2134,7 +2134,7 @@ function delayLoading()
 		introJs().setOptions(
 		{
 			showBullets: false,
-			dontShowAgain: false,
+			dontShowAgain: true,
 			steps: [
 <?php
 	if($_SESSION['rw'])
