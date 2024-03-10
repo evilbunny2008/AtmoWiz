@@ -589,11 +589,20 @@ def doHistoricalMeasurements(mydb, days = 1):
                 utc = sstring.replace(tzinfo=from_zone)
                 localzone = utc.astimezone(to_zone)
                 sdate = localzone.strftime(fmt)
+
                 values = (sdate, podUID)
-                #doLog("debug", _sqlselect3 % values)
                 cursor.execute(_sqlselect3, values)
                 row = cursor.fetchone()
                 if(row):
+                    # Ignoring update since we already have that record
+                    continue
+
+                query = "SELECT 1 FROM sensibo WHERE ABS(TIMESTAMPDIFF(SECOND, %s, whentime)) < 30 AND uid=%s"
+                doLog("debug", query % values)
+                cursor.execute(query, values)
+                row = cursor.fetchone()
+                if(row):
+                    # Ignoring update since we have a record within 30s
                     continue
 
                 doLog("debug", "rc = %d, i = %d" % (rc, i))
