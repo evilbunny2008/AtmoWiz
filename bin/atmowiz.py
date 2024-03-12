@@ -609,7 +609,10 @@ def doHistoricalMeasurements(mydb, days = 1):
                 doLog("debug", historicalMeasurements['temperature'][i])
                 doLog("debug", historicalMeasurements['humidity'][i])
 
-                at = calcAT(temp, humid, country, feelslike)
+                if(country != None):
+                    at = calcAT(temp, humid, country, feelslike)
+                else:
+                    at = None
                 values = (sdate, podUID, temp, humid, at, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, None)
                 doLog("debug", _sqlquery3 % values)
                 cursor.execute(_sqlquery3, values)

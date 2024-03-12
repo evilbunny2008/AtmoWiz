@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `sensibo` (
   `uid` varchar(8) NOT NULL DEFAULT '',
   `temperature` float NOT NULL DEFAULT 0,
   `humidity` tinyint(3) NOT NULL DEFAULT 0,
-  `feelslike` float NOT NULL DEFAULT 0,
+  `feelslike` float DEFAULT NULL,
   `rssi` tinyint(3) DEFAULT NULL,
   `airconon` tinyint(1) NOT NULL DEFAULT 0,
   `mode` enum('cool','heat','dry','auto','fan') NOT NULL DEFAULT 'cool',
