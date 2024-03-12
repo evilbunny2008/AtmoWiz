@@ -1055,6 +1055,10 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Power Usage [W]")
 					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
+				else if(entry.dataSeries.name == "Outdoor Temperature [°C]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Outdoor Humidity [%]")
+					content += "<div style='color:<?=$outHumidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
@@ -1119,7 +1123,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			color: "<?=$tempColour?>",
 		},{
 			type: "line",
-			name: "Temperature [°C]",
+			name: "Outdoor Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1127,7 +1131,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 		},{
 			type: "line",
 			axisYType: "secondary",
-			name: "Humidity [%]",
+			name: "Outdoor Humidity [%]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1309,10 +1313,10 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataSeries.name == "Temperature [°C]")
-					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				if(entry.dataSeries.name == "Outdoor Temperature [°C]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Power [W]")
-					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
+					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
@@ -1355,7 +1359,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	[
 		{
 			type: "line",
-			name: "Temperature [°C]",
+			name: "Outdoor Temperature [°C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1367,7 +1371,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
-			color: "<?=$humidColour?>",
+			color: "<?=$powerColour?>",
 		}
 	],
 });
@@ -1479,7 +1483,8 @@ async function toggleAC()
 
 	const img = document.getElementById("onoff");
 	const imgsrc = img.src.split('/');
-	if(imgsrc[imgsrc.length - 1] == 'assets/on.png')
+
+	if(imgsrc[imgsrc.length - 1] == 'on.png')
 		img.src = "assets/off.png";
 	else
 		img.src = "assets/on.png";

@@ -498,7 +498,7 @@
 
 	$commandHeader .= "<li>&nbsp;</li>\n";
 
-	$commandHeader .= "<li class='card-demo10' style='text-align:center;'><u><b>Current Conditions</b></u></li>\n";
+	$commandHeader .= "<li class='card-demo10' style='text-align:center;cursor:pointer;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;'><u><b>Current Conditions</b></u></li>\n";
 	$commandHeader .= "<li class='card-demo10'><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
 	$commandHeader .= "<li class='card-demo10'>&nbsp;</li>\n";
 

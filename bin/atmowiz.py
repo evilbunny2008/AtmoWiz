@@ -1615,8 +1615,8 @@ if __name__ == "__main__":
                         doLog("error", "Temp (%f) or Humidity (%d) out of bounds." % (measurements['temperature'], measurements['humidity']))
                         continue
 
+                    doLog("info", "secondsAgo = %d" % measurements['time']['secondsAgo'])
                     if(secondsAgo == -1):
-                        #doLog("debug", "secondsAgo = %d" % measurements['time']['secondsAgo'])
                         secondsAgo = 90 - measurements['time']['secondsAgo']
 
                     sstring = datetime.strptime(measurements['time']['time'], fromfmt1)
@@ -1680,7 +1680,7 @@ if __name__ == "__main__":
                 if(secondsAgo > 90):
                     secondsAgo = 90
 
-                timeToWait = secondsAgo + random.randint(10, 20)
+                timeToWait = secondsAgo + 5
 
                 doLog("debug", "Closing connection to MariaDB")
                 mydb.close()
