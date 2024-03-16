@@ -385,9 +385,18 @@ def calcWatts(mode, targetTemperature, temperature):
         return (heat * 1000 / COP + -88.16448331216453 * targetTemperature + 166.64969092512575 * (targetTemperature - temperature)) / 1000
 
     if(mode == 'cool' or mode == 'dry'):
-        return (cool * 1000 / EER + -88.16448331216453 * targetTemperature + 166.64969092512575 * (temperature - targetTemperature)) / 1000
+        intercept = 1738.25129510999
+        coef_target_temp = -44.560079227987025
+        coef_temp_diff = 148.431451497871
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool * 1000 / EER))
+        doLog("info", f"ret = {ret}")
+        if(ret <= cool * 1000 / EER * 0.05):
+            ret = cool * 1000 / EER * 0.05
+        ret = ret / 1000
+        doLog("info", f"ret = {ret}")
+        return ret
 
-    # Return 10 watts as a minimum
+    # Return 10 watts as a minimum to stop cost loops
     return 0.010
 
 def calcCost(mydb):
@@ -502,19 +511,19 @@ def calcFL(mydb, country):
         cursor1 = mydb.cursor()
 
         if(_corf == 'C' and country == 'au'):
-            query = "UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1) WHERE feelslike=-1"
+            query = "UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1) WHERE feelslike IS NULL"
             doLog("debug", query)
             cursor1.execute(query)
             mydb.commit()
             return
         else:
-            query = "SELECT whentime, uid, temperature, humidity FROM sensibo WHERE feelslike=-1"
+            query = "SELECT whentime, uid, temperature, humidity FROM sensibo WHERE feelslike IS NULL"
             doLog("debug", query)
             cursor1.execute(query)
             cursor2 = mydb.cursor()
             for (whentime, podUID, temp, humid) in cursor1:
                 at = calcAT(temp, humid, country, None)
-                query = "UPDATE sensibo SET feelslike=%s WHERE whentime=%s AND uid=%s AND feelslike=-1"
+                query = "UPDATE sensibo SET feelslike=%s WHERE whentime=%s AND uid=%s AND feelslike IS NULL"
                 values = (at, whentime, podUID)
                 doLog("debug", query % values)
                 cursor2.execute(query, values)
@@ -1329,6 +1338,8 @@ if __name__ == "__main__":
                         help='Path to config file, /etc/atmowiz.conf is the default')
     parser.add_argument('--reCalcCost', action='store_true', help='Recalc the cost of running the aircon after updating power prices')
     parser.add_argument('--reCalcFL', action='store_true', help='Recalc the feels like temperature')
+    parser.add_argument('--reCalcFromDate', type = str, help='Only recalc from eg 2024-03-01, if not set means do all')
+    parser.add_argument('--reCalcToDate', type = str, help='Only recalc to eg 2024-03-01, if not set means do all')
     args = parser.parse_args()
 
     if(not os.path.exists(args.config) or not os.path.isfile(args.config)):
@@ -1482,7 +1493,11 @@ if __name__ == "__main__":
     if(args.reCalcCost):
         try:
             cursor = mydb.cursor()
-            query = "UPDATE sensibo SET cost=0.0"
+            query = "UPDATE sensibo SET cost=0.0 WHERE 1"
+            if(args.reCalcFromDate):
+                query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
+            if(args.reCalcToDate):
+                query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
             doLog("debug", query)
             cursor.execute(query)
             mydb.commit()
@@ -1503,7 +1518,11 @@ if __name__ == "__main__":
     if(args.reCalcFL):
         try:
             cursor = mydb.cursor()
-            query = "UPDATE sensibo SET feelslike=-1"
+            query = "UPDATE sensibo SET feelslike=NULL WHERE 1"
+            if(args.reCalcFromDate):
+                query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
+            if(args.reCalcToDate):
+                query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
             doLog("debug", query)
             cursor.execute(query)
             mydb.commit()
