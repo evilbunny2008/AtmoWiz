@@ -381,13 +381,21 @@ def getWatts():
 
 def calcWatts(mode, targetTemperature, temperature):
     if(mode == 'heat'):
-        # Todo, this needs to be updated when we get useful values
-        return (heat * 1000 / COP + -88.16448331216453 * targetTemperature + 166.64969092512575 * (targetTemperature - temperature)) / 1000
+        intercept = -5648.26
+        coef_target_temp = 233.70
+        coef_temp_diff = -201.43
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat * 1000 / COP))
+        doLog("info", f"ret = {ret}")
+        if(ret <= heat * 1000 / COP * 0.05):
+            ret = heat * 1000 / COP * 0.05
+        ret = ret / 1000
+        doLog("info", f"ret = {ret}")
+        return ret
 
     if(mode == 'cool' or mode == 'dry'):
-        intercept = 1738.25129510999
-        coef_target_temp = -44.560079227987025
-        coef_temp_diff = 148.431451497871
+        intercept = 1494.60
+        coef_target_temp = -35.17
+        coef_temp_diff = 143.50
         ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool * 1000 / EER))
         doLog("info", f"ret = {ret}")
         if(ret <= cool * 1000 / EER * 0.05):

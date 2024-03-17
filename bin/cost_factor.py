@@ -72,7 +72,7 @@ for k in regressors:
     predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
     print("Cool Predicted Watts:", predicted_watts)
 
-    exit(0)
+    break
 
 query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='heat'"
 heat_df = pd.read_sql(query, engine)
@@ -98,7 +98,9 @@ for k in regressors:
     coef_temp_diff = model.coef_[1]
 
     predicted_watts = predict_watts(float(sys.argv[1]), float(sys.argv[2]))
-    print("Cool Predicted Watts:", predicted_watts)
+    print("heat Predicted Watts:", predicted_watts)
+
+    break
 
 exit(0)
 

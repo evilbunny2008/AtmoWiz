@@ -22,7 +22,7 @@
 	}
 
 	$url = "https://home.sensibo.com/api/v2/pods/".$_REQUEST['uid']."/acStates?apiKey=".$apikey."&limit=1&fields=acState";
-	$opts = array('http' => array('method'=>"GET", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'timeout' => 15));
+	$opts = array('http' => array('method'=>"GET", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'timeout' => 30));
 	$context = stream_context_create($opts);
 	$ret = @file_get_contents($url, false, $context);
 
@@ -40,7 +40,7 @@
 	$url = "https://home.sensibo.com/api/v2/pods/".$_REQUEST['uid']."/acStates/on?apiKey=".$apikey;
 
 	$body = json_encode(array('newValue' => $on));
-	$opts = array('http' => array('method'=>"PATCH", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 15));
+	$opts = array('http' => array('method'=>"PATCH", 'header' => "Accept: application/json\r\nContent-Type: application/json\r\n", 'content' => $body, 'timeout' => 30));
 	$context = stream_context_create($opts);
 	$ret = @file_get_contents($url, false, $context);
 
