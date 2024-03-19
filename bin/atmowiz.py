@@ -379,70 +379,75 @@ def getWatts():
 
     return None
 
-def calcWatts(uid, mode, targetTemperature, temperature):
+def calcWatts(podUID, mode, targetTemperature, temperature):
 
     if (simple_calc):
 
         simpleBias = 2
 
-        H_tMAX = 30
+        ttMAX = 0
 
-        H_tMin = 16
+        ttMIN = 50
 
         cursor = mydb.cursor()
-        Q1 = "SELECT * FROM meta WHERE uid = %s AND mode = %s AND keyval= temperatures"
-        values = (uid,mode )
-        doLog("debug", query % values)
+        Q1 = "SELECT * FROM meta WHERE uid = %s AND mode = %s AND keyval= %s"
+        values = (podUID,mode,"temperatures" )
+        doLog("debug", Q1 % values)
         cursor.execute(Q1, values)
-        row = cursor.fetchone()
+        result = cursor.fetchall()
 
-        if(row):
-            doLog("debug", row)
-            continue
+        if(result):
+            doLog("debug", result)
+
+            for value in result:
+                if int(value[3]) > ttMAX:
+                    ttMAX = int(value[3])
+                if int(value[3]) < ttMIN:
+                    ttMIN = int(value[3])
+
     
         if(mode == 'heat'):
 
             #IF(targetTemp+bias>temp,IF(targetTemp-temp+bias>=(H_tMax-H_tMin),(P_Heat*1000/cop)
             # ,(P_Heat*1000/cop)*((targetTemp-temp+bias)/(H_tMax-H_tMin))),H_MIN)
 
-            if((targetTemperature-temperature+simpleBias)>=(H_tMax-H_tMin)):
-               # full on until we get into range of AC unit
+            if((targetTemperature-temperature+simpleBias)>=(ttMAX-ttMIN)):
+               # full on until we get into target temp range of AC unit
                ret = (heat*1000/COP)
 
             else:
                 if(targetTemperature+simpleBias > temperature):
-                (heat*1000/COP)*((targetTemperature-temperature+simpleBias)/(H_tMax-H_tMin))
+                    ret =  (heat*1000/COP)*((targetTemperature-temperature+simpleBias)/(ttMAX-ttMIN))
 
-                #else:
-                #    ret = (heat * 1000 / COP * 0.05 )   
+                else:
+                    ret = (heat * 1000 / COP * 0.05 )
 
-
-            ret = ((heat/COP) * coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat * 1000 / COP))
-            doLog("info", f"ret = {ret}")
-            if(ret <= heat * 1000 / COP * 0.05):
-                ret = heat * 1000 / COP * 0.05
-            ret = ret / 1000
-            doLog("info", f"ret = {ret}")
-            return ret
+            return ret           
 
         if(mode == 'cool' or mode == 'dry'):
+           
+            #=IF(temp>targetTemp+bias,IF(temp-tMIN+bias>=(tMax-tMin),(P_Cool*1000/eer),(P_Cool*1000/eer)*((temp-D$8+bias)/(C_tMax-C_tMin))),C_MIN)
 
-            ret = ((cool/EER) * coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool * 1000 / EER))
-            doLog("info", f"ret = {ret}")
-            if(ret <= cool * 1000 / EER * 0.05):
-                ret = cool * 1000 / EER * 0.05
-            ret = ret / 1000
-            doLog("info", f"ret = {ret}")
-            return ret
+            if((temperature-targetTemperature+simpleBias)>=(ttMAX-ttMIN)):
+               # full on until we get into target temp range of AC unit
+               ret = (cool*1000/EER)
 
+            else:
+                if(temperature+simpleBias > targetTemperature):
+                    ret =  (cool*1000/COP)*((temperature-targetTemperature+simpleBias)/(ttMAX-ttMIN))
 
+                else:
+                    ret = (heat * 1000 / COP * 0.05 )             
 
-    else:    
+            return ret 
+
+    else: #not simple cal
+     
         if(mode == 'heat'):
             intercept = -5648.26
             coef_target_temp = 233.70
             coef_temp_diff = -201.43
-            ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat * 1000 / COP))
+            ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature))) / ((10300 / 3.39) * (heat * 1000 / COP))
             doLog("info", f"ret = {ret}")
             if(ret <= heat * 1000 / COP * 0.05):
                 ret = heat * 1000 / COP * 0.05
@@ -454,7 +459,7 @@ def calcWatts(uid, mode, targetTemperature, temperature):
             intercept = 1494.60
             coef_target_temp = -35.17
             coef_temp_diff = 143.50
-            ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool * 1000 / EER))
+            ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature))) / ((9500 / 3.49) * (cool * 1000 / EER))
             doLog("info", f"ret = {ret}")
             if(ret <= cool * 1000 / EER * 0.05):
                 ret = cool * 1000 / EER * 0.05
@@ -475,7 +480,7 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry')"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            kw = calcWatts(uid, mode, targetTemperature, temperature)
+            kw = calcWatts(podUID, mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
                 cost = kw * offpeak * (90 / 3600)
             else:
@@ -498,7 +503,7 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            kw = calcWatts(uid, mode, targetTemperature, temperature)
+            kw = calcWatts(podUID, mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
                 cost = kw * offpeak * (90 / 3600)
             else:
