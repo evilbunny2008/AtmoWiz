@@ -379,7 +379,33 @@ def getWatts():
 
     return None
 
-def calcWatts(mode, targetTemperature, temperature):
+def calcWatts(podUID, mode, targetTemperature, temperature):
+    simpleBias = 2
+
+    if(_corf == 'F'):
+        targetTemperature = (targetTemperature - 32) * 5 / 9
+        temperature = (temperature - 32) * 5 / 9
+        doLog("debug", "TargetTemp = %f" % targetTemperature)
+        doLog("debug", "Temp = %f" % temperature)
+
+        H_tMAX = (podMinMax[podUID][mode]['maxTemp'] - 32) * 5 / 9
+        H_tMin = (podMinMax[podUID][mode]['minTemp'] - 32) * 5 / 9
+
+    if(simple_calc):
+        #does this handle the case of 10C ?
+        if(mode == 'heat'):
+            if(targetTemperature - temperature + simpleBias >= H_tMax - H_tMin):
+                ret = heat * 1000 / COP
+            elif(targetTemperature + simpleBias > temperature):
+                ret = (heat * 1000 / COP) * ((targetTemperature - temperature + simpleBias) / (H_tMax - H_tMin))
+            else:
+                ret = heat * 1000 / COP * 0.05
+
+            doLog("info", f"ret = {ret}")
+            return ret / 1000
+
+        # Cool code wasn't provided.
+
     if(mode == 'heat'):
         intercept = -5648.26
         coef_target_temp = 233.70
@@ -417,7 +443,7 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry')"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            kw = calcWatts(mode, targetTemperature, temperature)
+            kw = calcWatts(podUID, mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
                 cost = kw * offpeak * (90 / 3600)
             else:
@@ -440,7 +466,7 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            kw = calcWatts(mode, targetTemperature, temperature)
+            kw = calcWatts(podUID, mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
                 cost = kw * offpeak * (90 / 3600)
             else:
@@ -1394,6 +1420,9 @@ if __name__ == "__main__":
     fankw = configParser.getfloat('cost', 'fankw', fallback = 0.050)
     offkw = configParser.getfloat('cost', 'offkw', fallback = 0.012)
 
+    #default to False until the code is proven to be stable
+    simple_calc = configParser.getboolean('cost', 'simple_calc', fallback = False)
+
     if(offkw < 0.001):
         offkw = 0.001
 
@@ -1568,6 +1597,8 @@ if __name__ == "__main__":
         cursor.execute("TRUNCATE meta")
         mydb.commit()
 
+        podMinMax = {}
+
         for podUID in uidList:
             remoteCapabilities = client.pod_get_remote_capabilities(podUID)
             if(remoteCapabilities == None):
@@ -1586,11 +1617,22 @@ if __name__ == "__main__":
 
             query = "INSERT INTO meta (uid, mode, keyval, value) VALUES (%s, %s, %s, %s)"
 
+            podMinMax[podUID] = {}
+
             for mode in device['modes']:
                 if(mode != "fan"):
+                    minTemp = maxTemp = -1
                     for temp in device['modes'][mode]['temperatures'][_corf]['values']:
                         doLog("debug", query % (podUID, mode, 'temperatures', temp))
                         cursor.execute(query, (podUID, mode, 'temperatures', temp))
+                        if(minTemp == -1 or minTemp > temp):
+                            minTemp = temp
+                        if(maxTemp == -1 or maxTemp < temp):
+                            maxTemp = temp
+
+                    podMinMax[podUID][mode] = {}
+                    podMinMax[podUID][mode]['minTemp'] = minTemp
+                    podMinMax[podUID][mode]['maxTemp'] = maxTemp
 
                 for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
                     for modes in device['modes'][mode][keyval]:
