@@ -379,30 +379,88 @@ def getWatts():
 
     return None
 
-def calcWatts(mode, targetTemperature, temperature):
-    if(mode == 'heat'):
-        intercept = -5648.26
-        coef_target_temp = 233.70
-        coef_temp_diff = -201.43
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat * 1000 / COP))
-        doLog("info", f"ret = {ret}")
-        if(ret <= heat * 1000 / COP * 0.05):
-            ret = heat * 1000 / COP * 0.05
-        ret = ret / 1000
-        doLog("info", f"ret = {ret}")
-        return ret
+def calcWatts(uid, mode, targetTemperature, temperature):
 
-    if(mode == 'cool' or mode == 'dry'):
-        intercept = 1494.60
-        coef_target_temp = -35.17
-        coef_temp_diff = 143.50
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool * 1000 / EER))
-        doLog("info", f"ret = {ret}")
-        if(ret <= cool * 1000 / EER * 0.05):
-            ret = cool * 1000 / EER * 0.05
-        ret = ret / 1000
-        doLog("info", f"ret = {ret}")
-        return ret
+    if (simple_calc):
+
+        simpleBias = 2
+
+        H_tMAX = 30
+
+        H_tMin = 16
+
+        cursor = mydb.cursor()
+        Q1 = "SELECT * FROM meta WHERE uid = %s AND mode = %s AND keyval= temperatures"
+        values = (uid,mode )
+        doLog("debug", query % values)
+        cursor.execute(Q1, values)
+        row = cursor.fetchone()
+
+        if(row):
+            doLog("debug", row)
+            continue
+    
+        if(mode == 'heat'):
+
+            #IF(targetTemp+bias>temp,IF(targetTemp-temp+bias>=(H_tMax-H_tMin),(P_Heat*1000/cop)
+            # ,(P_Heat*1000/cop)*((targetTemp-temp+bias)/(H_tMax-H_tMin))),H_MIN)
+
+            if((targetTemperature-temperature+simpleBias)>=(H_tMax-H_tMin)):
+               # full on until we get into range of AC unit
+               ret = (heat*1000/COP)
+
+            else:
+                if(targetTemperature+simpleBias > temperature):
+                (heat*1000/COP)*((targetTemperature-temperature+simpleBias)/(H_tMax-H_tMin))
+
+                #else:
+                #    ret = (heat * 1000 / COP * 0.05 )   
+
+
+            ret = ((heat/COP) * coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat * 1000 / COP))
+            doLog("info", f"ret = {ret}")
+            if(ret <= heat * 1000 / COP * 0.05):
+                ret = heat * 1000 / COP * 0.05
+            ret = ret / 1000
+            doLog("info", f"ret = {ret}")
+            return ret
+
+        if(mode == 'cool' or mode == 'dry'):
+
+            ret = ((cool/EER) * coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool * 1000 / EER))
+            doLog("info", f"ret = {ret}")
+            if(ret <= cool * 1000 / EER * 0.05):
+                ret = cool * 1000 / EER * 0.05
+            ret = ret / 1000
+            doLog("info", f"ret = {ret}")
+            return ret
+
+
+
+    else:    
+        if(mode == 'heat'):
+            intercept = -5648.26
+            coef_target_temp = 233.70
+            coef_temp_diff = -201.43
+            ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat * 1000 / COP))
+            doLog("info", f"ret = {ret}")
+            if(ret <= heat * 1000 / COP * 0.05):
+                ret = heat * 1000 / COP * 0.05
+            ret = ret / 1000
+            doLog("info", f"ret = {ret}")
+            return ret
+
+        if(mode == 'cool' or mode == 'dry'):
+            intercept = 1494.60
+            coef_target_temp = -35.17
+            coef_temp_diff = 143.50
+            ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool * 1000 / EER))
+            doLog("info", f"ret = {ret}")
+            if(ret <= cool * 1000 / EER * 0.05):
+                ret = cool * 1000 / EER * 0.05
+            ret = ret / 1000
+            doLog("info", f"ret = {ret}")
+            return ret
 
     # Return 10 watts as a minimum to stop cost loops
     return 0.010
@@ -417,7 +475,7 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry')"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            kw = calcWatts(mode, targetTemperature, temperature)
+            kw = calcWatts(uid, mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
                 cost = kw * offpeak * (90 / 3600)
             else:
@@ -440,7 +498,7 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            kw = calcWatts(mode, targetTemperature, temperature)
+            kw = calcWatts(uid, mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
                 cost = kw * offpeak * (90 / 3600)
             else:
@@ -1393,6 +1451,7 @@ if __name__ == "__main__":
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
     fankw = configParser.getfloat('cost', 'fankw', fallback = 0.050)
     offkw = configParser.getfloat('cost', 'offkw', fallback = 0.012)
+    simple_calc = configParser.getboolean('cost', 'simple_calc', fallback = True)
 
     if(offkw < 0.001):
         offkw = 0.001
