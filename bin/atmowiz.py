@@ -404,7 +404,16 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
             doLog("info", f"ret = {ret}")
             return ret / 1000
 
-        # Cool code wasn't provided.
+        if(mode == 'cool' or mode == 'dry'):
+            if(temperature - targetTemperature + simpleBias >= ttMAX - ttMIN):
+                ret = cool * 1000 / EER
+            elif(temperature + simpleBias > targetTemperature):
+                ret = (cool * 1000 / EER) * ((temperature - targetTemperature + simpleBias) / (ttMAX - ttMIN))
+            else:
+                ret = cool * 1000 / EER * 0.05
+
+            doLog("info", f"ret = {ret}")
+            return ret / 1000
 
     if(mode == 'heat'):
         intercept = -5648.26
