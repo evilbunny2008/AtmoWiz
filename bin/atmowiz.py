@@ -388,32 +388,45 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         doLog("debug", "TargetTemp = %f" % targetTemperature)
         doLog("debug", "Temp = %f" % temperature)
 
-        H_tMAX = (podMinMax[podUID][mode]['maxTemp'] - 32) * 5 / 9
-        H_tMin = (podMinMax[podUID][mode]['minTemp'] - 32) * 5 / 9
+        ttMax = (podMinMax[podUID][mode]['maxTemp'] - 32) * 5 / 9
+        ttMin = (podMinMax[podUID][mode]['minTemp'] - 32) * 5 / 9
+    else:    
+        ttMax = (podMinMax[podUID][mode]['maxTemp'] )
+        ttMin = (podMinMax[podUID][mode]['minTemp'] )
 
     if(simple_calc):
-        #does this handle the case of 10C ?
+        
         if(mode == 'heat'):
-            if(targetTemperature - temperature + simpleBias >= H_tMax - H_tMin):
+            if(temperature  < ttMin): 
+                # current temperature is less than lowest temp of the AC so unit full on until temp range is met
                 ret = heat * 1000 / COP
-            elif(targetTemperature + simpleBias > temperature):
-                ret = (heat * 1000 / COP) * ((targetTemperature - temperature + simpleBias) / (H_tMax - H_tMin))
+
+            elif(targetTemperature + simpleBias > temperature): 
+                #temperature now in range so power will be managed
+                ret = (heat * 1000 / COP) * ((targetTemperature - temperature + simpleBias) / (ttMax - ttMin))
             else:
-                ret = heat * 1000 / COP * 0.05
+                #target temperature met so system in idle
+                ret = heat * 1000 / COP * 0.1
 
             doLog("info", f"ret = {ret}")
             return ret / 1000
 
         if(mode == 'cool' or mode == 'dry'):
-            if(temperature - targetTemperature + simpleBias >= ttMAX - ttMIN):
+            if(temperature  > ttMax):
+                # current temperature is higher than highest temp of the AC so unit full on until temp range is met
                 ret = cool * 1000 / EER
+
             elif(temperature + simpleBias > targetTemperature):
-                ret = (cool * 1000 / EER) * ((temperature - targetTemperature + simpleBias) / (ttMAX - ttMIN))
+                #temperature now in range so power will be managed
+                ret = (cool * 1000 / EER) * ((temperature - targetTemperature + simpleBias) / (ttMax - ttMin))
             else:
-                ret = cool * 1000 / EER * 0.05
+                #target temperature met so system in idle
+                ret = cool * 1000 / EER * 0.1
 
             doLog("info", f"ret = {ret}")
             return ret / 1000
+        
+
 
     if(mode == 'heat'):
         intercept = -5648.26
@@ -1428,6 +1441,7 @@ if __name__ == "__main__":
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
     fankw = configParser.getfloat('cost', 'fankw', fallback = 0.050)
     offkw = configParser.getfloat('cost', 'offkw', fallback = 0.012)
+    simple_calc = configParser.getboolean('cost', 'simple_calc', fallback = True)
 
     #default to False until the code is proven to be stable
     simple_calc = configParser.getboolean('cost', 'simple_calc', fallback = False)
