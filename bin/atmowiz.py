@@ -390,18 +390,17 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
 
         ttMax = (podMinMax[podUID][mode]['maxTemp'] - 32) * 5 / 9
         ttMin = (podMinMax[podUID][mode]['minTemp'] - 32) * 5 / 9
-    else:    
-        ttMax = (podMinMax[podUID][mode]['maxTemp'] )
-        ttMin = (podMinMax[podUID][mode]['minTemp'] )
+    else:
+        ttMax = podMinMax[podUID][mode]['maxTemp']
+        ttMin = podMinMax[podUID][mode]['minTemp']
 
     if(simple_calc):
-        
         if(mode == 'heat'):
-            if(temperature  < ttMin): 
+            if(temperature  < ttMin):
                 # current temperature is less than lowest temp of the AC so unit full on until temp range is met
                 ret = heat * 1000 / COP
 
-            elif(targetTemperature + simpleBias > temperature): 
+            elif(targetTemperature + simpleBias > temperature):
                 #temperature now in range so power will be managed
                 ret = (heat * 1000 / COP) * ((targetTemperature - temperature + simpleBias) / (ttMax - ttMin))
             else:
@@ -425,8 +424,6 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
 
             doLog("info", f"ret = {ret}")
             return ret / 1000
-        
-
 
     if(mode == 'heat'):
         intercept = -5648.26
@@ -1441,7 +1438,6 @@ if __name__ == "__main__":
     heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
     fankw = configParser.getfloat('cost', 'fankw', fallback = 0.050)
     offkw = configParser.getfloat('cost', 'offkw', fallback = 0.012)
-    simple_calc = configParser.getboolean('cost', 'simple_calc', fallback = True)
 
     #default to False until the code is proven to be stable
     simple_calc = configParser.getboolean('cost', 'simple_calc', fallback = False)
