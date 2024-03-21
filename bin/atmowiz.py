@@ -398,14 +398,14 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         if(mode == 'heat'):
             if(temperature  < ttMin):
                 # current temperature is less than lowest temp of the AC so unit full on until temp range is met
-                ret = heat * 1000 / COP
+                ret = heat[podUID] * 1000 / COP[podUID]
 
             elif(targetTemperature + simpleBias > temperature):
                 #temperature now in range so power will be managed
-                ret = (heat * 1000 / COP) * ((targetTemperature - temperature + simpleBias) / (ttMax - ttMin))
+                ret = (heat[podUID] * 1000 / COP[podUID]) * ((targetTemperature - temperature + simpleBias) / (ttMax - ttMin))
             else:
                 #target temperature met so system in idle
-                ret = heat * 1000 / COP * 0.1
+                ret = heat[podUID] * 1000 / COP[podUID] * 0.1
 
             doLog("info", f"ret = {ret}")
             return ret / 1000
@@ -413,14 +413,14 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         if(mode == 'cool' or mode == 'dry'):
             if(temperature  > ttMax):
                 # current temperature is higher than highest temp of the AC so unit full on until temp range is met
-                ret = cool * 1000 / EER
+                ret = cool[podUID] * 1000 / EER[podUID]
 
             elif(temperature + simpleBias > targetTemperature):
                 #temperature now in range so power will be managed
-                ret = (cool * 1000 / EER) * ((temperature - targetTemperature + simpleBias) / (ttMax - ttMin))
+                ret = (cool[podUID] * 1000 / EER[podUID]) * ((temperature - targetTemperature + simpleBias) / (ttMax - ttMin))
             else:
                 #target temperature met so system in idle
-                ret = cool * 1000 / EER * 0.1
+                ret = cool[podUID] * 1000 / EER[podUID] * 0.1
 
             doLog("info", f"ret = {ret}")
             return ret / 1000
@@ -429,10 +429,10 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         intercept = -5648.26
         coef_target_temp = 233.70
         coef_temp_diff = -201.43
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat * 1000 / COP))
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat[podUID] * 1000 / COP[podUID]))
         doLog("info", f"ret = {ret}")
-        if(ret <= heat * 1000 / COP * 0.05):
-            ret = heat * 1000 / COP * 0.05
+        if(ret <= heat[podUID] * 1000 / COP[podUID] * 0.05):
+            ret = heat[podUID] * 1000 / COP[podUID] * 0.05
         ret = ret / 1000
         doLog("info", f"ret = {ret}")
         return ret
@@ -441,10 +441,10 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         intercept = 1494.60
         coef_target_temp = -35.17
         coef_temp_diff = 143.50
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool * 1000 / EER))
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool[podUID] * 1000 / EER[podUID]))
         doLog("info", f"ret = {ret}")
-        if(ret <= cool * 1000 / EER * 0.05):
-            ret = cool * 1000 / EER * 0.05
+        if(ret <= cool[podUID] * 1000 / EER[podUID] * 0.05):
+            ret = cool[podUID] * 1000 / EER[podUID] * 0.05
         ret = ret / 1000
         doLog("info", f"ret = {ret}")
         return ret
@@ -464,17 +464,17 @@ def calcCost(mydb):
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
-                cost = kw * offpeak * (90 / 3600)
+                cost = kw * offpeak[podUID] * (90 / 3600)
             else:
-                cost = kw * offpeak * (90 / 3600)
+                cost = kw * offpeak[podUID] * (90 / 3600)
                 if(hod >= 7 and hod < 9):
-                    cost = kw * peak * (90 / 3600)
+                    cost = kw * peak[podUID] * (90 / 3600)
                 if(hod >= 9 and hod < 17):
-                    cost = kw * shoulder * (90 / 3600)
+                    cost = kw * shoulder[podUID] * (90 / 3600)
                 if(hod >= 17 and hod < 20):
-                    cost = kw * peak * (90 / 3600)
+                    cost = kw * peak[podUID] * (90 / 3600)
                 if(hod >= 20 and hod < 22):
-                    cost = kw * shoulder * (90 / 3600)
+                    cost = kw * shoulder[podUID] * (90 / 3600)
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
@@ -487,17 +487,17 @@ def calcCost(mydb):
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
             if(dow == 1 or dow == 7):
-                cost = kw * offpeak * (90 / 3600)
+                cost = kw * offpeak[podUID] * (90 / 3600)
             else:
-                cost = kw * offpeak * (90 / 3600)
+                cost = kw * offpeak[podUID] * (90 / 3600)
                 if(hod >= 7 and hod < 9):
-                    cost = kw * peak * (90 / 3600)
+                    cost = kw * peak[podUID] * (90 / 3600)
                 if(hod >= 9 and hod < 17):
-                    cost = kw * shoulder * (90 / 3600)
+                    cost = kw * shoulder[podUID] * (90 / 3600)
                 if(hod >= 17 and hod < 20):
-                    cost = kw * peak * (90 / 3600)
+                    cost = kw * peak[podUID] * (90 / 3600)
                 if(hod >= 20 and hod < 22):
-                    cost = kw * shoulder * (90 / 3600)
+                    cost = kw * shoulder[podUID] * (90 / 3600)
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
@@ -509,17 +509,17 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             if(dow == 1 or dow == 7):
-                cost = fankw * offpeak * (90 / 3600)
+                cost = fankw[podUID] * offpeak[podUID] * (90 / 3600)
             else:
-                cost = fankw * offpeak * (90 / 3600)
+                cost = fankw[podUID] * offpeak[podUID] * (90 / 3600)
                 if(hod >= 7 and hod < 9):
-                    cost = fankw * peak * (90 / 3600)
+                    cost = fankw[podUID] * peak[podUID] * (90 / 3600)
                 if(hod >= 9 and hod < 17):
-                    cost = fankw * shoulder * (90 / 3600)
+                    cost = fankw[podUID] * shoulder[podUID] * (90 / 3600)
                 if(hod >= 17 and hod < 20):
-                    cost = fankw * peak * (90 / 3600)
+                    cost = fankw[podUID] * peak[podUID] * (90 / 3600)
                 if(hod >= 20 and hod < 22):
-                    cost = fankw * shoulder * (90 / 3600)
+                    cost = fankw[podUID] * shoulder[podUID] * (90 / 3600)
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
@@ -531,17 +531,17 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             if(dow == 1 or dow == 7):
-                cost = offkw * offpeak * (90 / 3600)
+                cost = offkw[podUID] * offpeak[podUID] * (90 / 3600)
             else:
-                cost = offkw * offpeak * (90 / 3600)
+                cost = offkw[podUID] * offpeak[podUID] * (90 / 3600)
                 if(hod >= 7 and hod < 9):
-                    cost = offkw * peak * (90 / 3600)
+                    cost = offkw[podUID] * peak[podUID] * (90 / 3600)
                 if(hod >= 9 and hod < 17):
-                    cost = offkw * shoulder * (90 / 3600)
+                    cost = offkw[podUID] * shoulder[podUID] * (90 / 3600)
                 if(hod >= 17 and hod < 20):
-                    cost = offkw * peak * (90 / 3600)
+                    cost = offkw[podUID] * peak[podUID] * (90 / 3600)
                 if(hod >= 20 and hod < 22):
-                    cost = offkw * shoulder * (90 / 3600)
+                    cost = offkw[podUID] * shoulder[podUID] * (90 / 3600)
 
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
@@ -1429,24 +1429,46 @@ if __name__ == "__main__":
     gid = configParser.getint('system', 'gid', fallback = 0)
     country = configParser.get('system', 'country', fallback = 'None')
 
-    peak = configParser.getfloat('cost', 'peak', fallback = 0.50)
-    shoulder = configParser.getfloat('cost', 'shoulder', fallback = 0.50)
-    offpeak = configParser.getfloat('cost', 'offpeak', fallback = 0.50)
-    EER = configParser.getfloat('cost', 'EER', fallback = 3.0)
-    COP = configParser.getfloat('cost', 'COP', fallback = 3.0)
-    cool = configParser.getfloat('cost', 'cool', fallback = 5.0)
-    heat = configParser.getfloat('cost', 'heat', fallback = 5.0)
-    fankw = configParser.getfloat('cost', 'fankw', fallback = 0.050)
-    offkw = configParser.getfloat('cost', 'offkw', fallback = 0.012)
-
     #default to False until the code is proven to be stable
     simple_calc = configParser.getboolean('cost', 'simple_calc', fallback = False)
 
-    if(offkw < 0.001):
-        offkw = 0.001
+    peak = {}
+    shoulder = {}
+    offpeak = {}
+    EER = {}
+    COP = {}
+    cool = {}
+    heat = {}
+    fankw = {}
+    offkw = {}
 
-    if(fankw < 0.001):
-        fankw = 0.001
+    pods = configParser.get('cost', 'pods', fallback = 'ABCDEFG1,ABCDEFG2').strip()
+    if(len(pods) <= 0):
+        doLog("error", f"You need to specify at least one POD UID in the cost section of {args.config}")
+        exit(1)
+
+    if ',' in pods:
+        pods = pods.split(",")
+    else:
+        pods = (pods, )
+
+    for pod in pods:
+        pod = pod.strip()
+        peak[pod] = configParser.getfloat(pod, 'peak', fallback = 0.50)
+        shoulder[pod] = configParser.getfloat(pod, 'shoulder', fallback = 0.50)
+        offpeak[pod] = configParser.getfloat(pod, 'offpeak', fallback = 0.50)
+        EER[pod] = configParser.getfloat(pod, 'EER', fallback = 3.0)
+        COP[pod] = configParser.getfloat(pod, 'COP', fallback = 3.0)
+        cool[pod] = configParser.getfloat(pod, 'cool', fallback = 5.0)
+        heat[pod] = configParser.getfloat(pod, 'heat', fallback = 5.0)
+        fankw[pod] = configParser.getfloat(pod, 'fankw', fallback = 0.020)
+        offkw[pod] = configParser.getfloat(pod, 'offkw', fallback = 0.010)
+
+        if(offkw[pod] < 0.001):
+            offkw[pod] = 0.001
+
+        if(fankw[pod] < 0.001):
+            fankw[pod] = 0.001
 
     if(weatherapikey != ''):
         doOpenMeteo = False
