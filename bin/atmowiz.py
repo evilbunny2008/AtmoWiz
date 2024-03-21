@@ -1566,56 +1566,6 @@ if __name__ == "__main__":
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
-    if(args.reCalcCost):
-        try:
-            cursor = mydb.cursor()
-            query = "UPDATE sensibo SET cost=0.0 WHERE 1"
-            if(args.reCalcFromDate):
-                query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
-            if(args.reCalcToDate):
-                query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
-            doLog("debug", query)
-            cursor.execute(query)
-            mydb.commit()
-            calcCost(mydb)
-            mydb.close()
-            doLog("info", "Cost has been recalculated.")
-            exit(0)
-        except MySQLdb._exceptions.ProgrammingError as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            exit(1)
-        except MySQLdb._exceptions.OperationalError as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            exit(1)
-        except MySQLdb._exceptions.IntegrityError as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            exit(1)
-
-    if(args.reCalcFL):
-        try:
-            cursor = mydb.cursor()
-            query = "UPDATE sensibo SET feelslike=NULL WHERE 1"
-            if(args.reCalcFromDate):
-                query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
-            if(args.reCalcToDate):
-                query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
-            doLog("debug", query)
-            cursor.execute(query)
-            mydb.commit()
-            calcFL(mydb, country)
-            mydb.close()
-            doLog("info", "Feels like has been recalculated.")
-            exit(0)
-        except MySQLdb._exceptions.ProgrammingError as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            exit(1)
-        except MySQLdb._exceptions.OperationalError as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            exit(1)
-        except MySQLdb._exceptions.IntegrityError as e:
-            doLog("error", "There was a problem, error was %s" % e, True)
-            exit(1)
-
     uidList = devices.values()
 
     try:
@@ -1679,6 +1629,56 @@ if __name__ == "__main__":
                         cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
+
+        if(args.reCalcCost):
+            try:
+                cursor = mydb.cursor()
+                query = "UPDATE sensibo SET cost=0.0 WHERE 1"
+                if(args.reCalcFromDate):
+                    query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
+                if(args.reCalcToDate):
+                    query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
+                doLog("debug", query)
+                cursor.execute(query)
+                mydb.commit()
+                calcCost(mydb)
+                mydb.close()
+                doLog("info", "Cost has been recalculated.")
+                exit(0)
+            except MySQLdb._exceptions.ProgrammingError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
+            except MySQLdb._exceptions.OperationalError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
+            except MySQLdb._exceptions.IntegrityError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
+
+        if(args.reCalcFL):
+            try:
+                cursor = mydb.cursor()
+                query = "UPDATE sensibo SET feelslike=NULL WHERE 1"
+                if(args.reCalcFromDate):
+                    query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
+                if(args.reCalcToDate):
+                    query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
+                doLog("debug", query)
+                cursor.execute(query)
+                mydb.commit()
+                calcFL(mydb, country)
+                mydb.close()
+                doLog("info", "Feels like has been recalculated.")
+                exit(0)
+            except MySQLdb._exceptions.ProgrammingError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
+            except MySQLdb._exceptions.OperationalError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
+            except MySQLdb._exceptions.IntegrityError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
 
         getLastCommands(mydb, 40)
 
