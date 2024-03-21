@@ -398,42 +398,41 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         if(mode == 'heat'):
             if(temperature  < ttMin):
                 # current temperature is less than lowest temp of the AC so unit full on until temp range is met
-                ret = heat[podUID] * 1000 / COP[podUID]
+                ret = heat[podUID] / COP[podUID]
 
             elif(targetTemperature + simpleBias > temperature):
                 #temperature now in range so power will be managed
-                ret = (heat[podUID] * 1000 / COP[podUID]) * ((targetTemperature - temperature + simpleBias) / (ttMax - ttMin))
+                ret = (heat[podUID] / COP[podUID]) * ((targetTemperature - temperature + simpleBias) / (ttMax - ttMin))
             else:
                 #target temperature met so system in idle
-                ret = heat[podUID] * 1000 / COP[podUID] * 0.1
+                ret = heat[podUID] / COP[podUID] * 0.1
 
             doLog("info", f"ret = {ret}")
-            return ret / 1000
+            return ret
 
         if(mode == 'cool' or mode == 'dry'):
             if(temperature  > ttMax):
                 # current temperature is higher than highest temp of the AC so unit full on until temp range is met
-                ret = cool[podUID] * 1000 / EER[podUID]
+                ret = cool[podUID] / EER[podUID]
 
             elif(temperature + simpleBias > targetTemperature):
                 #temperature now in range so power will be managed
-                ret = (cool[podUID] * 1000 / EER[podUID]) * ((temperature - targetTemperature + simpleBias) / (ttMax - ttMin))
+                ret = (cool[podUID] / EER[podUID]) * ((temperature - targetTemperature + simpleBias) / (ttMax - ttMin))
             else:
                 #target temperature met so system in idle
-                ret = cool[podUID] * 1000 / EER[podUID] * 0.1
+                ret = cool[podUID] / EER[podUID] * 0.1
 
             doLog("info", f"ret = {ret}")
-            return ret / 1000
+            return ret
 
     if(mode == 'heat'):
         intercept = -5648.26
         coef_target_temp = 233.70
         coef_temp_diff = -201.43
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat[podUID] * 1000 / COP[podUID]))
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat[podUID] / COP[podUID]))
         doLog("info", f"ret = {ret}")
-        if(ret <= heat[podUID] * 1000 / COP[podUID] * 0.05):
-            ret = heat[podUID] * 1000 / COP[podUID] * 0.05
-        ret = ret / 1000
+        if(ret <= heat[podUID] / COP[podUID] * 0.05):
+            ret = heat[podUID] / COP[podUID] * 0.05
         doLog("info", f"ret = {ret}")
         return ret
 
@@ -441,11 +440,10 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         intercept = 1494.60
         coef_target_temp = -35.17
         coef_temp_diff = 143.50
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool[podUID] * 1000 / EER[podUID]))
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool[podUID] / EER[podUID]))
         doLog("info", f"ret = {ret}")
-        if(ret <= cool[podUID] * 1000 / EER[podUID] * 0.05):
-            ret = cool[podUID] * 1000 / EER[podUID] * 0.05
-        ret = ret / 1000
+        if(ret <= cool[podUID] / EER[podUID] * 0.05):
+            ret = cool[podUID] / EER[podUID] * 0.05
         doLog("info", f"ret = {ret}")
         return ret
 
