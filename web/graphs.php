@@ -500,7 +500,7 @@ function deleteSetting(created, uid)
 }
 </script>
 <div id="id03" class="modal">
-  <form class="modal-content animate" id="climateSettingsForm"action="graphForms.php" method="post">
+  <form class="modal-content animate" id="climateSettingsForm" action="graphForms.php" method="post">
     <div class="imgcontainer">
       <span onclick="cancelAddUpdate(); return false;" class="close">&times;</span>
     </div>
@@ -1200,7 +1200,20 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 		color: "<?=$wifiColour?>",
        	}]
 });
+<?php
+	// https://github.com/symfony/symfony/blob/7.1/src/Symfony/Component/Form/Extension/Core/Type/MoneyType.php#L106
+	function get_currency_symbol($pattern)
+	{
+		preg_match('/^([^\s\xc2\xa0]*)[\s\xc2\xa0]*123(?:[,.]0+)?[\s\xc2\xa0]*([^\s\xc2\xa0]*)$/u', $pattern, $matches);
+		if(!empty($matches[1]))
+			return $matches[1];
+		if(!empty($matches[2]))
+			return $matches[2];
+		return $pattern;
+	}
 
+	$currsym = get_currency_symbol(numfmt_format_currency($currency_fmt, 123456789, $currency));
+?>
 var chart3 = new CanvasJS.Chart("costContainer",
 {
 	animationEnabled: true,
@@ -1228,7 +1241,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];
-				content += "</br><div style='color:<?=$costColour?>'>" + entry.dataSeries.name + ": " +  CanvasJS.formatNumber(entry.dataPoint.y, "$#,##0.00") + "</div>";
+				content += "</br><div style='color:<?=$costColour?>'>" + entry.dataSeries.name + ": " +  CanvasJS.formatNumber(entry.dataPoint.y, "<?=$currsym?>#,##0.00") + "</div>";
 			}
 			return content;
 		},
@@ -1244,7 +1257,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	},
 	axisY:
 	{
-		title: "Cost [$]",
+		title: "Cost [<?=$currsym?>]",
 		includeZero: true,
 		titleFontColor: "<?=$costColour?>",
 		lineColor: "<?=$costColour?>",
@@ -1252,7 +1265,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		tickColor: "<?=$costColour?>",
 		labelFormatter: function (e)
 		{
-			return CanvasJS.formatNumber(e.value, "$#,##0.00");
+			return CanvasJS.formatNumber(e.value, "<?=$currsym?>#,##0.00");
 		},
 	},
 	legend:
@@ -1265,7 +1278,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	data:
 	[{
 		type: "column",
-		name: "Cost [$]",
+		name: "Cost [<?=$currsym?>]",
 		xValueType: "dateTime",
 		markerSize: 0,
 		showInLegend: true,
