@@ -1201,18 +1201,18 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
        	}]
 });
 <?php
-	// https://github.com/symfony/symfony/blob/7.1/src/Symfony/Component/Form/Extension/Core/Type/MoneyType.php#L106
-	function get_currency_symbol($pattern)
-	{
-		preg_match('/^([^\s\xc2\xa0]*)[\s\xc2\xa0]*123(?:[,.]0+)?[\s\xc2\xa0]*([^\s\xc2\xa0]*)$/u', $pattern, $matches);
-		if(!empty($matches[1]))
-			return $matches[1];
-		if(!empty($matches[2]))
-			return $matches[2];
-		return $pattern;
-	}
+	setlocale(LC_ALL, $currency_code.'.UTF-8');
 
-	$currsym = get_currency_symbol(numfmt_format_currency($currency_fmt, 123456789, $currency));
+	$currsym = localeconv()['currency_symbol'];
+	$decpoint = localeconv()['decimal_point'];
+	$thousep = localeconv()['thousands_sep'];
+	$fracdigits = localeconv()['frac_digits'];
+
+	$digits = "";
+	for($i = 0; $i < $fracdigits; $i++)
+		$digits .= "0";
+
+	$fmtstr = "$currsym#$thousep##0$decpoint$digits";
 ?>
 var chart3 = new CanvasJS.Chart("costContainer",
 {
@@ -1241,7 +1241,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 			for(var i = 0; i < e.entries.length; i++)
 			{
 				var entry = e.entries[i];
-				content += "</br><div style='color:<?=$costColour?>'>" + entry.dataSeries.name + ": " +  CanvasJS.formatNumber(entry.dataPoint.y, "<?=$currsym?>#,##0.00") + "</div>";
+				content += "</br><div style='color:<?=$costColour?>'>" + entry.dataSeries.name + ": " +  CanvasJS.formatNumber(entry.dataPoint.y, "<?=$fmtstr?>") + "</div>";
 			}
 			return content;
 		},
@@ -1265,7 +1265,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 		tickColor: "<?=$costColour?>",
 		labelFormatter: function (e)
 		{
-			return CanvasJS.formatNumber(e.value, "<?=$currsym?>#,##0.00");
+			return CanvasJS.formatNumber(e.value, "<?=$fmtstr?>");
 		},
 	},
 	legend:

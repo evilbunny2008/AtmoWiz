@@ -20,10 +20,10 @@
 	$outTempColour = "DarkMagenta";
 	$outHumidColour = "DeepPink";
 
-	// Set your currency preference here in language_COUNTRY format, eg en_NZ, de_DE, ru_RU
-	$currency_fmt = numfmt_create('en_AU', NumberFormatter::CURRENCY);
 	// The 3-letter ISO 4217 currency code indicating the currency to use, eg NZD, EUR, RUR
 	$currency = "AUD";
+	// Set your currency preference here in language_COUNTRY format, eg en_US, de_DE, ru_RU
+	$currency_code = "en_AU";
 
 	session_start();
 

@@ -511,6 +511,7 @@
 
 	$query = "SELECT round(sum(cost), 2) as cost FROM sensibo WHERE whentime >= '".date("Y-m-d 00:00:00")."' AND uid='$uid'";
 	$row = mysqli_fetch_assoc(mysqli_query($link, $query));
+	$currency_fmt = numfmt_create($currency_code, NumberFormatter::CURRENCY);
 	$row['cost'] = numfmt_format_currency($currency_fmt, $row['cost'], $currency);
 
 	$currsign = "C";
