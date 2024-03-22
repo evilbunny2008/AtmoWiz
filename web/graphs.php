@@ -1336,18 +1336,18 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	axisY:
 	{
 		title: "Temperature [°C]",
-		titleFontColor: "<?=$tempColour?>",
-		lineColor: "<?=$tempColour?>",
-		labelFontColor: "<?=$tempColour?>",
-		tickColor: "<?=$tempColour?>",
+		titleFontColor: "<?=$outTempColour?>",
+		lineColor: "<?=$outTempColour?>",
+		labelFontColor: "<?=$outTempColour?>",
+		tickColor: "<?=$outTempColour?>",
 	},
 	axisY2:
 	{
 		title: "Power [W]",
-		titleFontColor: "<?=$humidColour?>",
-		lineColor: "<?=$humidColour?>",
-		labelFontColor: "<?=$humidColour?>",
-		tickColor: "<?=$humidColour?>",
+		titleFontColor: "<?=$powerColour?>",
+		lineColor: "<?=$powerColour?>",
+		labelFontColor: "<?=$powerColour?>",
+		tickColor: "<?=$powerColour?>",
 	},
 	legend:
 	{

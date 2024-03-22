@@ -20,6 +20,11 @@
 	$outTempColour = "DarkMagenta";
 	$outHumidColour = "DeepPink";
 
+	// Set your currency preference here in language_COUNTRY format, eg en_NZ, de_DE, ru_RU
+	$currency_fmt = numfmt_create('en_AU', NumberFormatter::CURRENCY);
+	// The 3-letter ISO 4217 currency code indicating the currency to use, eg NZD, EUR, RUR
+	$currency = "AUD";
+
 	session_start();
 
 	mysqli_report(MYSQLI_REPORT_OFF);

@@ -509,8 +509,16 @@
 
 	$commandHeader .= "<li>&nbsp;</li>\n";
 
+	$query = "SELECT round(sum(cost), 2) as cost FROM sensibo WHERE whentime >= '".date("Y-m-d 00:00:00")."' AND uid='$uid'";
+	$row = mysqli_fetch_assoc(mysqli_query($link, $query));
+	$row['cost'] = numfmt_format_currency($currency_fmt, $row['cost'], $currency);
+
+	$currsign = "C";
+	if($currtemp > 50)
+		$currsign = "F";
+
 	$commandHeader .= "<li class='card-demo10' style='text-align:center;cursor:pointer;' onClick='showDay(\"".(time() * 1000 - 86400000)."\"); return false;'><u><b>Current Conditions</b></u></li>\n";
-	$commandHeader .= "<li class='card-demo10'><b>".$currtime."</b> -- ".$currtemp."°C, ".$currhumid."%</li>\n";
+	$commandHeader .= "<li class='card-demo10'><b>".$currtime."</b> -- ".$currtemp."°$currsign, ".$currhumid."%, ".$row['cost']."</li>\n";
 	$commandHeader .= "<li class='card-demo10'>&nbsp;</li>\n";
 
 	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime FROM weather ORDER BY whentime DESC LIMIT 1";
