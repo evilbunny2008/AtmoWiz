@@ -43,7 +43,7 @@
 		if(substr($k, 0, 1) == '"')
 			$k = substr($k, 1, -1);
 
-		if(substr($k, 0, 1) == "<" && substr($k, -1) == ">")
+		if(substr($k, 0, 2) == "<U" && substr($k, -1) == ">")
 		{
 			$htmlEntity = "&#x".substr($k, 2, -1).";";
 			$k = html_entity_decode($htmlEntity, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8');
