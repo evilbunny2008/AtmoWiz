@@ -1201,18 +1201,11 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
        	}]
 });
 <?php
-	setlocale(LC_ALL, $currency_code.'.UTF-8');
-
-	$currsym = localeconv()['currency_symbol'];
-	$decpoint = localeconv()['decimal_point'];
-	$thousep = localeconv()['thousands_sep'];
-	$fracdigits = localeconv()['frac_digits'];
-
 	$digits = "";
-	for($i = 0; $i < $fracdigits; $i++)
+	for($i = 0; $i < $currency_values['frac_digits']; $i++)
 		$digits .= "0";
 
-	$fmtstr = "$currsym#$thousep##0$decpoint$digits";
+	$fmtstr = "${currency_values['currency_symbol']}#${currency_values['mon_thousands_sep']}##0${currency_values['mon_decimal_point']}$digits";
 ?>
 var chart3 = new CanvasJS.Chart("costContainer",
 {
@@ -1257,7 +1250,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	},
 	axisY:
 	{
-		title: "Cost [<?=$currsym?>]",
+		title: "Cost [<?=$currency_values['currency_symbol']?>]",
 		includeZero: true,
 		titleFontColor: "<?=$costColour?>",
 		lineColor: "<?=$costColour?>",
@@ -1278,7 +1271,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	data:
 	[{
 		type: "column",
-		name: "Cost [<?=$currsym?>]",
+		name: "Cost [<?=$currency_values['currency_symbol']?>]",
 		xValueType: "dateTime",
 		markerSize: 0,
 		showInLegend: true,

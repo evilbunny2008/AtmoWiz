@@ -25,20 +25,4 @@
 	// Set your currency preference here in language_COUNTRY format, eg en_US, de_DE, ru_RU
 	$currency_code = "en_AU";
 
-	session_start();
-
-	mysqli_report(MYSQLI_REPORT_OFF);
-	$link = @mysqli_connect('localhost', 'atmowiz', $dbpass, 'atmowiz');
-	if(!isset($link))
-		$error = "DB error occured, check your settings in mariadb.php and try again";
-
-	if($error == null && mysqli_connect_errno())
-		$error = "DB error: " . mysqli_connect_error();
-
-	$redis = new Redis();
-	$redis->connect('127.0.0.1');
-
-	$systemTz = trim(file_get_contents("/etc/timezone"));
-	if($systemTz == 'Etc/UTC')
-		$systemTz = 'UTC';
-	date_default_timezone_set($systemTz);
+	require_once("common.php");
