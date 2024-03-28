@@ -1047,16 +1047,16 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataSeries.name == "Temperature [°C]")
-					content += "<div style='color:<?=$tempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				if(entry.dataSeries.name == "Temperature [�C]")
+					content += "<div style='color:<?=$tempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "�C</div>";
 				else if(entry.dataSeries.name == "Humidity [%]")
 					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
-				else if(entry.dataSeries.name == "Feels Like [°C]")
-					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Feels Like [�C]")
+					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "�C</div>";
 				else if(entry.dataSeries.name == "Power Usage [W]")
 					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
-				else if(entry.dataSeries.name == "Outdoor Temperature [°C]")
-					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Outdoor Temperature [�C]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "�C</div>";
 				else if(entry.dataSeries.name == "Outdoor Humidity [%]")
 					content += "<div style='color:<?=$outHumidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
 
@@ -1077,7 +1077,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	},
 	axisY:
 	{
-		title: "Temperature [°C]",
+		title: "Temperature [�C]",
 		titleFontColor: "<?=$tempColour?>",
 		lineColor: "<?=$tempColour?>",
 		labelFontColor: "<?=$tempColour?>",
@@ -1101,7 +1101,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	[
 		{
 			type: "line",
-			name: "Feels Like [°C]",
+			name: "Feels Like [�C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1116,14 +1116,14 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			color: "<?=$humidColour?>",
 		},{
 			type: "line",
-			name: "Temperature [°C]",
+			name: "Temperature [�C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
 			color: "<?=$tempColour?>",
 		},{
 			type: "line",
-			name: "Outdoor Temperature [°C]",
+			name: "Outdoor Temperature [�C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1197,15 +1197,23 @@ var chart2 = new CanvasJS.Chart("rssiContainer",
 		xValueType: "dateTime",
 		markerSize: 0,
 		showInLegend: true,
-		color: "<?=$wifiColour?>",
+		color: "<?=$wifiColour?>",	
        	}]
 });
 <?php
+	setlocale(LC_MONETARY, $currency_code.'.UTF-8');
+	//print_r(localeconv()); die;
+
+	$currsym = localeconv()['currency_symbol'];
+	$decpoint = localeconv()['decimal_point'];
+	$thousep = localeconv()['thousands_sep'];
+	$fracdigits = localeconv()['frac_digits'];
+
 	$digits = "";
-	for($i = 0; $i < $currency_values['frac_digits']; $i++)
+	for($i = 0; $i < $fracdigits; $i++)
 		$digits .= "0";
 
-	$fmtstr = "${currency_values['currency_symbol']}#${currency_values['mon_thousands_sep']}##0${currency_values['mon_decimal_point']}$digits";
+	$fmtstr = "$currsym#$thousep##0$decpoint$digits";
 ?>
 var chart3 = new CanvasJS.Chart("costContainer",
 {
@@ -1250,7 +1258,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	},
 	axisY:
 	{
-		title: "Cost [<?=$currency_values['currency_symbol']?>]",
+		title: "Cost [<?=$currsym?>]",
 		includeZero: true,
 		titleFontColor: "<?=$costColour?>",
 		lineColor: "<?=$costColour?>",
@@ -1271,7 +1279,7 @@ var chart3 = new CanvasJS.Chart("costContainer",
 	data:
 	[{
 		type: "column",
-		name: "Cost [<?=$currency_values['currency_symbol']?>]",
+		name: "Cost [<?=$currsym?>]",
 		xValueType: "dateTime",
 		markerSize: 0,
 		showInLegend: true,
@@ -1319,8 +1327,8 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataSeries.name == "Outdoor Temperature [°C]")
-					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				if(entry.dataSeries.name == "Outdoor Temperature [�C]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "�C</div>";
 				else if(entry.dataSeries.name == "Power [W]")
 					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
 
@@ -1341,7 +1349,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	},
 	axisY:
 	{
-		title: "Temperature [°C]",
+		title: "Temperature [�C]",
 		titleFontColor: "<?=$outTempColour?>",
 		lineColor: "<?=$outTempColour?>",
 		labelFontColor: "<?=$outTempColour?>",
@@ -1365,7 +1373,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	[
 		{
 			type: "line",
-			name: "Outdoor Temperature [°C]",
+			name: "Outdoor Temperature [�C]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
