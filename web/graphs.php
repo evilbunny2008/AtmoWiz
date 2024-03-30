@@ -1008,6 +1008,7 @@ function deleteTimer(created, uid)
 	}
 }
 
+var corf = "C";
 var timePeriod = "<?=$timePeriod?>";
 var period = <?=$period?>;
 var uid = "<?=$row['uid']?>";
@@ -1047,16 +1048,16 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataSeries.name == "Temperature [°C]")
-					content += "<div style='color:<?=$tempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				if(entry.dataSeries.name == "Temperature [°"+corf+"]")
+					content += "<div style='color:<?=$tempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°"+corf+"</div>";
 				else if(entry.dataSeries.name == "Humidity [%]")
 					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
-				else if(entry.dataSeries.name == "Feels Like [°C]")
-					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Feels Like [°"+corf+"]")
+					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°"+corf+"</div>";
 				else if(entry.dataSeries.name == "Power Usage [W]")
 					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
-				else if(entry.dataSeries.name == "Outdoor Temperature [°C]")
-					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Outdoor Temperature [°"+corf+"]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°"+corf+"</div>";
 				else if(entry.dataSeries.name == "Outdoor Humidity [%]")
 					content += "<div style='color:<?=$outHumidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
 
@@ -1077,7 +1078,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	},
 	axisY:
 	{
-		title: "Temperature [°C]",
+		title: "Temperature [°"+corf+"]",
 		titleFontColor: "<?=$tempColour?>",
 		lineColor: "<?=$tempColour?>",
 		labelFontColor: "<?=$tempColour?>",
@@ -1101,7 +1102,7 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 	[
 		{
 			type: "line",
-			name: "Feels Like [°C]",
+			name: "Feels Like [°"+corf+"]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1116,14 +1117,14 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			color: "<?=$humidColour?>",
 		},{
 			type: "line",
-			name: "Temperature [°C]",
+			name: "Temperature [°"+corf+"]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
 			color: "<?=$tempColour?>",
 		},{
 			type: "line",
-			name: "Outdoor Temperature [°C]",
+			name: "Outdoor Temperature [°"+corf+"]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1319,8 +1320,8 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataSeries.name == "Outdoor Temperature [°C]")
-					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				if(entry.dataSeries.name == "Outdoor Temperature [°"+corf+"]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°"+corf+"</div>";
 				else if(entry.dataSeries.name == "Power [W]")
 					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
 
@@ -1341,7 +1342,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	},
 	axisY:
 	{
-		title: "Temperature [°C]",
+		title: "Temperature [°"+corf+"]",
 		titleFontColor: "<?=$outTempColour?>",
 		lineColor: "<?=$outTempColour?>",
 		labelFontColor: "<?=$outTempColour?>",
@@ -1365,7 +1366,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	[
 		{
 			type: "line",
-			name: "Outdoor Temperature [°C]",
+			name: "Outdoor Temperature [°"+corf+"]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1716,6 +1717,8 @@ console.log("Update should have happened.");
 			document.getElementById("chartContainer4").style.display = 'block';
 		else
 			document.getElementById("chartContainer4").style.display = 'none';
+
+		corf = content['corf'];
 
 		for(var i = 0; i < charts.length; i++)
 			charts[i].render();

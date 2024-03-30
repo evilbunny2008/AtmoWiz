@@ -22,7 +22,7 @@
 		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
 		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
 		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(), 'dataPoints4' => array(),
-			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(), 'dataPoints8' => array(),
+			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(), 'dataPoints8' => array(), corf => "C",
 			'commandHeader' => $commandHeader, 'commands' => $commands, 'currtime' => date("H:i"), 'showChart4' => $showChart4);
 		echo json_encode(array('status' => 200, 'content' => $data));
 		exit;
@@ -152,6 +152,7 @@
 			$dataPoints3 = $arr['2'];
 			$dataPoints4 = $arr['3'];
 			$dataPoints6 = $arr['4'];
+			$corf = $arr['5'];
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
@@ -211,7 +212,10 @@
 
 			mysqli_free_result($res);
 
-			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6)));
+			if(floatval($row2['temperature']) > 50)
+				$corf = "F";
+
+			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6, $corf)));
 			$redis->expire(md5($query), 86400);
 		}
 
@@ -266,6 +270,7 @@
 			$dataPoints3 = $arr['2'];
 			$dataPoints4 = $arr['3'];
 			$dataPoints6 = $arr['4'];
+			$corf = $arr['5'];
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
@@ -321,9 +326,12 @@
 				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => $row['watts']);
 			}
 
+			if(floatval($row2['temperature']) > 50)
+				$corf = "F";
+
 			mysqli_free_result($res);
 
-			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6)));
+			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6, $corf)));
 			$redis->expire(md5($query), 86400);
 		}
 	}
