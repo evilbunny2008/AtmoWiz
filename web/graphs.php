@@ -1048,16 +1048,22 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataSeries.name == "Temperature [°"+corf+"]")
-					content += "<div style='color:<?=$tempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°"+corf+"</div>";
+				if(entry.dataSeries.name == "Temperature [°C]")
+					content += "<div style='color:<?=$tempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Temperature [°F]")
+					content += "<div style='color:<?=$tempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°F</div>";
 				else if(entry.dataSeries.name == "Humidity [%]")
 					content += "<div style='color:<?=$humidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
-				else if(entry.dataSeries.name == "Feels Like [°"+corf+"]")
-					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°"+corf+"</div>";
+				else if(entry.dataSeries.name == "Feels Like [°C]")
+					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Feels Like [°F]")
+					content += "<div style='color:<?=$FLColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°F</div>";
 				else if(entry.dataSeries.name == "Power Usage [W]")
 					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
-				else if(entry.dataSeries.name == "Outdoor Temperature [°"+corf+"]")
-					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°"+corf+"</div>";
+				else if(entry.dataSeries.name == "Outdoor Temperature [°C]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Outdoor Temperature [°F]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°F</div>";
 				else if(entry.dataSeries.name == "Outdoor Humidity [%]")
 					content += "<div style='color:<?=$outHumidColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "%</div>";
 
@@ -1320,8 +1326,10 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataSeries.name == "Outdoor Temperature [°"+corf+"]")
-					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°"+corf+"</div>";
+				if(entry.dataSeries.name == "Outdoor Temperature [°C]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Outdoor Temperature [°F]")
+					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°F</div>";
 				else if(entry.dataSeries.name == "Power [W]")
 					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
 
