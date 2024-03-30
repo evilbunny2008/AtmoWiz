@@ -17,38 +17,47 @@
 		$systemTz = 'UTC';
 	date_default_timezone_set($systemTz);
 
-	$currency_values = array();
-	$open = false;
-	$file = "/usr/share/i18n/locales/".$currency_code;
-	$fp = fopen($file, "r");
-	while(!feof($fp))
+	setlocale(LC_MONETARY, $currency_code.'.UTF-8');
+	if(localeconv()['currency_symbol'] == "")
 	{
-		$line = trim(fgets($fp));
-		if($line == "LC_MONETARY")
+		$currency_values = array();
+		$open = false;
+		$file = "/usr/share/i18n/locales/".$currency_code;
+		$fp = fopen($file, "r");
+		while(!feof($fp))
 		{
-			$open = true;
-			continue;
+			$line = trim(fgets($fp));
+			if($line == "LC_MONETARY")
+			{
+				$open = true;
+				continue;
+			}
+
+			if($line == "END LC_MONETARY")
+				break;
+
+			if($open != true)
+				continue;
+
+			list($v, $k) = explode(" ", $line, 2);
+			$v = trim($v);
+			$k = trim($k);
+
+			if(substr($k, 0, 1) == '"')
+				$k = substr($k, 1, -1);
+
+			if(substr($k, 0, 2) == "<U" && substr($k, -1) == ">")
+			{
+				$htmlEntity = "&#x".substr($k, 2, -1).";";
+				$k = html_entity_decode($htmlEntity, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8');
+			}
+
+			$currency_values[$v] = $k;
 		}
-
-		if($line == "END LC_MONETARY")
-			break;
-
-		if($open != true)
-			continue;
-
-		list($v, $k) = explode(" ", $line, 2);
-		$v = trim($v);
-		$k = trim($k);
-
-		if(substr($k, 0, 1) == '"')
-			$k = substr($k, 1, -1);
-
-		if(substr($k, 0, 2) == "<U" && substr($k, -1) == ">")
-		{
-			$htmlEntity = "&#x".substr($k, 2, -1).";";
-			$k = html_entity_decode($htmlEntity, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8');
-		}
-
-		$currency_values[$v] = $k;
+		fclose($fp);
+	} else {
+		$currency_values['currency_symbol'] = localeconv()['currency_symbol'];
+		$currency_values['mon_decimal_point'] = localeconv()['decimal_point'];
+		$currency_values['mon_thousands_sep'] = localeconv()['thousands_sep'];
+		$currency_values['frac_digits'] = localeconv()['frac_digits'];
 	}
-	fclose($fp);
