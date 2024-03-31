@@ -249,6 +249,8 @@ def calcAT(temp, humid, country, feelslike):
         doLog("debug", "vp = %f" % vp)
         at = round(temp + (0.33 * vp) - 4.0, 1)
         doLog("debug", "at = %f" % at)
+        if(_corf == 'F'):
+            at = (at * 9 / 5) + 32
         return at
     else:
         # North American Heat Index -- https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
