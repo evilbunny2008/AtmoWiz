@@ -569,8 +569,10 @@
 
 		if($who == '')
 			$who = $who2;
-		else if($who != $who2)
+		else if($who != $who2 && $who2 != "RC")
 			$who = $who." (".$who2.")";
+		else if($who != $who2 && $who2 == "RC")
+			$who = $who." ";
 
 		if($date != $lastdate)
 		{
