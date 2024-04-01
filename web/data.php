@@ -31,13 +31,13 @@
 	function getWho($reason)
 	{
 		if($reason == "ExternalIrCommand")
-			return "Remote";
+			return "RC";
 		else if($reason == "UserRequest")
 			return "App";
 		else if($reason == "UserAPI")
 			return "API";
 		else if($reason == "Trigger")
-			return "Climate React";
+			return "CR";
 		return "Unknown";
 	}
 
