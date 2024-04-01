@@ -322,6 +322,7 @@ td
   display: inline-block;
   width: 315px;
   //border: 1px solid black;
+  font-size: <?=$CLfontSize?>;
 }
 
 .commandListDD

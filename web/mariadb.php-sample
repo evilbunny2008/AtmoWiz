@@ -20,6 +20,9 @@
 	$outTempColour = "DarkMagenta";
 	$outHumidColour = "DeepPink";
 
+	// 1rem is approx 12pt
+	$CLfontSize = "1rem";
+
 	// The 3-letter ISO 4217 currency code indicating the currency to use, eg NZD, EUR, RUR
 	$currency = "AUD";
 	// Set your currency preference here in language_COUNTRY format, eg en_US, de_DE, ru_RU
