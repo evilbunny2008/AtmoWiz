@@ -452,6 +452,28 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
     # Return 10 watts as a minimum to stop cost loops
     return 0.010
 
+def ToD(kw, dow, hod):
+    if(dow == 1 or dow == 7):
+        doLog("info", f"{kw} * {offpeak[podUID]} * (90 / 3600)")
+        cost = kw * offpeak[podUID] * (90 / 3600)
+    else:
+        doLog("info", f"{kw} * {offpeak[podUID]} * (90 / 3600)")
+        cost = kw * offpeak[podUID] * (90 / 3600)
+        if(hod >= 7 and hod < 9):
+            doLog("info", f"{kw} * {peak[podUID]} * (90 / 3600)")
+            cost = kw * peak[podUID] * (90 / 3600)
+        if(hod >= 9 and hod < 17):
+            doLog("info", f"{kw} * {shoulder[podUID]} * (90 / 3600)")
+            cost = kw * shoulder[podUID] * (90 / 3600)
+        if(hod >= 17 and hod < 20):
+            doLog("info", f"{kw} * {peak[podUID]} * (90 / 3600)")
+            cost = kw * peak[podUID] * (90 / 3600)
+        if(hod >= 20 and hod < 22):
+            doLog("info", f"{kw} * {shoulder[podUID]} * (90 / 3600)")
+            cost = kw * shoulder[podUID] * (90 / 3600)
+
+    return cost
+
 def calcCost(mydb):
     doLog("info", "Running cost calc...")
 
@@ -463,25 +485,7 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
-            if(dow == 1 or dow == 7):
-                doLog("info", f"{kw} * {offpeak[podUID]} * (90 / 3600)")
-                cost = kw * offpeak[podUID] * (90 / 3600)
-            else:
-                doLog("info", f"{kw} * {offpeak[podUID]} * (90 / 3600)")
-                cost = kw * offpeak[podUID] * (90 / 3600)
-                if(hod >= 7 and hod < 9):
-                    doLog("info", f"{kw} * {peak[podUID]} * (90 / 3600)")
-                    cost = kw * peak[podUID] * (90 / 3600)
-                if(hod >= 9 and hod < 17):
-                    doLog("info", f"{kw} * {shoulder[podUID]} * (90 / 3600)")
-                    cost = kw * shoulder[podUID] * (90 / 3600)
-                if(hod >= 17 and hod < 20):
-                    doLog("info", f"{kw} * {peak[podUID]} * (90 / 3600)")
-                    cost = kw * peak[podUID] * (90 / 3600)
-                if(hod >= 20 and hod < 22):
-                    doLog("info", f"{kw} * {shoulder[podUID]} * (90 / 3600)")
-                    cost = kw * shoulder[podUID] * (90 / 3600)
-
+            cost = ToD(kw, dow, hod)
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
@@ -492,25 +496,7 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
-            if(dow == 1 or dow == 7):
-                doLog("info", f"{kw} * {offpeak[podUID]} * (90 / 3600)")
-                cost = kw * offpeak[podUID] * (90 / 3600)
-            else:
-                doLog("info", f"{kw} * {offpeak[podUID]} * (90 / 3600)")
-                cost = kw * offpeak[podUID] * (90 / 3600)
-                if(hod >= 7 and hod < 9):
-                    doLog("info", f"{kw} * {peak[podUID]} * (90 / 3600)")
-                    cost = kw * peak[podUID] * (90 / 3600)
-                if(hod >= 9 and hod < 17):
-                    doLog("info", f"{kw} * {shoulder[podUID]} * (90 / 3600)")
-                    cost = kw * shoulder[podUID] * (90 / 3600)
-                if(hod >= 17 and hod < 20):
-                    doLog("info", f"{kw} * {peak[podUID]} * (90 / 3600)")
-                    cost = kw * peak[podUID] * (90 / 3600)
-                if(hod >= 20 and hod < 22):
-                    doLog("info", f"{kw} * {shoulder[podUID]} * (90 / 3600)")
-                    cost = kw * shoulder[podUID] * (90 / 3600)
-
+            cost = ToD(kw, dow, hod)
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
@@ -520,25 +506,7 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='fan'"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            if(dow == 1 or dow == 7):
-                doLog("info", f"{fankw[podUID]} * {offpeak[podUID]} * (90 / 3600)")
-                cost = fankw[podUID] * offpeak[podUID] * (90 / 3600)
-            else:
-                doLog("info", f"{fankw[podUID]} * {offpeak[podUID]} * (90 / 3600)")
-                cost = fankw[podUID] * offpeak[podUID] * (90 / 3600)
-                if(hod >= 7 and hod < 9):
-                    doLog("info", f"{fankw[podUID]} * {peak[podUID]} * (90 / 3600)")
-                    cost = fankw[podUID] * peak[podUID] * (90 / 3600)
-                if(hod >= 9 and hod < 17):
-                    doLog("info", f"{fankw[podUID]} * {shoulder[podUID]} * (90 / 3600)")
-                    cost = fankw[podUID] * shoulder[podUID] * (90 / 3600)
-                if(hod >= 17 and hod < 20):
-                    doLog("info", f"{fankw[podUID]} * {peak[podUID]} * (90 / 3600)")
-                    cost = fankw[podUID] * peak[podUID] * (90 / 3600)
-                if(hod >= 20 and hod < 22):
-                    doLog("info", f"{fankw[podUID]} * {shoulder[podUID]} * (90 / 3600)")
-                    cost = fankw[podUID] * shoulder[podUID] * (90 / 3600)
-
+            cost = ToD(fankw[podUID], dow, hod)
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
@@ -548,25 +516,7 @@ def calcCost(mydb):
         query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=0 AND cost=0.0"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            if(dow == 1 or dow == 7):
-                doLog("info", f"{offkw[podUID]} * {offpeak[podUID]} * (90 / 3600)")
-                cost = offkw[podUID] * offpeak[podUID] * (90 / 3600)
-            else:
-                doLog("info", f"{offkw[podUID]} * {offpeak[podUID]} * (90 / 3600)")
-                cost = offkw[podUID] * offpeak[podUID] * (90 / 3600)
-                if(hod >= 7 and hod < 9):
-                    doLog("info", f"{offkw[podUID]} * {peak[podUID]} * (90 / 3600)")
-                    cost = offkw[podUID] * peak[podUID] * (90 / 3600)
-                if(hod >= 9 and hod < 17):
-                    doLog("info", f"{offkw[podUID]} * {shoulder[podUID]} * (90 / 3600)")
-                    cost = offkw[podUID] * shoulder[podUID] * (90 / 3600)
-                if(hod >= 17 and hod < 20):
-                    doLog("info", f"{offkw[podUID]} * {peak[podUID]} * (90 / 3600)")
-                    cost = offkw[podUID] * peak[podUID] * (90 / 3600)
-                if(hod >= 20 and hod < 22):
-                    doLog("info", f"{offkw[podUID]} * {shoulder[podUID]} * (90 / 3600)")
-                    cost = offkw[podUID] * shoulder[podUID] * (90 / 3600)
-
+            cost = ToD(offkw[podUID], dow, hod)
             query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
             values = (cost, whentime, podUID)
             doLog("debug", query % values)
