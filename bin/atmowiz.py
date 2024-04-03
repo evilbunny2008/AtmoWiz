@@ -54,10 +54,10 @@ class SensiboClientAPI(object):
             doLog("error", "Request failed, full error messages hidden to protect the API key")
             return response.json()
 
-    def _patch(self, path, data, ** params):
+    def _patch(self, path, headers, data, ** params):
         try:
             params['apiKey'] = self._api_key
-            response = requests.patch(_SERVER + path, params = params, data = data)
+            response = requests.patch(_SERVER + path, headers = headers, params = params, data = data)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
@@ -159,6 +159,27 @@ class SensiboClientAPI(object):
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
             result = pod_get_past(podUid, days)
+
+        if(len(result) == 0 or result['result'] == []):
+            return None
+
+        try:
+            return result
+        except Exception as e:
+            doLog("error", result, True)
+            return None
+
+    def setSameMode(self, podUid, on):
+        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        result = self._patch("/pods/%s/acStates/on" % podUid, headers,
+                            json.dumps({"newValue": on}))
+        if(result == None):
+            return None
+
+        if(result['status'] == 429):
+            doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
+            time.sleep(5)
+            result = setSameMode(podUid, on)
 
         if(len(result) == 0 or result['result'] == []):
             return None
@@ -910,6 +931,16 @@ def TimerSettingsLoop():
                         cursor.execute(query, values)
                         (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing) = cursor.fetchone()
                         #doLog("debug", "%d, %s, %s, %s" % (airconon, temperature, humidity, feelsLike))
+
+                        if(turnOnOff == "Same"):
+                            if(airconon == 0):
+                                doLog("info", "Rule 13 hit, keeping aircon off and not changing mode, targetTemp, fanLevel swing or hor.swing...")
+                                client.setSameMode(podUID, False)
+                                continue
+                            if(airconon == 1):
+                                doLog("info", "Rule 14 hit, keeping aircon on and not changing mode, targetTemp, fanLevel swing or hor.swing...")
+                                client.setSameMode(podUID, True)
+                                continue
 
                         if((turnOnOff == "On" and airconon == 0) or mode != current_mode or targetTemperature != current_targetTemperature or fanLevel != current_fanLevel or swing != current_swing or horizontalSwing != current_horizontalSwing):
                             doLog("info", "Rule 9 hit, %s is %s turning aircon on to..." % (mode, turnOnOff))

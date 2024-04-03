@@ -797,6 +797,7 @@ function deleteTimeSetting(created, uid)
 	<select class="myInputs5" id="turnOnOff5" name="turnOnOff">
 		<option value='On'>On</option>
 		<option value='Off'>Off</option>
+		<option value='Same'>Don't Change</option>
 	</select>
 	<label for="mode5"><b>Mode:</b></label>
 	<select class="myInputs5" id="mode5" name="mode" onChange="populateSelect('5'); return false;">

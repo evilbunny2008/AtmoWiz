@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS `timesettings` (
   `uid` varchar(8) NOT NULL,
   `daysOfWeek` tinyint(3) NOT NULL,
   `startTime` time NOT NULL,
-  `turnOnOff` enum('On','Off') NOT NULL DEFAULT 'On',
+  `turnOnOff` enum('On','Off','Same') NOT NULL DEFAULT 'On',
   `mode` enum('Cool','Heat','Auto','Fan','Dry') NOT NULL DEFAULT 'Cool',
   `targetTemperature` tinyint(4) DEFAULT 26,
   `fanLevel` varchar(20) NOT NULL DEFAULT 'medium',
