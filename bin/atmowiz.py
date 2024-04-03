@@ -394,7 +394,7 @@ def getWatts():
             line = xmltodict.parse(line)
             watts = int(line['msg']['ch1']['watts'])
             ser.close()
-            return watts
+            return watts / 1000
     except Exception as e:
         doLog("error", line)
         doLog("error", e, True)
@@ -449,10 +449,10 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
             return ret
 
     if(mode == 'heat'):
-        intercept = -5648.26
-        coef_target_temp = 233.70
-        coef_temp_diff = -201.43
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / (10300 / 3.39) * (heat[podUID] / COP[podUID]))
+        intercept = -5648
+        coef_target_temp = 234
+        coef_temp_diff = -201
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / 3038 * (heat[podUID] / COP[podUID]))
         doLog("info", f"ret = {ret}")
         if(ret <= heat[podUID] / COP[podUID] * 0.05):
             ret = heat[podUID] / COP[podUID] * 0.05
@@ -460,10 +460,10 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         return ret
 
     if(mode == 'cool' or mode == 'dry'):
-        intercept = 1494.60
-        coef_target_temp = -35.17
-        coef_temp_diff = 143.50
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / (9500 / 3.49) * (cool[podUID] / EER[podUID]))
+        intercept = 1495
+        coef_target_temp = -35
+        coef_temp_diff = 144
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / 2722 * (cool[podUID] / EER[podUID]))
         doLog("info", f"ret = {ret}")
         if(ret <= cool[podUID] / EER[podUID] * 0.05):
             ret = cool[podUID] / EER[podUID] * 0.05
@@ -475,23 +475,23 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
 
 def ToD(kw, dow, hod):
     if(dow == 1 or dow == 7):
-        doLog("info", f"{kw} * {offpeak[podUID]} * (90 / 3600)")
-        cost = kw * offpeak[podUID] * (90 / 3600)
+        doLog("info", f"{kw} * {offpeak[podUID]} * 0.025")
+        cost = kw * offpeak[podUID] * 0.025
     else:
-        doLog("info", f"{kw} * {offpeak[podUID]} * (90 / 3600)")
-        cost = kw * offpeak[podUID] * (90 / 3600)
+        doLog("info", f"{kw} * {offpeak[podUID]} * 0.025")
+        cost = kw * offpeak[podUID] * 0.025
         if(hod >= 7 and hod < 9):
-            doLog("info", f"{kw} * {peak[podUID]} * (90 / 3600)")
-            cost = kw * peak[podUID] * (90 / 3600)
+            doLog("info", f"{kw} * {peak[podUID]} * 0.025")
+            cost = kw * peak[podUID] * 0.025
         if(hod >= 9 and hod < 17):
-            doLog("info", f"{kw} * {shoulder[podUID]} * (90 / 3600)")
-            cost = kw * shoulder[podUID] * (90 / 3600)
+            doLog("info", f"{kw} * {shoulder[podUID]} * 0.025")
+            cost = kw * shoulder[podUID] * 0.025
         if(hod >= 17 and hod < 20):
-            doLog("info", f"{kw} * {peak[podUID]} * (90 / 3600)")
-            cost = kw * peak[podUID] * (90 / 3600)
+            doLog("info", f"{kw} * {peak[podUID]} * 0.025")
+            cost = kw * peak[podUID] * 0.025
         if(hod >= 20 and hod < 22):
-            doLog("info", f"{kw} * {shoulder[podUID]} * (90 / 3600)")
-            cost = kw * shoulder[podUID] * (90 / 3600)
+            doLog("info", f"{kw} * {shoulder[podUID]} * 0.025")
+            cost = kw * shoulder[podUID] * 0.025
 
     return cost
 
@@ -1758,10 +1758,14 @@ if __name__ == "__main__":
 
                         at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
 
+                        kw = getWatts()
+                        if(kw == None):
+                            kw = calcWatts(podUID, ac_state['mode'], ac_state['targetTemperature'], measurements['temperature'])
+
                         values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                                   at, measurements['rssi'], ac_state['on'],
                                   ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
-                                  ac_state['swing'], ac_state['horizontalSwing'], getWatts())
+                                  ac_state['swing'], ac_state['horizontalSwing'], kw)
                         doLog("debug", _sqlquery3 % values)
                         cursor.execute(_sqlquery3, values)
                         mydb.commit()

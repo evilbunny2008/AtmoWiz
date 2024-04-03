@@ -379,11 +379,18 @@ td
     <div class="child" style='left:40%;'><img onClick="prevDay(); return false;" style='height:40px;' src='assets/left.png' /></div>
     <div class="child" style='right:20%;'><img onClick="nextDay(); return false;" style='height:40px;' src='assets/right.png' /></div>
     <div id="chartContainer" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
-    <div style="height:calc(100vh / 3 * 2 - 20px); width:calc(100% - 25px); background:#fff;">
-      <div id="rssiContainer" style="height: calc(100% / 2); width: calc(100% - 20px);"></div>
-      <div id="costContainer" style="height: calc(100% / 2); width: calc(100% - 20px);"></div>
+    <div id="chartContainer4" style="height: calc(100vh / 3 - 20px); width: 100%;"></div>
+    <div style="height:calc(100vh / 3 + 5px); width:calc(100% - 25px); background:#fff;">
+      <div id="costContainer" style="height:100%;width: calc(100% - 20px);"></div>
     </div>
-    <div id="chartContainer4" style="height: calc(100vh / 3 - 20px); width: 100%;display:none;"></div>
+<?php
+	$disprssi = "display:none";
+	if(isset($showRSSI) && $showRSSI == true)
+		$disprssi = "";
+?>
+    <div style="height:calc(100vh / 3 - 20px); width:calc(100% - 25px); background:#fff;<?=$disprssi?>">
+      <div id="rssiContainer" style="height:100%;width: calc(100% - 20px);"></div>
+    </div>
   </div>
 </section>
 <div style='height: 32px;width: 100%'></div>
@@ -1723,10 +1730,10 @@ console.log("Update should have happened.");
 		chart1.options.data[3].dataPoints = content['dataPoints7'];
 		chart1.options.data[4].dataPoints = content['dataPoints8'];
 
-		if(content['showChart4'])
-			document.getElementById("chartContainer4").style.display = 'block';
-		else
-			document.getElementById("chartContainer4").style.display = 'none';
+//		if(content['showChart4'])
+//			document.getElementById("chartContainer4").style.display = 'block';
+//		else
+//			document.getElementById("chartContainer4").style.display = 'none';
 
 		corf = content['corf'];
 

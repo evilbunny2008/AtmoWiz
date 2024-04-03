@@ -187,7 +187,7 @@
 					if($row2 !== False && doubleval($row2['whentimes']) > 0)
 					{
 						if($row2['watts'] != null)
-							$row2['watts'] = intval($row2['watts']);
+							$row2['watts'] = round($row2['watts'], 3);
 						else
 							$row2['watts'] = null;
 
@@ -319,7 +319,7 @@
 				$dataPoints4[] = array('x' => doubleval($row['whentimes']), 'y' => $row['rssi']);
 
 				if($row['watts'] != null)
-					$row['watts'] = intval($row['watts']);
+					$row['watts'] = round($row['watts'], 3);
 				else
 					$row['watts'] = null;
 

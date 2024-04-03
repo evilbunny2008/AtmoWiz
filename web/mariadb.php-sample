@@ -22,6 +22,7 @@
 
 	// 1rem is approx 12pt
 	$CLfontSize = "1rem";
+	$showRSSI = false;
 
 	// The 3-letter ISO 4217 currency code indicating the currency to use, eg NZD, EUR, RUR
 	$currency = "AUD";
