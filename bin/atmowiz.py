@@ -555,11 +555,11 @@ def calcCost(mydb):
         pass
 
 def dokiloWatts(mydb):
-    doLog("info", "Running cost calc...")
+    doLog("info", "Running dokilowatts()...")
 
     try:
         cursor = mydb.cursor()
-        query = "SELECT whentime, podUID, mode, targetTemperature, temperature FROM sensibo WHERE watts=0"
+        query = "SELECT whentime, uid, mode, targetTemperature, temperature FROM sensibo WHERE watts=0"
         cursor.execute(query)
         result = cursor.fetchall()
         for(whentime, podUID, mode, targetTemperature, temperature) in result:
@@ -1708,7 +1708,7 @@ if __name__ == "__main__":
 
                 dokiloWatts(mydb)
                 mydb.close()
-                doLog("info", "Cost has been recalculated.")
+                doLog("info", "Watts has been recalculated.")
                 exit(0)
             except MySQLdb._exceptions.ProgrammingError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
