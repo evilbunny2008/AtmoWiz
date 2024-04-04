@@ -1823,7 +1823,12 @@ if __name__ == "__main__":
 
                         kw = getWatts()
                         if(kw == None):
-                            kw = calcWatts(podUID, ac_state['mode'], ac_state['targetTemperature'], measurements['temperature'])
+                            if((ac_state['mode'] == 'heat' or ac_state['mode'] == 'cool' or ac_state['mode'] == 'dry') and ac_state['on'] == 1):
+                                kw = calcWatts(podUID, ac_state['mode'], ac_state['targetTemperature'], measurements['temperature'])
+                            if(ac_state['mode'] == 'fan' and ac_state['on'] == 1):
+                                kw = fankw[podUID]
+                            if(ac_state['on'] == 0):
+                                kw = offkw[podUID]
 
                         values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                                   at, measurements['rssi'], ac_state['on'],
