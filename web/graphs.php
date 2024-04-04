@@ -1335,12 +1335,12 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 			{
 				var entry = e.entries[i];
 
-				if(entry.dataSeries.name == "Outdoor Temperature [°C]")
+				if(entry.dataSeries.name == "Indoor Temperature [°C]")
 					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
-				else if(entry.dataSeries.name == "Outdoor Temperature [°F]")
+				else if(entry.dataSeries.name == "Indoor Temperature [°F]")
 					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°F</div>";
-				else if(entry.dataSeries.name == "Power [W]")
-					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "W</div>";
+				else if(entry.dataSeries.name == "Power [kW]")
+					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "kW</div>";
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
@@ -1367,7 +1367,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	},
 	axisY2:
 	{
-		title: "Power [W]",
+		title: "Power [kW]",
 		titleFontColor: "<?=$powerColour?>",
 		lineColor: "<?=$powerColour?>",
 		labelFontColor: "<?=$powerColour?>",
@@ -1383,7 +1383,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	[
 		{
 			type: "line",
-			name: "Outdoor Temperature [°"+corf+"]",
+			name: "Indoor Temperature [°"+corf+"]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1391,7 +1391,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 		},{
 			type: "line",
 			axisYType: "secondary",
-			name: "Power [W]",
+			name: "Power [kW]",
 			xValueType: "dateTime",
 			markerSize: 0,
 			showInLegend: true,
@@ -1725,7 +1725,8 @@ console.log("Update should have happened.");
 		chart1.options.data[2].dataPoints = content['dataPoints1'];
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
 		chart3.options.data[0].dataPoints = content['dataPoints5'];
-		chart4.options.data[0].dataPoints = content['dataPoints7'];
+//		chart4.options.data[0].dataPoints = content['dataPoints7'];
+		chart4.options.data[0].dataPoints = content['dataPoints1'];
 		chart4.options.data[1].dataPoints = content['dataPoints6'];
 		chart1.options.data[3].dataPoints = content['dataPoints7'];
 		chart1.options.data[4].dataPoints = content['dataPoints8'];

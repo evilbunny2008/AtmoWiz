@@ -554,6 +554,32 @@ def calcCost(mydb):
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
+def dokiloWatts(mydb):
+    doLog("info", "Running cost calc...")
+
+    try:
+        cursor = mydb.cursor()
+        query = "SELECT whentime, podUID, mode, targetTemperature, temperature FROM sensibo WHERE watts=0"
+        cursor.execute(query)
+        result = cursor.fetchall()
+        for(whentime, podUID, mode, targetTemperature, temperature) in result:
+            kw = calcWatts(podUID, mode, targetTemperature, temperature)
+            query = "UPDATE sensibo SET watts=%s WHERE whentime=%s AND uid=%s"
+            values = (kw, whentime, podUID)
+            doLog("info", query % values)
+            #cursor.execute(query, values)
+            #mydb.commit()
+
+    except MySQLdb._exceptions.ProgrammingError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+    except MySQLdb._exceptions.OperationalError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+    except MySQLdb._exceptions.IntegrityError as e:
+        doLog("error", "There was a problem, error was %s" % e, True)
+        pass
+
 def calcFL(mydb, country):
     try:
         cursor1 = mydb.cursor()
@@ -1395,9 +1421,12 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', type = str, default='/etc/atmowiz.conf',
                         help='Path to config file, /etc/atmowiz.conf is the default')
     parser.add_argument('--reCalcCost', action='store_true', help='Recalc the cost of running the aircon after updating power prices')
+    parser.add_argument('--reCalcWatts', action='store_true', help='Recalc the power of running the aircon after updating power prices')
     parser.add_argument('--reCalcFL', action='store_true', help='Recalc the feels like temperature')
     parser.add_argument('--reCalcFromDate', type = str, help='Only recalc from eg 2024-03-01, if not set means do all')
     parser.add_argument('--reCalcToDate', type = str, help='Only recalc to eg 2024-03-01, if not set means do all')
+    parser.add_argument('--resetCost', action='store_true', help='Reset the Cost DB column')
+    parser.add_argument('--resetWatts', action='store_true', help='Reset the Watts DB column')
     args = parser.parse_args()
 
     if(not os.path.exists(args.config) or not os.path.isfile(args.config)):
@@ -1640,15 +1669,44 @@ if __name__ == "__main__":
         if(args.reCalcCost):
             try:
                 cursor = mydb.cursor()
-                query = "UPDATE sensibo SET cost=0.0 WHERE 1"
-                if(args.reCalcFromDate):
-                    query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
-                if(args.reCalcToDate):
-                    query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
-                doLog("debug", query)
-                cursor.execute(query)
-                mydb.commit()
+                if(args.resetCost):
+                    query = "UPDATE sensibo SET cost=0.0 WHERE 1"
+                    if(args.reCalcFromDate):
+                        query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
+                    if(args.reCalcToDate):
+                        query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
+                    doLog("debug", query)
+                    cursor.execute(query)
+                    mydb.commit()
+
                 calcCost(mydb)
+                mydb.close()
+                doLog("info", "Cost has been recalculated.")
+                exit(0)
+            except MySQLdb._exceptions.ProgrammingError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
+            except MySQLdb._exceptions.OperationalError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
+            except MySQLdb._exceptions.IntegrityError as e:
+                doLog("error", "There was a problem, error was %s" % e, True)
+                exit(1)
+
+        if(args.reCalcWatts):
+            try:
+                cursor = mydb.cursor()
+                if(args.resetWatts):
+                    query = "UPDATE sensibo SET watts=0 WHERE 1"
+                    if(args.reCalcFromDate):
+                        query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
+                    if(args.reCalcToDate):
+                        query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
+                    doLog("debug", query)
+                    cursor.execute(query)
+                    mydb.commit()
+
+                dokiloWatts(mydb)
                 mydb.close()
                 doLog("info", "Cost has been recalculated.")
                 exit(0)
