@@ -326,7 +326,8 @@
 				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => $row['watts']);
 			}
 
-			if(floatval($row2['temperature']) > 50)
+			$corf = "C";
+			if(floatval($row['temperature']) > 50)
 				$corf = "F";
 
 			mysqli_free_result($res);
