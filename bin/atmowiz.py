@@ -559,7 +559,7 @@ def dokiloWatts(mydb):
 
     try:
         cursor = mydb.cursor()
-        query = "SELECT whentime, uid, mode, targetTemperature, temperature FROM sensibo WHERE watts=0"
+        query = "SELECT whentime, uid, mode, targetTemperature, temperature FROM sensibo WHERE watts IS NULL"
         cursor.execute(query)
         result = cursor.fetchall()
         for(whentime, podUID, mode, targetTemperature, temperature) in result:
@@ -1670,7 +1670,7 @@ if __name__ == "__main__":
             try:
                 cursor = mydb.cursor()
                 if(args.resetCost):
-                    query = "UPDATE sensibo SET cost=0.0 WHERE 1"
+                    query = "UPDATE sensibo SET cost=0 WHERE 1"
                     if(args.reCalcFromDate):
                         query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
                     if(args.reCalcToDate):
