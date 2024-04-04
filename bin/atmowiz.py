@@ -559,7 +559,7 @@ def dokiloWatts(mydb):
 
     try:
         cursor = mydb.cursor()
-        query = "SELECT whentime, uid, mode, targetTemperature, temperature, airconon FROM sensibo WHERE watts IS NULL"
+        query = "SELECT whentime, uid, mode, targetTemperature, temperature, airconon FROM sensibo WHERE watts IS NULL OR watts=0"
         cursor.execute(query)
         result = cursor.fetchall()
         for(whentime, podUID, mode, targetTemperature, temperature, airconon) in result:
