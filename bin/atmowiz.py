@@ -562,8 +562,13 @@ def dokiloWatts(mydb):
         query = "SELECT whentime, uid, mode, targetTemperature, temperature FROM sensibo WHERE watts IS NULL"
         cursor.execute(query)
         result = cursor.fetchall()
-        for(whentime, podUID, mode, targetTemperature, temperature) in result:
-            kw = calcWatts(podUID, mode, targetTemperature, temperature)
+        for(whentime, podUID, mode, targetTemperature, temperature, airconon) in result:
+            if((mode == 'heat' or mode == 'cool' or mode == 'dry') and airconon == 1):
+                kw = calcWatts(podUID, mode, targetTemperature, temperature)
+            if(mode == 'fan' and airconon == 1):
+                kw = fankw[podUID]
+            if(airconon == 0):
+                kw = offkw[podUID]
             query = "UPDATE sensibo SET watts=%s WHERE whentime=%s AND uid=%s"
             values = (kw, whentime, podUID)
             doLog("info", query % values)
