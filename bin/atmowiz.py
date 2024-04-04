@@ -475,22 +475,22 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
 
 def ToD(kw, dow, hod):
     if(dow == 1 or dow == 7):
-        doLog("info", f"{kw} * {offpeak[podUID]} * 0.025")
+        doLog("info", f"{kw} * {offpeak[podUID]} * 0.025 A")
         cost = kw * offpeak[podUID] * 0.025
     else:
-        doLog("info", f"{kw} * {offpeak[podUID]} * 0.025")
+        doLog("info", f"{kw} * {offpeak[podUID]} * 0.025 B")
         cost = kw * offpeak[podUID] * 0.025
         if(hod >= 7 and hod < 9):
-            doLog("info", f"{kw} * {peak[podUID]} * 0.025")
+            doLog("info", f"{kw} * {peak[podUID]} * 0.025 C")
             cost = kw * peak[podUID] * 0.025
         if(hod >= 9 and hod < 17):
-            doLog("info", f"{kw} * {shoulder[podUID]} * 0.025")
+            doLog("info", f"{kw} * {shoulder[podUID]} * 0.025 D")
             cost = kw * shoulder[podUID] * 0.025
         if(hod >= 17 and hod < 20):
-            doLog("info", f"{kw} * {peak[podUID]} * 0.025")
+            doLog("info", f"{kw} * {peak[podUID]} * 0.025 E")
             cost = kw * peak[podUID] * 0.025
         if(hod >= 20 and hod < 22):
-            doLog("info", f"{kw} * {shoulder[podUID]} * 0.025")
+            doLog("info", f"{kw} * {shoulder[podUID]} * 0.025 F")
             cost = kw * shoulder[podUID] * 0.025
 
     return cost
@@ -507,8 +507,8 @@ def calcCost(mydb):
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
             cost = ToD(kw, dow, hod)
-            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, podUID)
+            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, kw, whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
             mydb.commit()
@@ -518,8 +518,8 @@ def calcCost(mydb):
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
             cost = ToD(kw, dow, hod)
-            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, podUID)
+            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, kw, whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
             mydb.commit()
@@ -528,8 +528,8 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             cost = ToD(fankw[podUID], dow, hod)
-            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, podUID)
+            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, fankw[podUID], whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
             mydb.commit()
@@ -538,8 +538,8 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             cost = ToD(offkw[podUID], dow, hod)
-            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, podUID)
+            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, offkw[podUID], whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
             mydb.commit()
