@@ -572,8 +572,8 @@ def dokiloWatts(mydb):
             query = "UPDATE sensibo SET watts=%s WHERE whentime=%s AND uid=%s"
             values = (kw, whentime, podUID)
             doLog("info", query % values)
-            #cursor.execute(query, values)
-            #mydb.commit()
+            cursor.execute(query, values)
+            mydb.commit()
 
     except MySQLdb._exceptions.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
