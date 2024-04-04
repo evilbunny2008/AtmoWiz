@@ -212,6 +212,7 @@
 
 			mysqli_free_result($res);
 
+			$corf = "C";
 			if(floatval($row2['temperature']) > 50)
 				$corf = "F";
 
