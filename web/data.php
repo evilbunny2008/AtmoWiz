@@ -206,15 +206,15 @@
 						$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['feelslike']);
 						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['rssi']);
 						$dataPoints6[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['watts']);
+
+						$corf = "C";
+						if(floatval($row2['temperature']) > 50)
+							$corf = "F";
 					}
 				}
 			}
 
 			mysqli_free_result($res);
-
-			$corf = "C";
-			if(floatval($row2['temperature']) > 50)
-				$corf = "F";
 
 			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6, $corf)));
 			$redis->expire(md5($query), 86400);
@@ -303,6 +303,10 @@
 				} else
 					$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));
 
+				$corf = "C";
+				if(floatval($row['temperature']) > 50)
+					$corf = "F";
+
 				$dataPoints2[] = array('x' => doubleval($row['whentimes']), 'y' => intval($row['humidity']));
 
 				if($row['feelslike'] != null)
@@ -326,10 +330,6 @@
 
 				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => $row['watts']);
 			}
-
-			$corf = "C";
-			if(floatval($row['temperature']) > 50)
-				$corf = "F";
 
 			mysqli_free_result($res);
 
