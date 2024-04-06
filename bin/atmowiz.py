@@ -29,7 +29,7 @@ _SERVER = 'https://home.sensibo.com/api/v2'
 
 _sqlquery1 = 'INSERT INTO commands (whentime, uid, reason, who, status, airconon, mode, targetTemperature, temperatureUnit, fanLevel, swing, horizontalSwing, changes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 _sqlquery2 = 'INSERT INTO devices (uid, name) VALUES (%s, %s)'
-_sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, watts) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+_sqlquery3 = 'INSERT INTO sensibo (whentime, uid, temperature, humidity, feelslike, rssi, airconon, mode, targetTemperature, fanLevel, swing, horizontalSwing, actualwatts) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
 _sqlselect1 = 'SELECT 1 FROM commands WHERE whentime=%s AND uid=%s'
 _sqlselect2 = 'SELECT 1 FROM devices WHERE uid=%s AND name=%s'
@@ -507,8 +507,8 @@ def calcCost(mydb):
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
             cost = ToD(kw, dow, hod)
-            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, podUID)
+            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, kw, whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
             mydb.commit()
@@ -518,8 +518,8 @@ def calcCost(mydb):
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
             cost = ToD(kw, dow, hod)
-            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, podUID)
+            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, kw, whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
             mydb.commit()
@@ -528,8 +528,8 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             cost = ToD(fankw[podUID], dow, hod)
-            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, podUID)
+            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, fankw[podUID], whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
             mydb.commit()
@@ -538,41 +538,10 @@ def calcCost(mydb):
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             cost = ToD(offkw[podUID], dow, hod)
-            query = "UPDATE sensibo SET cost=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, whentime, podUID)
+            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
+            values = (cost, offkw[podUID], whentime, podUID)
             doLog("debug", query % values)
             cursor2.execute(query, values)
-            mydb.commit()
-
-    except MySQLdb._exceptions.ProgrammingError as e:
-        doLog("error", "There was a problem, error was %s" % e, True)
-        pass
-    except MySQLdb._exceptions.OperationalError as e:
-        doLog("error", "There was a problem, error was %s" % e, True)
-        pass
-    except MySQLdb._exceptions.IntegrityError as e:
-        doLog("error", "There was a problem, error was %s" % e, True)
-        pass
-
-def dokiloWatts(mydb):
-    doLog("info", "Running dokilowatts()...")
-
-    try:
-        cursor = mydb.cursor()
-        query = "SELECT whentime, uid, mode, targetTemperature, temperature, airconon FROM sensibo WHERE watts IS NULL OR watts=0"
-        cursor.execute(query)
-        result = cursor.fetchall()
-        for(whentime, podUID, mode, targetTemperature, temperature, airconon) in result:
-            if((mode == 'heat' or mode == 'cool' or mode == 'dry') and airconon == 1):
-                kw = calcWatts(podUID, mode, targetTemperature, temperature)
-            if(mode == 'fan' and airconon == 1):
-                kw = fankw[podUID]
-            if(airconon == 0):
-                kw = offkw[podUID]
-            query = "UPDATE sensibo SET watts=%s WHERE whentime=%s AND uid=%s"
-            values = (kw, whentime, podUID)
-            doLog("info", query % values)
-            cursor.execute(query, values)
             mydb.commit()
 
     except MySQLdb._exceptions.ProgrammingError as e:
@@ -1426,12 +1395,10 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', type = str, default='/etc/atmowiz.conf',
                         help='Path to config file, /etc/atmowiz.conf is the default')
     parser.add_argument('--reCalcCost', action='store_true', help='Recalc the cost of running the aircon after updating power prices')
-    parser.add_argument('--reCalcWatts', action='store_true', help='Recalc the power of running the aircon after updating power prices')
     parser.add_argument('--reCalcFL', action='store_true', help='Recalc the feels like temperature')
     parser.add_argument('--reCalcFromDate', type = str, help='Only recalc from eg 2024-03-01, if not set means do all')
     parser.add_argument('--reCalcToDate', type = str, help='Only recalc to eg 2024-03-01, if not set means do all')
     parser.add_argument('--resetCost', action='store_true', help='Reset the Cost DB column')
-    parser.add_argument('--resetWatts', action='store_true', help='Reset the Watts DB column')
     args = parser.parse_args()
 
     if(not os.path.exists(args.config) or not os.path.isfile(args.config)):
@@ -1675,7 +1642,7 @@ if __name__ == "__main__":
             try:
                 cursor = mydb.cursor()
                 if(args.resetCost):
-                    query = "UPDATE sensibo SET cost=0 WHERE 1"
+                    query = "UPDATE sensibo SET cost=0, watts=0 WHERE 1"
                     if(args.reCalcFromDate):
                         query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
                     if(args.reCalcToDate):
@@ -1687,33 +1654,6 @@ if __name__ == "__main__":
                 calcCost(mydb)
                 mydb.close()
                 doLog("info", "Cost has been recalculated.")
-                exit(0)
-            except MySQLdb._exceptions.ProgrammingError as e:
-                doLog("error", "There was a problem, error was %s" % e, True)
-                exit(1)
-            except MySQLdb._exceptions.OperationalError as e:
-                doLog("error", "There was a problem, error was %s" % e, True)
-                exit(1)
-            except MySQLdb._exceptions.IntegrityError as e:
-                doLog("error", "There was a problem, error was %s" % e, True)
-                exit(1)
-
-        if(args.reCalcWatts):
-            try:
-                cursor = mydb.cursor()
-                if(args.resetWatts):
-                    query = "UPDATE sensibo SET watts=0 WHERE 1"
-                    if(args.reCalcFromDate):
-                        query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
-                    if(args.reCalcToDate):
-                        query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
-                    doLog("debug", query)
-                    cursor.execute(query)
-                    mydb.commit()
-
-                dokiloWatts(mydb)
-                mydb.close()
-                doLog("info", "Watts has been recalculated.")
                 exit(0)
             except MySQLdb._exceptions.ProgrammingError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
@@ -1822,14 +1762,6 @@ if __name__ == "__main__":
                         at = calcAT(measurements['temperature'], measurements['humidity'], country, measurements['feelsLike'])
 
                         kw = getWatts()
-                        if(kw == None):
-                            if((ac_state['mode'] == 'heat' or ac_state['mode'] == 'cool' or ac_state['mode'] == 'dry') and ac_state['on'] == 1):
-                                kw = calcWatts(podUID, ac_state['mode'], ac_state['targetTemperature'], measurements['temperature'])
-                            if(ac_state['mode'] == 'fan' and ac_state['on'] == 1):
-                                kw = fankw[podUID]
-                            if(ac_state['on'] == 0):
-                                kw = offkw[podUID]
-
                         values = (sdate, podUID, measurements['temperature'], measurements['humidity'],
                                   at, measurements['rssi'], ac_state['on'],
                                   ac_state['mode'], ac_state['targetTemperature'], ac_state['fanLevel'],
