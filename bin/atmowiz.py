@@ -395,6 +395,16 @@ def getWatts():
             watts = int(line['msg']['ch1']['watts'])
             ser.close()
             return watts / 1000
+
+    except SerialException as e:
+        doLog("error", line)
+        doLog("error", e, True)
+        if(e.args[0] == 13):
+            doLog("error", "Permission Denied. Have you added atmowiz to the dialout group?")
+            return None
+        else:
+            return getWatts()
+
     except Exception as e:
         doLog("error", line)
         doLog("error", e, True)
