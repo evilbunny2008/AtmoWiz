@@ -1319,7 +1319,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	zoomEnabled: true,
 	title:
 	{
-		text: "Power Vs Ambient Temp"
+		text: "Power Vs Indoor Temp"
 	},
 	toolTip:
 	{
@@ -1372,6 +1372,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 		lineColor: "<?=$powerColour?>",
 		labelFontColor: "<?=$powerColour?>",
 		tickColor: "<?=$powerColour?>",
+		valueFormatString: "#,##0.00",
 	},
 	legend:
 	{

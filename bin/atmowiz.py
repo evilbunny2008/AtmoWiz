@@ -396,7 +396,7 @@ def getWatts():
             ser.close()
             return watts / 1000
 
-    except SerialException as e:
+    except serial.serialutil.SerialException as e:
         doLog("error", line)
         doLog("error", e, True)
         if(e.args[0] == 13):
@@ -404,6 +404,21 @@ def getWatts():
             return None
         else:
             return getWatts()
+
+    except serial.SerialException as e:
+        doLog("error", line)
+        doLog("error", e, True)
+        if(e.args[0] == 13):
+            doLog("error", "Permission Denied. Have you added atmowiz to the dialout group?")
+            return None
+        else:
+            return getWatts()
+
+    except PermissionError as e:
+        doLog("error", line)
+        doLog("error", e, True)
+        doLog("error", "Permission Denied. Have you added atmowiz to the dialout group or allowed?")
+        return None
 
     except Exception as e:
         doLog("error", line)
@@ -428,6 +443,7 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         ttMin = podMinMax[podUID][mode]['minTemp']
 
     if(simple_calc):
+        doLog("info", "Doing simple calc")
         if(mode == 'heat'):
             if(temperature  < ttMin):
                 # current temperature is less than lowest temp of the AC so unit full on until temp range is met
@@ -459,9 +475,9 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
             return ret
 
     if(mode == 'heat'):
-        intercept = -5648
-        coef_target_temp = 234
-        coef_temp_diff = -201
+        intercept = 0.7279997536773715
+        coef_target_temp = 0.01186641968005067
+        coef_temp_diff = -0.07953268491932018
         ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / 3038 * (heat[podUID] / COP[podUID]))
         doLog("info", f"ret = {ret}")
         if(ret <= heat[podUID] / COP[podUID] * 0.05):
@@ -470,9 +486,9 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         return ret
 
     if(mode == 'cool' or mode == 'dry'):
-        intercept = 1495
-        coef_target_temp = -35
-        coef_temp_diff = 144
+        intercept = 1.5265831151116123
+        coef_target_temp = -0.03648278787549056
+        coef_temp_diff = 0.1378628596287258
         ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / 2722 * (cool[podUID] / EER[podUID]))
         doLog("info", f"ret = {ret}")
         if(ret <= cool[podUID] / EER[podUID] * 0.05):

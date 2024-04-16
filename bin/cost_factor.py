@@ -45,12 +45,12 @@ password = configParser.get('mariadb', 'password', fallback = 'password')
 db_uri = "mysql://%s:%s@%s/%s" % (username, password, hostname, database)
 engine = create_engine(db_uri)
 
-query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND (mode='cool' OR mode='dry')"
+query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, actualwatts FROM `sensibo` WHERE airconon = 1 AND actualwatts != 0 AND (mode='cool' OR mode='dry')"
 cool_df = pd.read_sql(query, engine)
 #cool_df.to_csv('/root/AtmoWiz/web/data.csv')
 
 X = cool_df[["temperature", "tempDiff"]]
-y = cool_df["watts"]
+y = cool_df["actualwatts"]
 
 for k in regressors:
     print (f"Trying {k}...")
@@ -74,11 +74,11 @@ for k in regressors:
 
     break
 
-query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, watts FROM `sensibo` WHERE airconon = 1 AND watts != 0 AND mode='heat'"
+query = "SELECT temperature, (temperature - targetTemperature) as tempDiff, actualwatts FROM `sensibo` WHERE airconon = 1 AND actualwatts != 0 AND mode='heat'"
 heat_df = pd.read_sql(query, engine)
 
 X = heat_df[["temperature", "tempDiff"]]
-y = heat_df["watts"]
+y = heat_df["actualwatts"]
 
 for k in regressors:
     print (f"Trying {k}...")
@@ -122,7 +122,7 @@ ax.plot_surface(xx, yy, zz, alpha=0.5)
 
 fig.savefig('/root/AtmoWiz/web/out.png')
 
-fig = px.scatter_3d(df, x='temperature', y='tempDiff', z='watts', size_max=12, color='watts', opacity=0.8)
+fig = px.scatter_3d(df, x='temperature', y='tempDiff', z='actualwatts', size_max=12, color='actualwatts', opacity=0.8)
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
 fig.update_layout(scene=dict(xaxis=dict(title='Target Temperature'), yaxis=dict(title='Temperature Difference'), zaxis=dict(title='Watts')))
 fig.update_layout(title=dict(text="Target Temperature Vs Temperature Difference Vs Watts", font=dict(size=18), xanchor='left', yanchor='top'))
