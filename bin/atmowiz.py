@@ -1819,7 +1819,7 @@ if __name__ == "__main__":
                 getLastCommands(mydb, 5)
 
                 loops += 1
-                if(loops >= 480):
+                if(loops >= 40):
                     loops = 0
                     doHistoricalMeasurements(mydb, 1)
 
