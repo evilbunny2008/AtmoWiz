@@ -475,10 +475,12 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
             return ret
 
     if(mode == 'heat'):
-        intercept = 0.7279997536773715
-        coef_target_temp = 0.01186641968005067
-        coef_temp_diff = -0.07953268491932018
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / 3038 * (heat[podUID] / COP[podUID]))
+        intercept = 0.1037245947218648
+        coef_target_temp = 0.028118990530133777
+        coef_temp_diff = -0.25255855955106443
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / 3.038 * (heat[podUID] / COP[podUID]))
+        #doLog("info", "ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / 3.038 * (heat[podUID] / COP[podUID]))")
+        #doLog("info", f"{ret} = (({intercept} + {coef_target_temp} * {temperature} + {coef_temp_diff} * ({targetTemperature} - {temperature})) / 3.038 * ({heat[podUID]} / {COP[podUID]}))")
         doLog("info", f"ret = {ret}")
         if(ret <= heat[podUID] / COP[podUID] * 0.05):
             ret = heat[podUID] / COP[podUID] * 0.05
@@ -489,7 +491,7 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
         intercept = 1.5265831151116123
         coef_target_temp = -0.03648278787549056
         coef_temp_diff = 0.1378628596287258
-        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / 2722 * (cool[podUID] / EER[podUID]))
+        ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (temperature - targetTemperature)) / 2.722 * (cool[podUID] / EER[podUID]))
         doLog("info", f"ret = {ret}")
         if(ret <= cool[podUID] / EER[podUID] * 0.05):
             ret = cool[podUID] / EER[podUID] * 0.05
