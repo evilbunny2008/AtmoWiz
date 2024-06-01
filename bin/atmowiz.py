@@ -68,10 +68,22 @@ class SensiboClientAPI(object):
         try:
             params['apiKey'] = self._api_key
             response = requests.post(_SERVER + path, headers = headers, params = params, data = data)
+            doLog("error", response.text)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key")
+            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            return response.json()
+
+    def _put(self, path, headers, data, ** params):
+        try:
+            params['apiKey'] = self._api_key
+            response = requests.put(_SERVER + path, headers = headers, params = params, data = data)
+            doLog("error", response.text)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as exc:
+            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
             return response.json()
 
     def devices(self):
@@ -889,30 +901,30 @@ def checkClimateSetting(mydb):
                 doLog("debug", "%d, %s, %s, %s, %s, %s" % (airconon, current_mode, current_targetTemperature, current_fanLevel, current_swing, current_horizontalSwing))
 
                 body = {}
+
+                body["lowTemperatureThreshold"] = lowerTemperature
+                body["highTemperatureThreshold"] = upperTemperature
+
                 body["enabled"] = True
-                body["lowTemperatureThreshold"] = int(lowerTemperature)
-                if(lowerTurnOnOff):
+                if(lowerTurnOnOff == "On"):
                     body["lowTemperatureState"] = {"on": True}
+                    body["lowTemperatureState"]["targetTemperature"] = lowerTargetTemperature
+                    body["lowTemperatureState"]["mode"] = lowerMode
+                    body["lowTemperatureState"]["fanLevel"] = lowerFanLevel
+                    body["lowTemperatureState"]["swing"] = lowerSwing
+                    body["lowTemperatureState"]["horizontalSwing"] = lowerHorizontalSwing
                 else:
                     body["lowTemperatureState"] = {"on": False}
 
-                body["lowTemperatureState"]["targetTemperature"] = lowerTargetTemperature
-                body["lowTemperatureState"]["mode"] = lowerMode
-                body["lowTemperatureState"]["fanLevel"] = lowerFanLevel
-                body["lowTemperatureState"]["swing"] = lowerSwing
-                body["lowTemperatureState"]["horizontalSwing"] = lowerHorizontalSwing
-
-                body["highTemperatureThreshold"] = int(upperTemperature)
-                if(upperTurnOnOff):
+                if(upperTurnOnOff == "On"):
                     body["highTemperatureState"] = {"on": True}
+                    body["highTemperatureState"]["targetTemperature"] = upperTargetTemperature
+                    body["highTemperatureState"]["mode"] = upperMode
+                    body["highTemperatureState"]["fanLevel"] = upperFanLevel
+                    body["highTemperatureState"]["swing"] = upperSwing
+                    body["highTemperatureState"]["horizontalSwing"] = upperHorizontalSwing
                 else:
                     body["highTemperatureState"] = {"on": False}
-
-                body["highTemperatureState"]["targetTemperature"] = upperTargetTemperature
-                body["highTemperatureState"]["mode"] = upperMode
-                body["highTemperatureState"]["fanLevel"] = upperFanLevel
-                body["highTemperatureState"]["swing"] = upperSwing
-                body["highTemperatureState"]["horizontalSwing"] = upperHorizontalSwing
 
                 body = json.dumps(body)
                 doLog("debug", body)
