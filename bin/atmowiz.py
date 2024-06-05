@@ -47,7 +47,7 @@ class SensiboClientAPI(object):
     def _get(self, path, ** params):
         try:
             params['apiKey'] = self._api_key
-            response = requests.get(_SERVER + path, params = params)
+            response = requests.get(_SERVER + path, params = params, timeout=30)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
@@ -57,7 +57,7 @@ class SensiboClientAPI(object):
     def _patch(self, path, headers, data, ** params):
         try:
             params['apiKey'] = self._api_key
-            response = requests.patch(_SERVER + path, headers = headers, params = params, data = data)
+            response = requests.patch(_SERVER + path, headers = headers, params = params, data = data, timeout=30)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
@@ -67,7 +67,7 @@ class SensiboClientAPI(object):
     def _post(self, path, headers, data, ** params):
         try:
             params['apiKey'] = self._api_key
-            response = requests.post(_SERVER + path, headers = headers, params = params, data = data)
+            response = requests.post(_SERVER + path, headers = headers, params = params, data = data, timeout=30)
             doLog("error", response.text)
             response.raise_for_status()
             return response.json()
@@ -78,7 +78,7 @@ class SensiboClientAPI(object):
     def _put(self, path, headers, data, ** params):
         try:
             params['apiKey'] = self._api_key
-            response = requests.put(_SERVER + path, headers = headers, params = params, data = data)
+            response = requests.put(_SERVER + path, headers = headers, params = params, data = data, timeout=30)
             doLog("error", response.text)
             response.raise_for_status()
             return response.json()
