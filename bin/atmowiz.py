@@ -542,18 +542,7 @@ def calcCost(mydb):
         cursor1 = mydb.cursor()
         cursor2 = mydb.cursor()
 
-        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry')"
-        cursor1.execute(query)
-        for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
-            kw = calcWatts(podUID, mode, targetTemperature, temperature)
-            cost = ToD(kw, dow, hod)
-            query = "UPDATE sensibo SET cost=%s, watts=%s WHERE whentime=%s AND uid=%s"
-            values = (cost, kw, whentime, podUID)
-            doLog("debug", query % values)
-            cursor2.execute(query, values)
-            mydb.commit()
-
-        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND mode='heat'"
+        query = "SELECT whentime, uid, DAYOFWEEK(whentime) as dow, HOUR(whentime) as hod, mode, targetTemperature, temperature FROM sensibo WHERE airconon=1 AND cost=0.0 AND (mode='cool' OR mode='dry' OR mode='heat')"
         cursor1.execute(query)
         for (whentime, podUID, dow, hod, mode, targetTemperature, temperature) in cursor1:
             kw = calcWatts(podUID, mode, targetTemperature, temperature)
@@ -694,7 +683,8 @@ def doHistoricalMeasurements(mydb, days = 1):
                     # Ignoring update since we already have that record
                     continue
 
-                query = "SELECT 1 FROM sensibo WHERE ABS(TIMESTAMPDIFF(SECOND, %s, whentime)) < 30 AND uid=%s"
+                values = (sdate, sdate, podUID)
+                query = "SELECT 1 FROM sensibo WHERE whentime BETWEEN (%s - INTERVAL 30 SECOND) AND (%s + INTERVAL 30 SECOND) AND uid=%s"
                 doLog("debug", query % values)
                 cursor.execute(query, values)
                 row = cursor.fetchone()
