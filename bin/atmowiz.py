@@ -53,6 +53,9 @@ class SensiboClientAPI(object):
         except requests.exceptions.RequestException as exc:
             doLog("error", "Request failed, full error messages hidden to protect the API key")
             return response.json()
+        except requests.exceptions.Timeout as e:
+            doLog("error", "Timeout occurred...")
+            return None
 
     def _patch(self, path, headers, data, ** params):
         try:
@@ -63,6 +66,9 @@ class SensiboClientAPI(object):
         except requests.exceptions.RequestException as exc:
             doLog("error", "Request failed, full error messages hidden to protect the API key")
             return response.json()
+        except requests.exceptions.Timeout as e:
+            doLog("error", "Timeout occurred...")
+            return None
 
     def _post(self, path, headers, data, ** params):
         try:
@@ -74,6 +80,9 @@ class SensiboClientAPI(object):
         except requests.exceptions.RequestException as exc:
             doLog("error", "Request failed, full error messages hidden to protect the API key", True)
             return response.json()
+        except requests.exceptions.Timeout as e:
+            doLog("error", "Timeout occurred...")
+            return None
 
     def _put(self, path, headers, data, ** params):
         try:
@@ -85,6 +94,9 @@ class SensiboClientAPI(object):
         except requests.exceptions.RequestException as exc:
             doLog("error", "Request failed, full error messages hidden to protect the API key", True)
             return response.json()
+        except requests.exceptions.Timeout as e:
+            doLog("error", "Timeout occurred...")
+            return None
 
     def devices(self):
         result = self._get("/users/me/pods", fields="id,room")
