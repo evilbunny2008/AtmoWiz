@@ -499,9 +499,9 @@ def calcWatts(podUID, mode, targetTemperature, temperature):
             return ret
 
     if(mode == 'heat'):
-        intercept = 0.1037245947218648
-        coef_target_temp = 0.028118990530133777
-        coef_temp_diff = -0.25255855955106443
+        intercept = -0.05117905329790551
+        coef_target_temp = 0.03574210340396863
+        coef_temp_diff = -0.24460169101038237
         ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / 3.038 * (heat[podUID] / COP[podUID]))
         #doLog("info", "ret = ((intercept + coef_target_temp * temperature + coef_temp_diff * (targetTemperature - temperature)) / 3.038 * (heat[podUID] / COP[podUID]))")
         #doLog("info", f"{ret} = (({intercept} + {coef_target_temp} * {temperature} + {coef_temp_diff} * ({targetTemperature} - {temperature})) / 3.038 * ({heat[podUID]} / {COP[podUID]}))")

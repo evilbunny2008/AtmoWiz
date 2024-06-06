@@ -278,7 +278,7 @@
 			{
 				if($period == 86400000)
 				{
-					$query1 = "SELECT * FROM commands WHERE uid='$uid' AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') > -90 AND TIMESTAMPDIFF(SECOND, whentime, '${row['whentime']}') <= 2 AND changes LIKE \"%'on'%\" LIMIT 1";
+					$query1 = "SELECT * FROM commands WHERE uid='$uid' AND whentime > '${row['whentime']}' - INTERVAL 90 SECOND AND whentime <= '${row['whentime']}' + INTERVAL 2 SECOND AND changes LIKE \"%'on'%\" LIMIT 1";
 					$dres = mysqli_query($link, $query1);
 					if(mysqli_num_rows($dres) > 0)
 					{
@@ -291,12 +291,22 @@
 								else
 									$ac = "off";
 
-							if($ac == "on")
-								$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
-										'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'green');
-							else if($ac == "off")
-								$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
-										'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'tomato');
+							if($drow['reason'] != 'Trigger')
+							{
+								if($ac == "on")
+									$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
+											'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'green');
+								else if($ac == "off")
+									$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
+											'inindexLabel' => $ac, 'markerType' => 'cross',  'markerSize' =>  20, 'markerColor' => 'tomato');
+							} else {
+								if($ac == "on")
+									$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
+											'inindexLabel' => $ac, 'markerType' => 'circle',  'markerSize' =>  10, 'markerColor' => 'green');
+								else if($ac == "off")
+									$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']),
+											'inindexLabel' => $ac, 'markerType' => 'circle',  'markerSize' =>  10, 'markerColor' => 'red');
+							}
 						}
 					} else
 						$dataPoints1[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['temperature']));

@@ -1078,6 +1078,8 @@ var chart1 = new CanvasJS.Chart("chartContainer",
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
+				if(entry.dataPoint.markerType == 'circle')
+					content += "<br/><div>Climate React was triggered, Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
 			}
 			return content;
 		},
@@ -1344,6 +1346,8 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 
 				if(entry.dataPoint.markerType == 'cross')
 					content += "<br/><div>Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
+				if(entry.dataPoint.markerType == 'circle')
+					content += "<br/><div>Climate React was triggered, Aircon was turned " + entry.dataPoint.inindexLabel + "</div>";
 			}
 			return content;
 		},
