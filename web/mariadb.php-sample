@@ -19,6 +19,7 @@
 	$powerColour = "Steelblue";
 	$outTempColour = "DarkMagenta";
 	$outHumidColour = "DeepPink";
+	$targetTempColour = "LightSkyBlue";
 
 	// 1rem is approx 12pt
 	$CLfontSize = "1rem";

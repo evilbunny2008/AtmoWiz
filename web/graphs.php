@@ -1321,7 +1321,7 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 	zoomEnabled: true,
 	title:
 	{
-		text: "Power Vs Indoor Temp"
+		text: "Power Vs Indoor Temp Vs Target Temp"
 	},
 	toolTip:
 	{
@@ -1341,6 +1341,10 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
 				else if(entry.dataSeries.name == "Indoor Temperature [°F]")
 					content += "<div style='color:<?=$outTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°F</div>";
+				else if(entry.dataSeries.name == "Target Temperature [°C]")
+					content += "<div style='color:<?=$targetTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°C</div>";
+				else if(entry.dataSeries.name == "Target Temperature [°F]")
+					content += "<div style='color:<?=$targetTempColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "°F</div>";
 				else if(entry.dataSeries.name == "Power [kW]")
 					content += "<div style='color:<?=$powerColour?>'>" + entry.dataSeries.name + ": " +  entry.dataPoint.y + "kW</div>";
 
@@ -1401,7 +1405,14 @@ var chart4 = new CanvasJS.Chart("chartContainer4",
 			markerSize: 0,
 			showInLegend: true,
 			color: "<?=$powerColour?>",
-		}
+		},{
+			type: "line",
+			name: "Target Temperature [°"+corf+"]",
+			xValueType: "dateTime",
+			markerSize: 0,
+			showInLegend: true,
+			color: "<?=$targetTempColour?>",
+		},
 	],
 });
 
@@ -1483,7 +1494,8 @@ function toggleDataSeries(e)
 		e.dataSeries.visible = true;
 	}
 
-	chart1.render();
+	for(var i = 0; i < charts.length; i++)
+		charts[i].render();
 }
 
 function getISOWeekNumber(dt)
@@ -1730,16 +1742,11 @@ console.log("Update should have happened.");
 		chart1.options.data[2].dataPoints = content['dataPoints1'];
 		chart2.options.data[0].dataPoints = content['dataPoints4'];
 		chart3.options.data[0].dataPoints = content['dataPoints5'];
-//		chart4.options.data[0].dataPoints = content['dataPoints7'];
 		chart4.options.data[0].dataPoints = content['dataPoints1'];
 		chart4.options.data[1].dataPoints = content['dataPoints6'];
 		chart1.options.data[3].dataPoints = content['dataPoints7'];
 		chart1.options.data[4].dataPoints = content['dataPoints8'];
-
-//		if(content['showChart4'])
-//			document.getElementById("chartContainer4").style.display = 'block';
-//		else
-//			document.getElementById("chartContainer4").style.display = 'none';
+		chart4.options.data[2].dataPoints = content['dataPoints9'];
 
 		corf = content['corf'];
 

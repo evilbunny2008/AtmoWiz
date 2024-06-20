@@ -22,7 +22,7 @@
 		$commands = "<li style='color:red;text-align:center'>" . $error . "</li>\n";
 		$commands .= "<li style='text-align:right'><a href='graphs.php?logout=1'>Log Out</a></li>\n";
 		$data = array('uid' => '', 'dataPoints1' => array(), 'dataPoints2' => array(), 'dataPoints3' => array(), 'dataPoints4' => array(),
-			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(), 'dataPoints8' => array(), corf => "C",
+			'dataPoints5' => array(), 'dataPoints6' => array(), 'dataPoints7' => array(), 'dataPoints8' => array(), 'dataPoints9' => array(), corf => "C",
 			'commandHeader' => $commandHeader, 'commands' => $commands, 'currtime' => date("H:i"), 'showChart4' => $showChart4);
 		echo json_encode(array('status' => 200, 'content' => $data));
 		exit;
@@ -52,6 +52,7 @@
 	$dataPoints6 = array();
 	$dataPoints7 = array();
 	$dataPoints8 = array();
+	$dataPoints9 = array();
 
 	$airconon = '';
 	$uid = '';
@@ -105,6 +106,7 @@
 		$dataPoints6[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 		$dataPoints7[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 		$dataPoints8[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
+		$dataPoints9[] = array('x' => mktime(0, 0, 0, date("m", $startTS / 1000), date("d", $startTS / 1000), date("Y", $startTS / 1000)) * 1000, 'y' => null);
 	} else {
 		$dataPoints1[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints2[] = array('x' => doubleval($startTS), 'y' => null);
@@ -114,6 +116,7 @@
 		$dataPoints6[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints7[] = array('x' => doubleval($startTS), 'y' => null);
 		$dataPoints8[] = array('x' => doubleval($startTS), 'y' => null);
+		$dataPoints9[] = array('x' => doubleval($startTS), 'y' => null);
 	}
 
 	$query = "";
@@ -121,28 +124,28 @@
 	if($period == 86400000)
 	{
 		$query = "SELECT whentime, UNIX_TIMESTAMP(whentime) * 1000 as whentimes, DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, ".
-				"temperature, humidity, feelslike, rssi, airconon, watts FROM sensibo ".
+				"temperature, humidity, feelslike, rssi, airconon, watts, targetTemperature FROM sensibo ".
 				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
 	}
 
 	if($period == 604800000)
 	{
 		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime, DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, ".
-				"temperature, humidity, feelslike, rssi, airconon, watts FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
+				"temperature, humidity, feelslike, rssi, airconon, watts, targetTemperature FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
 				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
 	}
 
 	if($period == 2592000000)
 	{
 		$query = "SELECT * FROM ( SELECT @row := @row +1 AS rownum, UNIX_TIMESTAMP(whentime) * 1000 as whentimes,DATE_FORMAT(whentime, '%H:%i') as wttime,".
-				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon, watts FROM ( SELECT @row :=0) r, sensibo ".
+				"DATE_FORMAT(whentime, '%Y-%m-%d %H:%i') as wtdt, temperature, humidity, feelslike, rssi, airconon, watts, targetTemperature FROM ( SELECT @row :=0) r, sensibo ".
 				"WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC".
 				") ranked WHERE rownum % 15 = 0";
 	}
 
 	if($period == 31536000000)
 	{
-		$query = "SELECT DATE_FORMAT(whentime, '%Y-%m-%d') as wtdate, count(uid) as c FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ".
+		$query = "SELECT DATE_FORMAT(whentime, '%Y-%m-%d') as wtdate, count(uid) as c, targetTemperature FROM sensibo WHERE uid='$uid' AND whentime >= FROM_UNIXTIME($startTS / 1000) AND whentime <= FROM_UNIXTIME(($startTS + $period) / 1000) ".
 				"GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
@@ -153,6 +156,7 @@
 			$dataPoints4 = $arr['3'];
 			$dataPoints6 = $arr['4'];
 			$corf = $arr['5'];
+			$dataPoints9 = $arr['6'];
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
@@ -206,6 +210,7 @@
 						$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['feelslike']);
 						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['rssi']);
 						$dataPoints6[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['watts']);
+						$dataPoints9[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['targetTemperature']);
 
 						$corf = "C";
 						if(floatval($row2['temperature']) > 50)
@@ -216,12 +221,12 @@
 
 			mysqli_free_result($res);
 
-			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6, $corf)));
+			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6, $corf, $dataPoints9)));
 			$redis->expire(md5($query), 86400);
 		}
 
-		$query = "SELECT UNIX_TIMESTAMP(whentime) as whentime, round(sum(cost), 2) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
-				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%v') ORDER BY whentime ASC";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) as whentime, round(sum(cost), 2) as cost FROM sensibo WHERE uid='$uid' AND whentime >= FROM_UNIXTIME($startTS / 1000) AND ".
+				"whentime <= FROM_UNIXTIME(($startTS + $period) / 1000) GROUP BY DATE_FORMAT(whentime, '%Y-%v') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
 			$dataPoints5 = unserialize($redis->get(md5($query)));
@@ -244,7 +249,7 @@
 			$redis->expire(md5($query), 86400);
 		}
 
-		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature, humidity FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature, humidity FROM weather WHERE whentime >= FROM_UNIXTIME($startTS / 1000) AND whentime <= FROM_UNIXTIME(($startTS + $period) / 1000) ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
 			$arr = unserialize($redis->get(md5($query)));
@@ -272,6 +277,7 @@
 			$dataPoints4 = $arr['3'];
 			$dataPoints6 = $arr['4'];
 			$corf = $arr['5'];
+			$dataPoints9 = $arr['6'];
 		} else {
 			$res = mysqli_query($link, $query);
 			while($row = mysqli_fetch_assoc($res))
@@ -339,18 +345,18 @@
 					$row['watts'] = null;
 
 				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => $row['watts']);
+				$dataPoints9[] = array('x' => doubleval($row['whentimes']), 'y' => $row['targetTemperature']);
 			}
 
 			mysqli_free_result($res);
 
-			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6, $corf)));
+			$redis->set(md5($query), serialize(array($dataPoints1, $dataPoints2, $dataPoints3, $dataPoints4, $dataPoints6, $corf, $dataPoints9)));
 			$redis->expire(md5($query), 86400);
 		}
 	}
 
 	$ac = "off";
-	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime, UNIX_TIMESTAMP(whentime) * 1000 as startTS FROM ".
-				"sensibo WHERE uid='$uid' ORDER BY whentime DESC LIMIT 1";
+	$query = "SELECT *, DATE_FORMAT(whentime, '%H:%i') as wttime, UNIX_TIMESTAMP(whentime) * 1000 as startTS FROM sensibo WHERE uid='$uid' ORDER BY whentime DESC LIMIT 1";
 	$res = mysqli_query($link, $query);
 	if(mysqli_num_rows($res) > 0)
 	{
@@ -371,8 +377,8 @@
 
 	if($period == 2592000000)
 	{
-		$query = "SELECT UNIX_TIMESTAMP(whentime) as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND ".
-				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC LIMIT 500";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND whentime >= FROM_UNIXTIME($startTS / 1000) AND ".
+				"whentime <= FROM_UNIXTIME(($startTS + $period) / 1000) GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
 			$dataPoints5 = unserialize($redis->get(md5($query)));
@@ -391,7 +397,8 @@
 			$redis->expire(md5($query), 86400);
 		}
 
-		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature, humidity FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature, humidity FROM weather WHERE whentime >= FROM_UNIXTIME($startTS / 1000) AND ".
+				"whentime <= FROM_UNIXTIME(($startTS + $period) / 1000) ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
 			$arr = unserialize($redis->get(md5($query)));
@@ -411,8 +418,7 @@
 		}
 	} else if($period != 31536000000) {
 		$query = "SELECT FLOOR(UNIX_TIMESTAMP(whentime) / 3600) * 3600000 as whentime, sum(cost) as cost FROM sensibo WHERE uid='$uid' AND ".
-				"UNIX_TIMESTAMP(whentime) * 1000 >= floor($startTS / 3600000) * 3600000 + 3600000 AND ".
-				"UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period + 3600000 GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC LIMIT 500";
+				"whentime >= FROM_UNIXTIME(FLOOR($startTS / 3600000) * 3600) AND whentime <= FROM_UNIXTIME(($startTS + $period + 3600000) / 1000) GROUP BY DATE_FORMAT(whentime, '%Y-%m-%d %H') ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
 			$dataPoints5 = unserialize($redis->get(md5($query)));
@@ -434,7 +440,7 @@
 			$redis->expire(md5($query), 86400);
 		}
 
-		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature, humidity FROM weather WHERE UNIX_TIMESTAMP(whentime) * 1000 >= $startTS AND UNIX_TIMESTAMP(whentime) * 1000 <= $startTS + $period ORDER BY whentime ASC";
+		$query = "SELECT UNIX_TIMESTAMP(whentime) * 1000 as whentimes, temperature, humidity FROM weather WHERE whentime >= FROM_UNIXTIME(FLOOR($startTS / 3600000) * 3600) AND whentime <= FROM_UNIXTIME(($startTS + $period + 3600000) / 1000) ORDER BY whentime ASC";
 		if($redis->exists(md5($query)))
 		{
 			$arr = unserialize($redis->get(md5($query)));
@@ -633,6 +639,6 @@
 	}
 
 	$data = array('uid' => $uid, 'dataPoints1' => $dataPoints1, 'dataPoints2' => $dataPoints2, 'dataPoints3' => $dataPoints3, 'dataPoints4' => $dataPoints4,
-					'dataPoints5' => $dataPoints5, 'dataPoints6' => $dataPoints6, 'dataPoints7' => $dataPoints7, 'dataPoints8' => $dataPoints8,
+					'dataPoints5' => $dataPoints5, 'dataPoints6' => $dataPoints6, 'dataPoints7' => $dataPoints7, 'dataPoints8' => $dataPoints8, 'dataPoints9' => $dataPoints9,
 					'commandHeader' => $commandHeader, 'commands' => $commands, 'currtime' => $currtime, 'startTS' => $startTS, 'showChart4' => $showChart4);
 	echo json_encode(array('status' => 200, 'content' => $data));
