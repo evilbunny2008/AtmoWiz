@@ -210,7 +210,7 @@
 						$dataPoints3[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['feelslike']);
 						$dataPoints4[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['rssi']);
 						$dataPoints6[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['watts']);
-						$dataPoints9[] = array('x' => doubleval($row2['whentimes']), 'y' => $row2['targetTemperature']);
+						$dataPoints9[] = array('x' => doubleval($row2['whentimes']), 'y' => floatval($row2['targetTemperature']));
 
 						$corf = "C";
 						if(floatval($row2['temperature']) > 50)
@@ -345,7 +345,7 @@
 					$row['watts'] = null;
 
 				$dataPoints6[] = array('x' => doubleval($row['whentimes']), 'y' => $row['watts']);
-				$dataPoints9[] = array('x' => doubleval($row['whentimes']), 'y' => $row['targetTemperature']);
+				$dataPoints9[] = array('x' => doubleval($row['whentimes']), 'y' => floatval($row['targetTemperature']));
 			}
 
 			mysqli_free_result($res);
