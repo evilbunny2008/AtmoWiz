@@ -597,7 +597,7 @@
 			if($commands != "<ul>\n")
 				$commands .= "<li>&nbsp;</li>\n";
 
-			$commands .= "<li style='text-align:center;cursor:pointer;' onClick='showDay(\"$wtsec\"); return false;'><u><b>$date</b></u></li>\n";
+			$commands .= "<li style='text-align:center;cursor:pointer;' onClick='showDay(\"".($wtsec)."\"); return false;'><u><b>$date</b></u></li>\n";
 			$lastdate = $date;
 		}
 

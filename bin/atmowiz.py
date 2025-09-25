@@ -17,8 +17,10 @@ import signal
 import sys
 import time
 import traceback
+
 from datetime import datetime
 from dateutil import tz
+from pathlib import Path
 from requests.auth import HTTPBasicAuth
 from systemd.journal import JournalHandler
 from urllib.parse import urlparse
@@ -100,7 +102,7 @@ class SensiboClientAPI(object):
 
     def devices(self):
         result = self._get("/users/me/pods", fields="id,room")
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -119,7 +121,7 @@ class SensiboClientAPI(object):
 
     def pod_all_stats(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,feelsLike")
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -138,7 +140,7 @@ class SensiboClientAPI(object):
 
     def pod_get_remote_capabilities(self, podUid, nb = 1):
         result = self._get("/pods/%s/acStates" % podUid, limit = nb, fields="device,remoteCapabilities,features")
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -157,7 +159,7 @@ class SensiboClientAPI(object):
 
     def pod_status(self, podUid, lastlimit = 5):
         result = self._get("/pods/%s/acStates" % podUid, limit = lastlimit, fields="status,reason,time,acState,causedByUser,resultingAcState,changedProperties")
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -176,7 +178,7 @@ class SensiboClientAPI(object):
 
     def pod_get_past(self, podUid, days = 1):
         result = self._get("/pods/%s/historicalMeasurements" % podUid, days = days, fields="status,reason,time,acState,causedByUser")
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -197,7 +199,7 @@ class SensiboClientAPI(object):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         result = self._patch("/pods/%s/acStates/on" % podUid, headers,
                             json.dumps({"newValue": on}))
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -218,7 +220,7 @@ class SensiboClientAPI(object):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         result = self._post("/pods/%s/acStates" % podUid, headers,
                             json.dumps({"acState": {"on": on, "mode": mode, "targetTemperature": int(targetTemperature), "fanLevel": fanLevel, "swing": swing, "horizontalSwing": hswing}}))
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -237,7 +239,7 @@ class SensiboClientAPI(object):
 
     def pod_location(self, podUid):
         result = self._get("/pods/%s/acStates" % podUid, limit = 1, fields="pod")
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -257,7 +259,7 @@ class SensiboClientAPI(object):
     def pod_smartmode(self, podUid, body):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         result = self._post("/pods/%s/smartmode" % podUid, headers, body)
-        if(result == None):
+        if not result:
             return None
 
         if(result['status'] == 429):
@@ -400,8 +402,33 @@ def doLog(logType, line, doStackTrace = False):
                 print ('\33[90m' + full_stack() + '\033[0m')
             log.error(full_stack())
 
+def chown_symlink_or_target(path_str, uid, gid):
+    path = Path(path_str)
+
+    # Case 1: symlink
+    if path.is_symlink():
+        target = path.resolve(strict=False)  # resolve even if dangling
+
+        if target.exists():
+            doLog("debug", f"Changed ownership of symlink target {target} to {uid}:{gid}")
+            os.chown(target, uid, gid)
+            return str(target)
+        else:
+            doLog("debug", f"Symlink {path} is dangling (target {target} does not exist)")
+            return False
+
+    # Case 2: normal file
+    if path.exists():
+        os.chown(path, uid, gid)
+        doLog("debug", f"Changed ownership of {path} to {uid}:{gid}")
+        return str(path)
+
+    # Case 3: path doesn’t exist
+    doLog("debug", f"Path {path} does not exist")
+    return False
+
 def getWatts():
-    if(costCurrentPort == None):
+    if not costCurrentPort:
         return None
 
     import serial
@@ -637,13 +664,13 @@ def doHistoricalMeasurements(mydb, days = 1):
 
         for podUID in uidList:
             historicalMeasurements = client.pod_get_past(podUID, days)
-            if(historicalMeasurements == None):
+            if not historicalMeasurements:
                 continue
 
             historicalMeasurements = historicalMeasurements['result']
 
             pod_measurement40 = client.pod_all_stats(podUID, 40)
-            if(pod_measurement40 == None):
+            if not pod_measurement40:
                 continue
 
             pod_measurement40 = pod_measurement40['result']
@@ -737,11 +764,11 @@ def doHistoricalMeasurements(mydb, days = 1):
 def getLastCommands(mydb, nb = 5):
     for podUID in uidList:
         lastCommands = client.pod_status(podUID, nb)
-        if(lastCommands == None):
+        if not lastCommands:
             continue
 
         lastCommands = lastCommands['result']
-        if(lastCommands == None):
+        if not lastCommands:
             continue
 
         for last in lastCommands:
@@ -758,7 +785,7 @@ def getLastCommands(mydb, nb = 5):
                 if(row):
                     continue
 
-                if(last['causedByUser'] == None):
+                if not last['causedByUser']:
                     last['causedByUser'] = {}
                     last['causedByUser']['firstName'] = 'Remote'
 
@@ -1299,7 +1326,7 @@ def getLatLon(podUID):
     global _lon
 
     latLon = client.pod_location(podUID)
-    if(latLon == None):
+    if not latLon:
         return None
 
     latLon = latLon['result'][0]['pod']['location']['latLon']
@@ -1466,8 +1493,6 @@ if __name__ == "__main__":
     OWMapikey = configParser.get('observations', 'OWMapikey', fallback = '')
     doOpenMeteo = configParser.getboolean('observations', 'doOpenMeteo', fallback = True)
 
-    costCurrentPort = configParser.get('power', 'costCurrentPort', fallback = None)
-
     hostname = configParser.get('mariadb', 'hostname', fallback = 'localhost')
     database = configParser.get('mariadb', 'database', fallback = 'atmowiz')
     username = configParser.get('mariadb', 'username', fallback = 'atmowiz')
@@ -1476,6 +1501,13 @@ if __name__ == "__main__":
     uid = configParser.getint('system', 'uid', fallback = 0)
     gid = configParser.getint('system', 'gid', fallback = 0)
     country = configParser.get('system', 'country', fallback = 'None')
+
+    costCurrentPort = configParser.get('power', 'costCurrentPort', fallback = None)
+    if costCurrentPort:
+        costCurrentPort = chown_symlink_or_target(costCurrentPort, uid, gid)
+
+    if not costCurrentPort:
+        costCurrentPort = None
 
     #default to False until the code is proven to be stable
     simple_calc = configParser.getboolean('cost', 'simple_calc', fallback = False)
@@ -1599,7 +1631,7 @@ if __name__ == "__main__":
     result = client.devices()
     devices = {x['room']['name']: x['id'] for x in result['result']}
 
-    if(devices == None):
+    if not devices:
         doLog("error", "Unable to get a list of devices, check your internet connection and apikey and try again.")
         exit(1)
 
@@ -1640,11 +1672,11 @@ if __name__ == "__main__":
 
         for podUID in uidList:
             remoteCapabilities = client.pod_get_remote_capabilities(podUID)
-            if(remoteCapabilities == None):
+            if not remoteCapabilities:
                 continue
 
             remoteCapabilities = remoteCapabilities['result']
-            if(remoteCapabilities == None or remoteCapabilities == []):
+            if not remoteCapabilities:
                 continue
 
             _corf = remoteCapabilities[0]['device']['temperatureUnit']
@@ -1767,7 +1799,7 @@ if __name__ == "__main__":
 
                 for podUID in uidList:
                     pod_measurement = client.pod_all_stats(podUID, 1)
-                    if(pod_measurement == None):
+                    if not pod_measurement:
                         continue
 
                     pod_measurement = pod_measurement['result'][0]
