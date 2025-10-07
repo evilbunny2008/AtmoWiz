@@ -12,6 +12,7 @@ import os
 import pwd
 import random
 import requests
+import setproctitle
 import shutil
 import signal
 import sys
@@ -1443,6 +1444,7 @@ def signal_handler(sig, frame):
 
 if __name__ == "__main__":
     os.system("")
+    setproctitle.setproctitle("AtmoWiz")
     log = logging.getLogger('AtmoWiz Daemon')
     log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='AtmoWiz Daemon'))
     log.setLevel(logging.DEBUG)
