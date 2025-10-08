@@ -4,7 +4,6 @@ import argparse
 import configparser
 import grp
 import json
-import logging
 import math
 import multiprocessing
 import MySQLdb
@@ -23,7 +22,7 @@ from datetime import datetime
 from dateutil import tz
 from pathlib import Path
 from requests.auth import HTTPBasicAuth
-from systemd.journal import JournalHandler
+from systemd import journal
 from urllib.parse import urlparse
 
 _corf = "C"
@@ -42,6 +41,68 @@ _INVOCATION_ID = os.environ.get('INVOCATION_ID', False)
 
 _lat = 0
 _lon = 0
+
+debug_level = 1
+is_tty = False
+MAX_LEN = 5000;
+
+syslog_desc = "AtmoWizDaemon"
+
+log_level_map = {
+        "debug": journal.LOG_DEBUG,
+        "info": journal.LOG_INFO,
+        "notice": journal.LOG_NOTICE,
+        "warning": journal.LOG_WARNING,
+        "error": journal.LOG_ERR,
+        "critical": journal.LOG_CRIT,
+        "alert": journal.LOG_ALERT,
+        "emergency": journal.LOG_EMERG,
+}
+
+def startup_output():
+    global is_tty
+
+    is_tty = sys.stdout.isatty()
+
+    if is_tty:
+        if debug_level > 0:
+            doLog("info", "More logging will be to both journal and stdout")
+        else:
+            doLog("info", "Error logging will be to both journal and stdout")
+    else:
+        if debug_level > 0:
+            doLog("info", "More logging will only be logged to journal")
+        else:
+            doLog("info", "Error logging will only be logged to journal")
+
+def doLog(level, line, doStackTrace = False):
+    global is_tty, syslog_desc
+
+    level = level.lower().strip()
+    if level not in log_level_map:
+        level = "info"
+
+    # Truncate if necessary
+    if len(line) > MAX_LEN:
+        warning_text = f"[TRUNCATED: original length {len(line)} > {MAX_LEN}] "
+        line = warning_text + line[:MAX_LEN]
+
+    line = f"{level.upper()}: {line}"
+    if is_tty:
+        if doStackTrace:
+            print(full_stack())
+        else:
+            print(f"{syslog_desc} {line}")
+
+    priority = log_level_map[level]
+    if(doStackTrace):
+        journal.send(full_stack(), SYSLOG_IDENTIFIER=syslog_desc, PRIORITY=priority)
+    else:
+        journal.send(line, SYSLOG_IDENTIFIER=syslog_desc, PRIORITY=priority)
+
+    # Exit on severe levels
+    if level in ("critical", "alert", "emergency"):
+        sys.exit(1)
 
 class SensiboClientAPI(object):
     def __init__(self, api_key):
@@ -364,45 +425,6 @@ def full_stack():
 
     return stackstr
 
-def doLog(logType, line, doStackTrace = False):
-    line = str(line)
-    if(logType == 'info'):
-        if(not _INVOCATION_ID):
-            print (line)
-        log.info(line)
-
-        if(doStackTrace):
-            if(not _INVOCATION_ID):
-                print (full_stack())
-            log.info(full_stack())
-    elif(logType == 'debug'):
-        if(not _INVOCATION_ID):
-            print ('\33[90m' + line + '\033[0m')
-
-        log.debug(line)
-        if(doStackTrace):
-            if(not _INVOCATION_ID):
-                print ('\33[90m' + full_stack() + '\033[0m')
-            log.debug(full_stack())
-    elif(logType == 'warning'):
-        if(not _INVOCATION_ID):
-            print ('\033[93m' + line + '\033[0m')
-
-        log.warning(line)
-        if(doStackTrace):
-            if(not _INVOCATION_ID):
-                print ('\033[93m' + full_stack() + '\033[0m')
-            log.warning(full_stack())
-    else:
-        if(not _INVOCATION_ID):
-            print ('\33[91m' + line + '\033[0m')
-
-        log.error(line)
-        if(doStackTrace):
-            if(not _INVOCATION_ID):
-                print ('\33[90m' + full_stack() + '\033[0m')
-            log.error(full_stack())
-
 def chown_symlink_or_target(path_str, uid, gid):
     path = Path(path_str)
 
@@ -452,7 +474,7 @@ def getWatts():
         doLog("error", line)
         doLog("error", e, True)
         if(e.args[0] == 13):
-            doLog("error", "Permission Denied. Have you added atmowiz to the dialout group?")
+            doLog("error", f"Permission Denied. Have you added {syslog_desc} to the dialout group?")
             return None
         else:
             return getWatts()
@@ -461,7 +483,7 @@ def getWatts():
         doLog("error", line)
         doLog("error", e, True)
         if(e.args[0] == 13):
-            doLog("error", "Permission Denied. Have you added atmowiz to the dialout group?")
+            doLog("error", f"Permission Denied. Have you added {syslog_desc} to the dialout group?")
             return None
         else:
             return getWatts()
@@ -469,7 +491,7 @@ def getWatts():
     except PermissionError as e:
         doLog("error", line)
         doLog("error", e, True)
-        doLog("error", "Permission Denied. Have you added atmowiz to the dialout group or allowed?")
+        doLog("error", f"Permission Denied. Have you added {syslog_desc} to the dialout group or allowed?")
         return None
 
     except Exception as e:
@@ -1444,19 +1466,16 @@ def signal_handler(sig, frame):
 
 if __name__ == "__main__":
     os.system("")
-    setproctitle.setproctitle("AtmoWiz")
-    log = logging.getLogger('AtmoWiz Daemon')
-    log.addHandler(JournalHandler(SYSLOG_IDENTIFIER='AtmoWiz Daemon'))
-    log.setLevel(logging.DEBUG)
-    doLog("info", "Daemon started....")
+    setproctitle.setproctitle(syslog_desc)
+    startup_output()
+    doLog("info", f"{syslog_desc} started....")
     if(_INVOCATION_ID):
-        doLog("info", "Started by SystemD: Yes")
+        doLog("info", f"{syslog_desc} started by SystemD: Yes")
     else:
-        doLog("info", "Started by SystemD: No")
+        doLog("info", f"{syslog_desc} started by SystemD: No")
 
     if(os.getuid() != 0 or os.getgid() != 0):
-        doLog("error", "This program is designed to be started as root.", True)
-        exit(1)
+        doLog("exception", f"{syslog_desc} is designed to be started as root.", True)
 
     _obs_mp = multiprocessing.Process(target=getObservations)
     _settings_mp = multiprocessing.Process(target=TimerSettingsLoop)
