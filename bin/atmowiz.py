@@ -95,7 +95,7 @@ def doLog(level, line, doStackTrace = False):
             print(f"{syslog_desc} {line}")
 
     priority = log_level_map[level]
-    if(doStackTrace):
+    if doStackTrace:
         journal.send(full_stack(), SYSLOG_IDENTIFIER=syslog_desc, PRIORITY=priority)
     else:
         journal.send(line, SYSLOG_IDENTIFIER=syslog_desc, PRIORITY=priority)
@@ -112,10 +112,12 @@ class SensiboClientAPI(object):
         try:
             params['apiKey'] = self._api_key
             response = requests.get(_SERVER + path, params = params, timeout=30)
+            #print(response.text)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key")
+            #doLog("error", "Request failed, full error messages hidden to protect the API key")
+            doLog("error", f"Request failed, {str(exec)}")
             return response.json()
         except requests.exceptions.Timeout as e:
             doLog("error", "Timeout occurred...")
@@ -128,7 +130,8 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key")
+            #doLog("error", "Request failed, full error messages hidden to protect the API key")
+            doLog("error", f"Request failed, {str(exc)}")
             return response.json()
         except requests.exceptions.Timeout as e:
             doLog("error", "Timeout occurred...")
@@ -142,7 +145,8 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            #doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            doLog("error", f"Request failed, {str(exc)}")
             return response.json()
         except requests.exceptions.Timeout as e:
             doLog("error", "Timeout occurred...")
@@ -156,7 +160,8 @@ class SensiboClientAPI(object):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as exc:
-            doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            #doLog("error", "Request failed, full error messages hidden to protect the API key", True)
+            doLog("error", f"Request failed, {str(exc)}")
             return response.json()
         except requests.exceptions.Timeout as e:
             doLog("error", "Timeout occurred...")
@@ -167,12 +172,12 @@ class SensiboClientAPI(object):
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
             result = self.devices()
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -186,12 +191,12 @@ class SensiboClientAPI(object):
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = pod_all_stats(podUid, nb)
+            result = self.pod_all_stats(podUid, nb)
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -205,12 +210,12 @@ class SensiboClientAPI(object):
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = pod_get_remote_capabilities(podUid, nb)
+            result = self.pod_get_remote_capabilities(podUid, nb)
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -224,12 +229,12 @@ class SensiboClientAPI(object):
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = pod_status(podUid, lastlimit)
+            result = self.pod_status(podUid, lastlimit)
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -243,12 +248,12 @@ class SensiboClientAPI(object):
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = pod_get_past(podUid, days)
+            result = self.pod_get_past(podUid, days)
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -259,17 +264,16 @@ class SensiboClientAPI(object):
 
     def setSameMode(self, podUid, on):
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        result = self._patch("/pods/%s/acStates/on" % podUid, headers,
-                            json.dumps({"newValue": on}))
+        result = self._patch("/pods/%s/acStates/on" % podUid, headers, json.dumps({"newValue": on}))
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = setSameMode(podUid, on)
+            result = self.setSameMode(podUid, on)
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -285,12 +289,12 @@ class SensiboClientAPI(object):
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = pod_change_ac_state(podUid, on, targetTemperature, mode, fanLevel, swing, hswing)
+            result = self.pod_change_ac_state(podUid, on, targetTemperature, mode, fanLevel, swing, hswing)
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -304,12 +308,12 @@ class SensiboClientAPI(object):
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = pod_location(podUid)
+            result = self.pod_location(podUid)
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -324,12 +328,12 @@ class SensiboClientAPI(object):
         if not result:
             return None
 
-        if(result['status'] == 429):
+        if result['status'] == 429:
             doLog("error", "Sensibo said we made too many requests, sleeping for 5s and will then retry")
             time.sleep(5)
-            result = pod_smartmode(podUid, body)
+            result = self.pod_smartmode(podUid, body)
 
-        if(len(result) == 0 or result['result'] == []):
+        if len(result) == 0 or result['result'] == []:
             return None
 
         try:
@@ -343,14 +347,14 @@ def signal_handling(signum,frame):
     _terminate = True
 
 def calcAT(temp, humid, country, feelslike):
-    if(feelslike != None and country == 'None'):
+    if feelslike != None and country == 'None':
         return feelslike
 
-    if(country == 'au'):
+    if country == 'au':
         doLog("debug", "Using BoM Apparent Temp")
         # BoM's Feels Like formula -- http://www.bom.gov.au/info/thermal_stress/
         # UPDATE sensibo SET feelslike=round(temperature + (0.33 * ((humidity / 100) * 6.105 * exp((17.27 * temperature) / (237.7 + temperature)))) - 4, 1)
-        if(_corf == 'F'):
+        if _corf == 'F':
             temp = (temp - 32) * 5 / 9
             doLog("debug", "temp = %f" % temp)
 
@@ -358,13 +362,13 @@ def calcAT(temp, humid, country, feelslike):
         doLog("debug", "vp = %f" % vp)
         at = round(temp + (0.33 * vp) - 4.0, 1)
         doLog("debug", "at = %f" % at)
-        if(_corf == 'F'):
+        if _corf == 'F':
             at = (at * 9 / 5) + 32
         return at
     else:
         # North American Heat Index -- https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
         doLog("debug", "Using NA HI")
-        if(_corf == 'C'):
+        if _corf == 'C':
             temp =  (temp * 9 / 5) + 32
             doLog("debug", "temp = %f" % temp)
 
@@ -1272,7 +1276,7 @@ def getInigoData(mydb):
         humid = result[skip+6]
         fl = calcAT(float(temp), float(humid), country, None)
 
-        whentime = datetime.fromtimestamp(int(result[skip+225])).strftime(fmt)
+        whentime = datetime.fromtimestamp(int(result[skip+65])).strftime(fmt)
 
         cursor = mydb.cursor()
         query = "SELECT 1 FROM weather WHERE whentime=%s"
@@ -1675,13 +1679,13 @@ if __name__ == "__main__":
         cursor = mydb.cursor()
         for device in devices:
             values = (devices[device], device)
-            doLog("debug", _sqlselect2 % values)
+            #doLog("debug", _sqlselect2 % values)
             cursor.execute(_sqlselect2, values)
             row = cursor.fetchone()
             if(row):
                 continue
 
-            doLog("debug", _sqlquery2 % values)
+            #doLog("debug", _sqlquery2 % values)
             cursor.execute(_sqlquery2, values)
 
         mydb.commit()
@@ -1715,7 +1719,7 @@ if __name__ == "__main__":
                 if(mode != "fan"):
                     minTemp = maxTemp = -1
                     for temp in device['modes'][mode]['temperatures'][_corf]['values']:
-                        doLog("debug", query % (podUID, mode, 'temperatures', temp))
+                        #doLog("debug", query % (podUID, mode, 'temperatures', temp))
                         cursor.execute(query, (podUID, mode, 'temperatures', temp))
                         if(minTemp == -1 or minTemp > temp):
                             minTemp = temp
@@ -1728,7 +1732,7 @@ if __name__ == "__main__":
 
                 for keyval in ['fanLevels', 'swing', 'horizontalSwing']:
                     for modes in device['modes'][mode][keyval]:
-                        doLog("debug", query % (podUID, mode, keyval, modes))
+                        #doLog("debug", query % (podUID, mode, keyval, modes))
                         cursor.execute(query, (podUID, mode, keyval, modes))
 
         mydb.commit()
@@ -1742,7 +1746,7 @@ if __name__ == "__main__":
                         query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
                     if(args.reCalcToDate):
                         query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
-                    doLog("debug", query)
+                    #doLog("debug", query)
                     cursor.execute(query)
                     mydb.commit()
 
@@ -1768,7 +1772,7 @@ if __name__ == "__main__":
                     query += f" AND whentime >= '{args.reCalcFromDate} 00:00:00'"
                 if(args.reCalcToDate):
                     query += f" AND  whentime <= '{args.reCalcToDate} 23:59:59'"
-                doLog("debug", query)
+                #doLog("debug", query)
                 cursor.execute(query)
                 mydb.commit()
                 calcFL(mydb, country)
@@ -1846,11 +1850,11 @@ if __name__ == "__main__":
                         #doLog("debug", _sqlselect3 % values)
                         cursor.execute(_sqlselect3, values)
                         row = cursor.fetchone()
-                        if(row):
+                        if row:
                             #doLog("debug", "Skipping insert due to row already existing.")
                             continue
 
-                        if(ac_state['mode'] == 'fan'):
+                        if ac_state['mode'] == 'fan':
                             ac_state['targetTemperature'] = None
                             ac_state['temperatureUnit'] = None
 
@@ -1874,7 +1878,7 @@ if __name__ == "__main__":
                         doLog("error", "There was a problem, error was %s" % e, True)
                         pass
                     except MySQLdb._exceptions.DataError as e:
-                        if(e.args[0] == 1265):
+                        if e.args[0] == 1265:
                             table_name = 'sensibo'
                             field = e.args[1].split("'")[1]
                             updateEnum(mydb, table_name, field, ac_state)
@@ -1888,13 +1892,13 @@ if __name__ == "__main__":
                 getLastCommands(mydb, 5)
 
                 loops += 1
-                if(loops >= 40):
+                if loops >= 40:
                     loops = 0
                     doHistoricalMeasurements(mydb, 1)
 
-                if(secondsAgo <= 0):
+                if secondsAgo <= 0:
                     secondsAgo = 90
-                if(secondsAgo > 90):
+                if secondsAgo > 90:
                     secondsAgo = 90
 
                 timeToWait = secondsAgo + 5
