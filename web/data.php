@@ -460,6 +460,8 @@
 		}
 	}
 
+	$redis->close();
+
 	$commandHeader = '';
 
 	if(isset($_SESSION['rw']) && $_SESSION['rw'] == true)
