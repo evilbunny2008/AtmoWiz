@@ -6,9 +6,9 @@ import grp
 import json
 import math
 import multiprocessing
-import MySQLdb
 import os
 import pwd
+import pymysql
 import random
 import requests
 import setproctitle
@@ -639,13 +639,13 @@ def calcCost(mydb):
             cursor2.execute(query, values)
             mydb.commit()
 
-    except MySQLdb._exceptions.ProgrammingError as e:
+    except pymysql.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
-    except MySQLdb._exceptions.OperationalError as e:
+    except pymysql.OperationalError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
-    except MySQLdb._exceptions.IntegrityError as e:
+    except pymysql.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
@@ -674,13 +674,13 @@ def calcFL(mydb, country):
             mydb.commit()
             return
 
-    except MySQLdb._exceptions.ProgrammingError as e:
+    except pymysql.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
-    except MySQLdb._exceptions.OperationalError as e:
+    except pymysql.OperationalError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
-    except MySQLdb._exceptions.IntegrityError as e:
+    except pymysql.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         pass
 
@@ -770,7 +770,7 @@ def doHistoricalMeasurements(mydb, days = 1):
                 doLog("debug", _sqlquery3 % values)
                 cursor.execute(_sqlquery3, values)
                 mydb.commit()
-    except MySQLdb._exceptions.DataError as e:
+    except pymysql.DataError as e:
         if(e.args[0] == 1265):
             table_name = 'sensibo'
             field = e.args[1].split("'")[1]
@@ -832,16 +832,16 @@ def getLastCommands(mydb, nb = 5):
                           acState['horizontalSwing'], str(changes))
                 doLog("debug", _sqlquery1 % values)
                 cursor.execute(_sqlquery1, values)
-            except MySQLdb._exceptions.ProgrammingError as e:
+            except pymysql.ProgrammingError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 pass
-            except MySQLdb._exceptions.IntegrityError as e:
+            except pymysql.IntegrityError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 pass
-            except MySQLdb._exceptions.OperationalError as e:
+            except pymysql.OperationalError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 pass
-            except MySQLdb._exceptions.DataError as e:
+            except pymysql.DataError as e:
                 if(e.args[0] == 1265):
                     table_name = 'commands'
                     field = e.args[1].split("'")[1]
@@ -879,7 +879,12 @@ def getObservations():
         while True:
             try:
                 doLog("info", "getObservations(%s)" % podUID)
-                mydb = MySQLdb.connect(hostname, username, password, database)
+                mydb = pymysql.connect(
+                    host=hostname,
+                    user=username,
+                    password=password,
+                    database=database
+                )
 
                 if(weatherapikey != ''):
                     getWeatherAPI(mydb, podUID)
@@ -987,13 +992,13 @@ def checkClimateSetting(mydb):
 
                 client.pod_smartmode(podUID, body)
 
-        except MySQLdb._exceptions.ProgrammingError as e:
+        except pymysql.ProgrammingError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
-        except MySQLdb._exceptions.IntegrityError as e:
+        except pymysql.IntegrityError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
-        except MySQLdb._exceptions.OperationalError as e:
+        except pymysql.OperationalError as e:
             doLog("error", "There was a problem, error was %s" % e, True)
             pass
 
@@ -1003,7 +1008,12 @@ def TimerSettingsLoop():
             doLog("info", "TimerSettingsLoop() wake up")
 
             try:
-                mydb = MySQLdb.connect(hostname, username, password, database)
+                mydb = pymysql.connect(
+                    host=hostname,
+                    user=username,
+                    password=password,
+                    database=database
+                )
 
                 checkClimateSetting(mydb)
 
@@ -1661,15 +1671,20 @@ if __name__ == "__main__":
         exit(1)
 
     try:
-        mydb = MySQLdb.connect(hostname, username, password, database)
+        mydb = pymysql.connect(
+            host=hostname,
+            user=username,
+            password=password,
+            database=database
+        )
         updateDatabase(mydb)
-    except MySQLdb._exceptions.ProgrammingError as e:
+    except pymysql.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
-    except MySQLdb._exceptions.OperationalError as e:
+    except pymysql.OperationalError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
-    except MySQLdb._exceptions.IntegrityError as e:
+    except pymysql.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
@@ -1754,13 +1769,13 @@ if __name__ == "__main__":
                 mydb.close()
                 doLog("info", "Cost has been recalculated.")
                 exit(0)
-            except MySQLdb._exceptions.ProgrammingError as e:
+            except pymysql.ProgrammingError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 exit(1)
-            except MySQLdb._exceptions.OperationalError as e:
+            except pymysql.OperationalError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 exit(1)
-            except MySQLdb._exceptions.IntegrityError as e:
+            except pymysql.IntegrityError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 exit(1)
 
@@ -1779,13 +1794,13 @@ if __name__ == "__main__":
                 mydb.close()
                 doLog("info", "Feels like has been recalculated.")
                 exit(0)
-            except MySQLdb._exceptions.ProgrammingError as e:
+            except pymysql.ProgrammingError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 exit(1)
-            except MySQLdb._exceptions.OperationalError as e:
+            except pymysql.OperationalError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 exit(1)
-            except MySQLdb._exceptions.IntegrityError as e:
+            except pymysql.IntegrityError as e:
                 doLog("error", "There was a problem, error was %s" % e, True)
                 exit(1)
 
@@ -1797,13 +1812,13 @@ if __name__ == "__main__":
         doHistoricalMeasurements(mydb, days)
         calcCost(mydb)
 
-    except MySQLdb._exceptions.ProgrammingError as e:
+    except pymysql.ProgrammingError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
-    except MySQLdb._exceptions.OperationalError as e:
+    except pymysql.OperationalError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
-    except MySQLdb._exceptions.IntegrityError as e:
+    except pymysql.IntegrityError as e:
         doLog("error", "There was a problem, error was %s" % e, True)
         exit(1)
 
@@ -1817,7 +1832,12 @@ if __name__ == "__main__":
     try:
         while True:
             try:
-                mydb = MySQLdb.connect(hostname, username, password, database)
+                mydb = pymysql.connect(
+                    host=hostname,
+                    user=username,
+                    password=password,
+                    database=database
+                )
                 doLog("info", "Starting main loop...")
                 doLog("debug", "Connection to mariadb accepted")
                 secondsAgo = -1
@@ -1868,16 +1888,16 @@ if __name__ == "__main__":
                         doLog("debug", _sqlquery3 % values)
                         cursor.execute(_sqlquery3, values)
                         mydb.commit()
-                    except MySQLdb._exceptions.ProgrammingError as e:
+                    except pymysql.ProgrammingError as e:
                         doLog("error", "There was a problem, error was %s" % e, True)
                         pass
-                    except MySQLdb._exceptions.IntegrityError as e:
+                    except pymysql.IntegrityError as e:
                         doLog("error", "There was a problem, error was %s" % e, True)
                         pass
-                    except MySQLdb._exceptions.OperationalError as e:
+                    except pymysql.OperationalError as e:
                         doLog("error", "There was a problem, error was %s" % e, True)
                         pass
-                    except MySQLdb._exceptions.DataError as e:
+                    except pymysql.DataError as e:
                         if e.args[0] == 1265:
                             table_name = 'sensibo'
                             field = e.args[1].split("'")[1]

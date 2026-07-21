@@ -12,10 +12,10 @@
 	$redis = new Redis();
 	$redis->connect('127.0.0.1');
 
-	$systemTz = trim(file_get_contents("/etc/timezone"));
-	if($systemTz == 'Etc/UTC')
-		$systemTz = 'UTC';
-	date_default_timezone_set($systemTz);
+//	$systemTz = trim(file_get_contents("/etc/timezone"));
+//	if($systemTz == 'Etc/UTC')
+//		$systemTz = 'UTC';
+//	date_default_timezone_set($systemTz);
 
 	setlocale(LC_MONETARY, $currency_code.'.UTF-8');
 	if(localeconv()['currency_symbol'] == "")
